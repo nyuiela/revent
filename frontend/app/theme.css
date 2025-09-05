@@ -16,6 +16,14 @@
   --app-gray-dark: #e0e0e0;
   --app-card-bg: rgba(255, 255, 255, 0.4);
   --app-card-border: rgba(0, 0, 0, 0.1);
+
+  /* Events pages with Prism background */
+  --events-foreground: #ffffff;
+  --events-foreground-muted: #e5e7eb;
+  --events-card-bg: rgba(255, 255, 255, 0.1);
+  --events-card-border: rgba(255, 255, 255, 0.2);
+  --events-accent: #3b82f6;
+  --events-accent-hover: #2563eb;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -31,6 +39,14 @@
     --app-gray-dark: #2e2e2e;
     --app-card-bg: rgba(17, 17, 17, 0.4);
     --app-card-border: rgba(115, 115, 115, 0.5);
+
+    /* Events pages with Prism background */
+    --events-foreground: #ffffff;
+    --events-foreground-muted: #e5e7eb;
+    --events-card-bg: rgba(255, 255, 255, 0.1);
+    --events-card-border: rgba(255, 255, 255, 0.2);
+    --events-accent: #3b82f6;
+    --events-accent-hover: #2563eb;
   }
 }
 
