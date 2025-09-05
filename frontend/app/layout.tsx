@@ -4,6 +4,10 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
 import { ThemeProvider } from "next-themes";
+import { QueryClient } from "@tanstack/react-query";
+import { request, gql } from "graphql-request";
+import { headers, url } from "@/context/queryProvider";
+import { eventsCreatedQuery } from "@/context/queryProvider";
 import 'ethereum-identity-kit/css'
 
 export const viewport: Viewport = {
@@ -44,7 +48,27 @@ export default async function RootLayout({
 }: Readonly<{
    children: React.ReactNode;
 }>) {
+   // useEffect(() => {
+   //   const url = new URL(window.location.href)
+   //   const isMini =
+   //     url.pathname.startsWith('/mini') ||
+   //     url.searchParams.get('miniApp') === 'true'
 
+   //   if (isMini) {
+   //     import('@farcaster/miniapp-sdk').then(({ sdk }) => {
+   //       sdk.actions.ready()
+   //       console.log('sdk', sdk)
+   //     })
+   //   }
+   // }, [])
+
+   const queryClient = new QueryClient()
+   await queryClient.prefetchQuery({
+      queryKey: ['data'],
+      async queryFn() {
+         return await request(url, eventsCreatedQuery, {}, headers)
+      }
+   })
    return (
       <html lang="en">
          <body className="bg-background">
