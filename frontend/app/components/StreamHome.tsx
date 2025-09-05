@@ -6,6 +6,8 @@ import StreamHeader from "./StreamHeader";
 import EventsMap, { type LiveEvent, type EventsMapRef } from "./EventsMap";
 import EventSearch from "./EventSearch";
 import { Camera, ChevronUp, Monitor, Plus, Eye } from "lucide-react";
+import { ViewProfile } from "@farcaster/frame-sdk";
+import { useViewProfile } from "@coinbase/onchainkit/minikit";
 // Removed unused Graph Protocol imports - now handled by API route
 type Mode = "map" | "camera" | "screen";
 
@@ -17,6 +19,7 @@ export default function StreamHome() {
   const [searchBarVisible, setSearchBarVisible] = useState(true);
   const [selectedEventTitle, setSelectedEventTitle] = useState<string>("");
   const mapRef = useRef<EventsMapRef>(null);
+  const viewProfile = useViewProfile();
 
   const filters = ["all", "eat", "café", "bar"]; // exact labels per screenshot
 
@@ -206,7 +209,7 @@ export default function StreamHome() {
                   {/* Text content */}
                   <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
                     <div className="font-medium text-sm truncate text-white drop-shadow-sm">{event.title}</div>
-                    <div className="text-xs text-white/80 drop-shadow-sm">@{event.username}</div>
+                    <div className="text-xs text-white/80 drop-shadow-sm" onClick={viewProfile}>@{event.username}</div>
                   </div>
                 </Link>
               ))}
@@ -218,6 +221,7 @@ export default function StreamHome() {
       {/* Curations for you */}
       <section className="space-y-3 px-4">
         <h3 className="text-sm font-medium">Events for you</h3>
+        <button onClick={viewProfile}>View Profile</button>
         <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
           {curations.map((c) => (
             <Link

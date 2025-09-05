@@ -1,7 +1,7 @@
 "use client";
 
 import {
-   useMiniKit,
+  useMiniKit,
 } from "@coinbase/onchainkit/minikit";
 import { useEffect, useState } from "react";
 import { Features } from "./components/DemoComponents";
@@ -9,103 +9,104 @@ import StreamHome from "./components/StreamHome";
 import WaitlistModal from "./components/WaitlistModal";
 import Footer from "./components/footer";
 
+
 export default function App() {
-   const { setFrameReady, isFrameReady } = useMiniKit();
-   // const [frameAdded, setFrameAdded] = useState(false);
-   const [activeTab, setActiveTab] = useState("home");
-   const [showWaitlist, setShowWaitlist] = useState(false);
+  const { setFrameReady, isFrameReady } = useMiniKit();
+  // const [frameAdded, setFrameAdded] = useState(false);
+  const [activeTab, setActiveTab] = useState("home");
+  const [showWaitlist, setShowWaitlist] = useState(false);
+  // const addFrame = useAddFrame();
 
-   // const addFrame = useAddFrame();
+  useEffect(() => {
+    if (!isFrameReady) {
+      setFrameReady();
+    }
+  }, [setFrameReady, isFrameReady]);
 
-   useEffect(() => {
-      if (!isFrameReady) {
-         setFrameReady();
-      }
-   }, [setFrameReady, isFrameReady]);
+  // Check if user is first-time visitor
+  useEffect(() => {
+    const hasVisited = localStorage.getItem("hasVisitedStream");
+    if (!hasVisited) {
+      setShowWaitlist(true);
+    }
+  }, []);
 
-   // Check if user is first-time visitor
-   useEffect(() => {
-      const hasVisited = localStorage.getItem("hasVisitedStream");
-      if (!hasVisited) {
-         setShowWaitlist(true);
-      }
-   }, []);
+  // const handleAddFrame = useCallback(async () => {
+  //   const frameAdded = await addFrame();
+  //   setFrameAdded(Boolean(frameAdded));
+  // }, [addFrame]);
 
-   // const handleAddFrame = useCallback(async () => {
-   //   const frameAdded = await addFrame();
-   //   setFrameAdded(Boolean(frameAdded));
-   // }, [addFrame]);
+  const handleJoinWaitlist = async (email: string) => {
+    // Here you would typically send the email to your backend
+    // For now, we'll just simulate the API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-   const handleJoinWaitlist = async (email: string) => {
-      // Here you would typically send the email to your backend
-      // For now, we'll just simulate the API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    // Mark user as having visited
+    localStorage.setItem("hasVisitedStream", "true");
 
-      // Mark user as having visited
-      localStorage.setItem("hasVisitedStream", "true");
+    // You could also store the email in localStorage or send to your API
+    localStorage.setItem("waitlistEmail", email);
+  };
 
-      // You could also store the email in localStorage or send to your API
-      localStorage.setItem("waitlistEmail", email);
-   };
+  const handleCloseWaitlist = () => {
+    setShowWaitlist(false);
+    // Mark user as having visited even if they don't join
+    localStorage.setItem("hasVisitedStream", "true");
+  };
 
-   const handleCloseWaitlist = () => {
-      setShowWaitlist(false);
-      // Mark user as having visited even if they don't join
-      localStorage.setItem("hasVisitedStream", "true");
-   };
+  // const saveFrameButton = useMemo(() => {
+  //   if (context && !context.client.added) {
+  //     return (
+  //       <Button
+  //         variant="ghost"
+  //         size="sm"
+  //         onClick={handleAddFrame}
+  //         className="text-[var(--app-accent)] p-4"
+  //         icon={<Icon name="plus" size="sm" />}
+  //       >
+  //         Save Frame
+  //       </Button>
+  //     );
+  //   }
 
-   // const saveFrameButton = useMemo(() => {
-   //   if (context && !context.client.added) {
-   //     return (
-   //       <Button
-   //         variant="ghost"
-   //         size="sm"
-   //         onClick={handleAddFrame}
-   //         className="text-[var(--app-accent)] p-4"
-   //         icon={<Icon name="plus" size="sm" />}
-   //       >
-   //         Save Frame
-   //       </Button>
-   //     );
-   //   }
+  //   if (frameAdded) {
+  //     return (
+  //       <div className="flex items-center space-x-1 text-sm font-medium text-[#0052FF] animate-fade-out">
+  //         <Icon name="check" size="sm" className="text-[#0052FF]" />
+  //         <span>Saved</span>
+  //       </div>
+  //     );
+  //   }
 
-   //   if (frameAdded) {
-   //     return (
-   //       <div className="flex items-center space-x-1 text-sm font-medium text-[#0052FF] animate-fade-out">
-   //         <Icon name="check" size="sm" className="text-[#0052FF]" />
-   //         <span>Saved</span>
-   //       </div>
-   //     );
-   //   }
+  //   return null;
+  // }, [context, frameAdded, handleAddFrame]);
 
-   //   return null;
-   // }, [context, frameAdded, handleAddFrame]);
+  return (
+    <div className="flex flex-col min-h-screen font-sans text-[var(--app-foreground)] mini-app-theme from-[var(--app-background)] to-[var(--app-gray)]">
 
-   return (
-      <div className="flex flex-col min-h-screen font-sans text-[var(--app-foreground)] mini-app-theme from-[var(--app-background)] to-[var(--app-gray)]">
-         <div className="w-full max-w-md mx-auto p-0 ">
-            <header className="flex justify-between items-center mb-0 h-0">
-               <div>
-                  <div className="flex items-center space-x-2">
-                     {/* Wallet connect moved to StreamHeader */}
-                  </div>
-               </div>
-               {/* <div>{saveFrameButton}</div> */}
-            </header>
+      <div className="w-full max-w-md mx-auto p-0 ">
+        <header className="flex justify-between items-center mb-0 h-0">
+          <div>
+            <div className="flex items-center space-x-2">
+              {/* Wallet connect moved to StreamHeader */}
+            </div>
+          </div>
+          {/* <div>{saveFrameButton}</div> */}
+        </header>
 
-            <main className="flex-1">
-               {activeTab === "home" && <StreamHome />}
-               {activeTab === "features" && <Features setActiveTab={setActiveTab} />}
-            </main>
-            <Footer />
-         </div>
-         {showWaitlist && (
-            <WaitlistModal
-               isOpen={showWaitlist}
-               onJoinWaitlist={handleJoinWaitlist}
-               onClose={handleCloseWaitlist}
-            />
-         )}
+        <main className="flex-1">
+          {activeTab === "home" && <StreamHome />}
+          {activeTab === "features" && <Features setActiveTab={setActiveTab} />}
+        </main>
+        <Footer />
       </div>
-   );
+      {showWaitlist && (
+        <WaitlistModal
+          isOpen={showWaitlist}
+          onJoinWaitlist={handleJoinWaitlist}
+          onClose={handleCloseWaitlist}
+        />
+      )}
+    </div>
+  );
 }

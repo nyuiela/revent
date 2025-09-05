@@ -10,11 +10,13 @@ import {
   Moon,
   Monitor,
   User,
-  LogOut
+  LogOut,
+  Wallet
 } from "lucide-react";
-import { ConnectWallet, WalletModal } from "@coinbase/onchainkit/wallet";
+import { ConnectWallet, WalletDropdown, WalletDropdownDisconnect, WalletModal } from "@coinbase/onchainkit/wallet";
 import { useTheme } from "next-themes";
 import { useAccount, useDisconnect } from "wagmi";
+import { EthBalance, Address, Avatar, Identity, Name } from "@coinbase/onchainkit/identity";
 
 type Platform = {
   id: string;
@@ -26,6 +28,7 @@ type Platform = {
 
 export default function StreamHeader() {
   const [showModal, setShowModal] = useState(false);
+  const [showModalConnect, setShowModalConnect] = useState(false);
   const { theme, setTheme } = useTheme();
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
@@ -89,6 +92,7 @@ export default function StreamHeader() {
       <div className="flex items-center justify-between py-2 px-4">
         {/* Wallet connect compact pill */}
         <div className="flex items-center gap-2">
+
           {isConnected && address ? (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--app-card-bg)] border border-[var(--app-card-border)] text-sm">
               <User className="w-4 h-4 text-[var(--app-accent)]" />
@@ -105,8 +109,31 @@ export default function StreamHeader() {
             </div>
           ) : (
             <>
-              <WalletModal isOpen={showModal} onClose={() => setShowModal(false)} />
-              <ConnectWallet className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--app-card-bg)] border border-[var(--app-card-border)] text-sm cursor-pointer hover:bg-[var(--app-gray)] transition-colors *:text-foreground" />
+              {/* <WalletModal isOpen={showModal} onClose={() => setShowModal(false)} /> */}
+              {/* <NetworkSwitcher /> */}
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--app-card-bg)] border border-[var(--app-card-border)] text-sm">
+                <button
+                  onClick={() => setShowModalConnect(true)}
+                  className="ml-1 p-1 hover:bg-[var(--app-gray)] rounded transition-colors text-xs font-medium"
+                  title="Connect wallet"
+                >
+                  Connect Wallet
+                </button>
+              </div>
+              <Wallet className="z-10">
+                <ConnectWallet className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--app-card-bg)] border border-[var(--app-card-border)] text-sm cursor-pointer hover:bg-[var(--app-gray)] transition-colors *:text-foreground" />
+                <WalletDropdown>
+                  <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
+                    <Avatar />
+                    <Name />
+                    <Address />
+                    <EthBalance />
+                  </Identity>
+                  <WalletDropdownDisconnect />
+                </WalletDropdown>
+                <WalletModal isOpen={showModalConnect} onClose={() => { setShowModalConnect(false) }} />
+              </Wallet>
+
             </>
           )}
         </div>

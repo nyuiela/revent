@@ -1,14 +1,14 @@
 function withValidProperties(
-   properties: Record<string, undefined | string | string[]>,
+  properties: Record<string, undefined | string | string[]>,
 ) {
-   return Object.fromEntries(
-      Object.entries(properties).filter(([key, value]) => {
-         if (Array.isArray(value)) {
-            return value.length > 0;
-         }
-         return !!value; x
-      }),
-   );
+  return Object.fromEntries(
+    Object.entries(properties).filter(([key, value]) => {
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
+      return !!value;
+    }),
+  );
 }
 
 // export async function GET() {
@@ -53,8 +53,8 @@ function withValidProperties(
 
 
 export async function GET() {
-   // Temporary redirect to Farcaster Hosted Manifest
-   const hostedManifestUrl = "https://api.farcaster.xyz/miniapps/hosted-manifest/0198f492-50fa-8ec5-436d-4d7c1783c395";
+  // Temporary redirect to Farcaster Hosted Manifest
+  const hostedManifestUrl = "https://api.farcaster.xyz/miniapps/hosted-manifest/0198f492-50fa-8ec5-436d-4d7c1783c395";
 
-   return Response.redirect(hostedManifestUrl, 307);
+  return Response.redirect(hostedManifestUrl, 307);
 }

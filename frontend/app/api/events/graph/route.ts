@@ -61,7 +61,22 @@ function isEventLive(startTime: string, endTime: string): boolean {
 }
 
 // Function to generate fallback data for events without IPFS metadata
-function generateFallbackEvent(graphEvent: GraphEvent): any {
+function generateFallbackEvent(graphEvent: GraphEvent): {
+  id: string;
+  title: string;
+  username: string;
+  lat: number;
+  lng: number;
+  isLive: boolean;
+  avatarUrl: string;
+  platforms: string[];
+  creator: string;
+  startTime: string;
+  endTime: string;
+  maxAttendees: string;
+  registrationFee: string;
+  blockTimestamp: string;
+} {
   const isLive = isEventLive(graphEvent.startTime, graphEvent.endTime);
 
   return {
@@ -104,7 +119,7 @@ export async function GET() {
 
     // Fetch events from The Graph Protocol using GraphQLClient
     const client = new GraphQLClient(url, { headers });
-    const graphData = await client.request(query);
+    const graphData = await client.request(query) as { eventCreateds?: GraphEvent[] };
     const graphEvents: GraphEvent[] = graphData.eventCreateds || [];
 
     console.log(`Fetched ${graphEvents.length} events from The Graph Protocol:`, graphEvents);

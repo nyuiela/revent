@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const uint8Array = new Uint8Array(buffer);
 
     // Try Infura IPFS first if credentials are available
-    let ipfsHash: string;
+    let ipfsHash: string | undefined;
 
     if (process.env.INFURA_IPFS_PROJECT_ID && process.env.INFURA_IPFS_PROJECT_SECRET) {
       try {
@@ -82,6 +82,11 @@ export async function POST(request: NextRequest) {
         // For development, generate a mock hash
         ipfsHash = `mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       }
+    }
+
+    // Ensure we have an IPFS hash
+    if (!ipfsHash) {
+      return NextResponse.json({ error: 'Failed to upload to IPFS' }, { status: 500 });
     }
 
     // Return the IPFS URL

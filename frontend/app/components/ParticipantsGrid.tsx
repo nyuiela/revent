@@ -26,7 +26,7 @@ export default function ParticipantsGrid({ addresses, maxItems = 4 }: Participan
             try {
               const name = await getName({ address: address as `0x${string}` });
               return name || address; // Fallback to address if no ENS name
-            } catch (error) {
+            } catch {
               console.log(`No ENS name found for ${address}`);
               return address; // Fallback to address
             }

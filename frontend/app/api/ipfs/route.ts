@@ -38,9 +38,9 @@ export async function POST(req: NextRequest) {
     const uri = `ipfs://${cid}`;
 
     return NextResponse.json({ cid, uri });
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json(
-      { error: "Unexpected error uploading to IPFS", details: e?.message },
+      { error: "Unexpected error uploading to IPFS", details: e instanceof Error ? e.message : "Unknown error" },
       { status: 500 }
     );
   }

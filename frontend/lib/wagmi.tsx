@@ -1,5 +1,5 @@
 import { createConfig, http, injected } from 'wagmi'
-import { baseSepolia, mainnet, sepolia } from 'wagmi/chains'
+import { baseSepolia } from 'wagmi/chains'
 
 const config = createConfig({
   chains: [baseSepolia],
