@@ -18,6 +18,7 @@ import Image from "next/image";
 import EventManagement from "./EventManagement";
 import config from "@/lib/wagmi";
 import ParticipantsGrid from "./ParticipantsGrid";
+import StreamPublisher from "./live-peer";
 
 
 type EventParticipant = {
@@ -643,7 +644,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
 
   return (
     <div className="min-h-screen text-[var(--events-foreground)] bg-black/80 relative z-[20]">
-
+      <StreamPublisher />
       {/* Header */}
       {/* <div className="sticky top-0 z-40 bg-[var(--app-background)] border-b border-[var(--app-card-border)]">
         <div className="flex items-center justify-between p-4">

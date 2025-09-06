@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Live Stream Viewer</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        max-width: 1200px;
+        width: 100%;
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+        font-size: 2.5rem;
+      }
+
+      .stream-section {
+        margin-bottom: 30px;
+      }
+
+      .video-container {
+        position: relative;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        background: #000;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      video {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .stream-info {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+      }
+
+      .status {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9rem;
+      }
+
+      .status.live {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status.offline {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .status.connecting {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .controls {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 20px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 25px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+      }
+
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #0056b3;
+        transform: translateY(-2px);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #545b62;
+        transform: translateY(-2px);
+      }
+
+      .input-group {
+        margin-bottom: 20px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+      }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: #007bff;
+      }
+
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+        display: none;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #007bff;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px;
+          margin: 10px;
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+
+        .controls {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        button {
+          width: 100%;
+          max-width: 300px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎥 Live Stream Viewer</h1>
+
+      <div class="stream-section">
+        <div class="input-group">
+          <input
+            type="text"
+            id="streamInput"
+            placeholder="Enter ENS name or CID (e.g., ethaccra.eth or QmXxXxXx...)"
+          />
+        </div>
+
+        <div class="controls">
+          <button class="btn-primary" onclick="loadStream()">
+            Load Stream
+          </button>
+          <button class="btn-secondary" onclick="stopStream()">
+            Stop Stream
+          </button>
+        </div>
+
+        <div class="error" id="errorMessage"></div>
+      </div>
+
+      <div class="video-container">
+        <video id="videoPlayer" controls autoplay muted playsinline>
+          <p>Your browser doesn't support HTML5 video.</p>
+        </video>
+      </div>
+
+      <div class="stream-info">
+        <h3>Stream Information</h3>
+        <p>
+          <strong>Status:</strong>
+          <span class="status offline" id="streamStatus">Offline</span>
+        </p>
+        <p><strong>Source:</strong> <span id="streamSource">None</span></p>
+        <p><strong>Protocol:</strong> <span id="streamProtocol">None</span></p>
+      </div>
+    </div>
+
+    <script>
+      let currentStream = null;
+      let currentSource = null;
+
+      // ENS resolver function (simplified)
+      async function resolveENS(ensName) {
+        try {
+          // In a real implementation, you would use ethers.js or web3.js
+          // to resolve ENS names to IPFS CIDs
+          console.log(`Resolving ENS: ${ensName}`);
+
+          // Mock ENS resolution for demo
+          const mockResolutions = {
+            "ethaccra.eth": "QmXxXxXx...", // Mock CID
+            "test.eth": "QmYyYyYy...", // Mock CID
+          };
+
+          return mockResolutions[ensName] || null;
+        } catch (error) {
+          console.error("ENS resolution error:", error);
+          return null;
+        }
+      }
+
+      // Get stream URL from CID or ENS
+      async function getStreamUrl(identifier) {
+        let cid = identifier;
+
+        // Check if it's an ENS name
+        if (identifier.endsWith(".eth")) {
+          cid = await resolveENS(identifier);
+          if (!cid) {
+            throw new Error(`Could not resolve ENS name: ${identifier}`);
+          }
+        }
+
+        // In a real implementation, you would:
+        // 1. Fetch the IPFS content using the CID
+        // 2. Parse the content to get stream metadata
+        // 3. Return the appropriate stream URL
+
+        // For demo purposes, return a mock stream URL
+        return {
+          hls: `http://207.180.247.72:8888/${cid}/index.m3u8`,
+          webrtc: `http://207.180.247.72:8889/${cid}/whip`,
+          rtmp: `rtmp://207.180.247.72:8888/${cid}`,
+        };
+      }
+
+      // Load and play stream
+      async function loadStream() {
+        const input = document.getElementById("streamInput").value.trim();
+        if (!input) {
+          showError("Please enter a stream identifier (ENS name or CID)");
+          return;
+        }
+
+        try {
+          setStatus("connecting", "Connecting...");
+          showError(""); // Clear any previous errors
+
+          const streamUrls = await getStreamUrl(input);
+          const video = document.getElementById("videoPlayer");
+
+          // Try HLS first (most compatible)
+          if (streamUrls.hls) {
+            video.src = streamUrls.hls;
+            video.type = "application/x-mpegURL";
+            currentSource = streamUrls.hls;
+            updateStreamInfo(input, "HLS");
+          }
+
+          // Set up event listeners
+          video.addEventListener("loadstart", () => {
+            setStatus("connecting", "Loading...");
+          });
+
+          video.addEventListener("canplay", () => {
+            setStatus("live", "Live");
+            currentStream = streamUrls;
+          });
+
+          video.addEventListener("error", (e) => {
+            console.error("Video error:", e);
+            setStatus("offline", "Error");
+            showError(
+              "Failed to load stream. Please check the stream identifier.",
+            );
+          });
+
+          // Try to play
+          await video.play();
+        } catch (error) {
+          console.error("Stream loading error:", error);
+          setStatus("offline", "Error");
+          showError(`Error loading stream: ${error.message}`);
+        }
+      }
+
+      // Stop current stream
+      function stopStream() {
+        const video = document.getElementById("videoPlayer");
+        video.pause();
+        video.src = "";
+        currentStream = null;
+        currentSource = null;
+        setStatus("offline", "Offline");
+        updateStreamInfo("None", "None");
+      }
+
+      // Update stream status
+      function setStatus(type, text) {
+        const statusEl = document.getElementById("streamStatus");
+        statusEl.className = `status ${type}`;
+        statusEl.textContent = text;
+      }
+
+      // Update stream information
+      function updateStreamInfo(source, protocol) {
+        document.getElementById("streamSource").textContent = source;
+        document.getElementById("streamProtocol").textContent = protocol;
+      }
+
+      // Show error message
+      function showError(message) {
+        const errorEl = document.getElementById("errorMessage");
+        if (message) {
+          errorEl.textContent = message;
+          errorEl.style.display = "block";
+        } else {
+          errorEl.style.display = "none";
+        }
+      }
+
+      // Handle Enter key in input
+      document
+        .getElementById("streamInput")
+        .addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            loadStream();
+          }
+        });
+
+      // Auto-load demo stream on page load
+      window.addEventListener("load", () => {
+        document.getElementById("streamInput").value = "ethaccra.eth";
+      });
+    </script>
+  </body>
+</html>

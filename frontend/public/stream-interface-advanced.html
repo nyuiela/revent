@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Advanced Stream Interface</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.11/dist/hls.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        max-width: 1200px;
+        width: 100%;
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+        font-size: 2.5rem;
+      }
+
+      .stream-section {
+        margin-bottom: 30px;
+      }
+
+      .video-container {
+        position: relative;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        background: #000;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      video {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .stream-info {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+      }
+
+      .status {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9rem;
+      }
+
+      .status.live {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status.offline {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .status.connecting {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .controls {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 20px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 25px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+      }
+
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #0056b3;
+        transform: translateY(-2px);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #545b62;
+        transform: translateY(-2px);
+      }
+
+      .input-group {
+        margin-bottom: 20px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+      }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: #007bff;
+      }
+
+      select {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        font-size: 1rem;
+        background: white;
+        cursor: pointer;
+      }
+
+      select:focus {
+        outline: none;
+        border-color: #007bff;
+      }
+
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+        display: none;
+      }
+
+      .success {
+        background: #d4edda;
+        color: #155724;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+        display: none;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #007bff;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .quality-selector {
+        margin-bottom: 20px;
+      }
+
+      .quality-selector label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .stream-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .stat-card {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .stat-card h4 {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+      }
+
+      .stat-card p {
+        color: #333;
+        font-size: 1.2rem;
+        font-weight: bold;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px;
+          margin: 10px;
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+
+        .controls {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        button {
+          width: 100%;
+          max-width: 300px;
+        }
+
+        .stream-stats {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎥 Advanced Stream Interface</h1>
+
+      <div class="stream-section">
+        <div class="input-group">
+          <input
+            type="text"
+            id="streamInput"
+            placeholder="Enter streaming URL (HLS, WebRTC, or direct video URL)"
+            value=""
+          />
+        </div>
+
+        <div class="quality-selector">
+          <label for="qualitySelect">Stream Quality:</label>
+          <select id="qualitySelect">
+            <option value="auto">Auto (Adaptive)</option>
+            <option value="1080p">1080p (Full HD)</option>
+            <option value="720p">720p (HD)</option>
+            <option value="480p">480p (SD)</option>
+            <option value="360p">360p (Low)</option>
+          </select>
+        </div>
+
+        <div class="controls">
+          <button class="btn-primary" onclick="loadStream()">
+            Load Stream
+          </button>
+          <button class="btn-secondary" onclick="stopStream()">
+            Stop Stream
+          </button>
+          <button class="btn-secondary" onclick="toggleFullscreen()">
+            Fullscreen
+          </button>
+        </div>
+
+        <div class="error" id="errorMessage"></div>
+        <div class="success" id="successMessage"></div>
+      </div>
+
+      <div class="video-container">
+        <video id="videoPlayer" controls autoplay muted playsinline>
+          <p>Your browser doesn&apos;t support HTML5 video.</p>
+        </video>
+      </div>
+
+      <div class="stream-info">
+        <h3>Stream Information</h3>
+        <p>
+          <strong>Status:</strong>
+          <span class="status offline" id="streamStatus">Offline</span>
+        </p>
+        <p><strong>Source:</strong> <span id="streamSource">None</span></p>
+        <p><strong>Protocol:</strong> <span id="streamProtocol">None</span></p>
+        <p><strong>Quality:</strong> <span id="streamQuality">None</span></p>
+
+        <div class="stream-stats">
+          <div class="stat-card">
+            <h4>Buffer Health</h4>
+            <p id="bufferHealth">0%</p>
+          </div>
+          <div class="stat-card">
+            <h4>Bitrate</h4>
+            <p id="bitrate">0 kbps</p>
+          </div>
+          <div class="stat-card">
+            <h4>Resolution</h4>
+            <p id="resolution">0x0</p>
+          </div>
+          <div class="stat-card">
+            <h4>FPS</h4>
+            <p id="fps">0</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentStream = null;
+      let currentSource = null;
+      let hls = null;
+      let statsInterval = null;
+
+      // Detect stream protocol from URL
+      function detectProtocol(url) {
+        if (url.includes(".m3u8")) {
+          return "HLS";
+        } else if (url.includes("webrtc") || url.includes("whip")) {
+          return "WebRTC";
+        } else if (url.includes("rtmp://")) {
+          return "RTMP";
+        } else if (url.match(/\.(mp4|webm|ogg|avi|mov)$/i)) {
+          return "Direct Video";
+        } else {
+          return "Unknown";
+        }
+      }
+
+      // Load and play stream
+      async function loadStream() {
+        const input = document.getElementById("streamInput").value.trim();
+        if (!input) {
+          showError("Please enter a streaming URL");
+          return;
+        }
+
+        try {
+          setStatus("connecting", "Connecting...");
+          showError("");
+          showSuccess("");
+
+          const video = document.getElementById("videoPlayer");
+          const protocol = detectProtocol(input);
+          const quality = document.getElementById("qualitySelect").value;
+
+          // Clean up previous HLS instance
+          if (hls) {
+            hls.destroy();
+            hls = null;
+          }
+
+          // Set up event listeners
+          video.addEventListener("loadstart", () => {
+            setStatus("connecting", "Loading...");
+          });
+
+          video.addEventListener("canplay", () => {
+            setStatus("live", "Live");
+            currentStream = input;
+            currentSource = input;
+            showSuccess("Stream loaded successfully!");
+            startStatsMonitoring();
+          });
+
+          video.addEventListener("error", (e) => {
+            console.error("Video error:", e);
+            setStatus("offline", "Error");
+            showError(
+              "Failed to load stream. Please check the URL and try again.",
+            );
+            stopStatsMonitoring();
+          });
+
+          // Handle different protocols
+          if (protocol === "HLS" && Hls.isSupported()) {
+            // Use HLS.js for better HLS support
+            hls = new Hls({
+              debug: false,
+              enableWorker: true,
+              lowLatencyMode: true,
+            });
+
+            hls.loadSource(input);
+            hls.attachMedia(video);
+
+            hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+              console.log("HLS manifest parsed, levels:", data.levels);
+              setQuality(quality);
+            });
+
+            hls.on(Hls.Events.ERROR, function (event, data) {
+              console.error("HLS error:", data);
+              if (data.fatal) {
+                showError(`HLS Error: ${data.details}`);
+                setStatus("offline", "Error");
+              }
+            });
+          } else if (
+            protocol === "HLS" &&
+            video.canPlayType("application/vnd.apple.mpegurl")
+          ) {
+            // Native HLS support (Safari)
+            video.src = input;
+            video.addEventListener("loadedmetadata", function () {
+              setQuality(quality);
+            });
+          } else {
+            // Direct video or other protocols
+            video.src = input;
+            video.type = getVideoType(protocol);
+          }
+
+          // Update stream info
+          updateStreamInfo(input, protocol, quality);
+
+          // Try to play
+          await video.play();
+        } catch (error) {
+          console.error("Stream loading error:", error);
+          setStatus("offline", "Error");
+          showError(`Error loading stream: ${error.message}`);
+        }
+      }
+
+      // Set stream quality
+      function setQuality(quality) {
+        if (!hls || !hls.levels) return;
+
+        const levels = hls.levels;
+        let targetLevel = -1;
+
+        switch (quality) {
+          case "1080p":
+            targetLevel = levels.findIndex((level) => level.height >= 1080);
+            break;
+          case "720p":
+            targetLevel = levels.findIndex(
+              (level) => level.height >= 720 && level.height < 1080,
+            );
+            break;
+          case "480p":
+            targetLevel = levels.findIndex(
+              (level) => level.height >= 480 && level.height < 720,
+            );
+            break;
+          case "360p":
+            targetLevel = levels.findIndex(
+              (level) => level.height >= 360 && level.height < 480,
+            );
+            break;
+          default:
+            targetLevel = -1; // Auto
+        }
+
+        if (targetLevel !== -1) {
+          hls.currentLevel = targetLevel;
+        } else {
+          hls.currentLevel = -1; // Auto
+        }
+      }
+
+      // Get appropriate MIME type for video
+      function getVideoType(protocol) {
+        switch (protocol) {
+          case "HLS":
+            return "application/x-mpegURL";
+          case "WebRTC":
+            return "application/webrtc";
+          case "Direct Video":
+            return "video/mp4";
+          default:
+            return "video/mp4";
+        }
+      }
+
+      // Stop current stream
+      function stopStream() {
+        const video = document.getElementById("videoPlayer");
+        video.pause();
+        video.src = "";
+
+        if (hls) {
+          hls.destroy();
+          hls = null;
+        }
+
+        currentStream = null;
+        currentSource = null;
+        setStatus("offline", "Offline");
+        updateStreamInfo("None", "None", "None");
+        stopStatsMonitoring();
+        showError("");
+        showSuccess("");
+      }
+
+      // Toggle fullscreen
+      function toggleFullscreen() {
+        const video = document.getElementById("videoPlayer");
+        if (!document.fullscreenElement) {
+          video.requestFullscreen().catch((err) => {
+            console.error("Error attempting to enable fullscreen:", err);
+          });
+        } else {
+          document.exitFullscreen();
+        }
+      }
+
+      // Start monitoring stream statistics
+      function startStatsMonitoring() {
+        stopStatsMonitoring();
+        statsInterval = setInterval(updateStats, 1000);
+      }
+
+      // Stop monitoring stream statistics
+      function stopStatsMonitoring() {
+        if (statsInterval) {
+          clearInterval(statsInterval);
+          statsInterval = null;
+        }
+      }
+
+      // Update stream statistics
+      function updateStats() {
+        const video = document.getElementById("videoPlayer");
+
+        // Buffer health
+        const buffered = video.buffered;
+        const duration = video.duration;
+        let bufferHealth = 0;
+
+        if (duration > 0 && buffered.length > 0) {
+          const bufferedEnd = buffered.end(buffered.length - 1);
+          bufferHealth = Math.round((bufferedEnd / duration) * 100);
+        }
+
+        document.getElementById("bufferHealth").textContent =
+          `${bufferHealth}%`;
+
+        // Resolution
+        const resolution = `${video.videoWidth}x${video.videoHeight}`;
+        document.getElementById("resolution").textContent = resolution;
+
+        // Bitrate (if available from HLS)
+        if (hls && hls.levels && hls.currentLevel !== -1) {
+          const currentLevel = hls.levels[hls.currentLevel];
+          const bitrate = Math.round(currentLevel.bitrate / 1000);
+          document.getElementById("bitrate").textContent = `${bitrate} kbps`;
+        } else {
+          document.getElementById("bitrate").textContent = "Unknown";
+        }
+
+        // FPS (approximate)
+        const fps =
+          Math.round(
+            (video.webkitDecodedFrameCount / (Date.now() - video.startTime)) *
+              1000,
+          ) || 0;
+        document.getElementById("fps").textContent = fps;
+      }
+
+      // Update stream status
+      function setStatus(type, text) {
+        const statusEl = document.getElementById("streamStatus");
+        statusEl.className = `status ${type}`;
+        statusEl.textContent = text;
+      }
+
+      // Update stream information
+      function updateStreamInfo(source, protocol, quality) {
+        document.getElementById("streamSource").textContent = source;
+        document.getElementById("streamProtocol").textContent = protocol;
+        document.getElementById("streamQuality").textContent = quality;
+      }
+
+      // Show error message
+      function showError(message) {
+        const errorEl = document.getElementById("errorMessage");
+        if (message) {
+          errorEl.textContent = message;
+          errorEl.style.display = "block";
+        } else {
+          errorEl.style.display = "none";
+        }
+      }
+
+      // Show success message
+      function showSuccess(message) {
+        const successEl = document.getElementById("successMessage");
+        if (message) {
+          successEl.textContent = message;
+          successEl.style.display = "block";
+        } else {
+          successEl.style.display = "none";
+        }
+      }
+
+      // Handle Enter key in input
+      document
+        .getElementById("streamInput")
+        .addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            loadStream();
+          }
+        });
+
+      // Example stream URLs for testing
+      const exampleUrls = [
+        "http://207.180.247.72:8888/ethaccra/index.m3u8", // HLS
+        "http://207.180.247.72:8889/ethaccra/whip", // WebRTC
+        "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4", // Direct video
+      ];
+
+      // Add example URLs to placeholder
+      document.getElementById("streamInput").placeholder =
+        "Enter streaming URL (e.g., " + exampleUrls[0] + ")";
+
+      // Clean up on page unload
+      window.addEventListener("beforeunload", () => {
+        stopStream();
+      });
+    </script>
+  </body>
+</html>

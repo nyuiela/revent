@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Stream Viewer</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+      }
+
+      .input-group {
+        margin-bottom: 20px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+      }
+
+      button {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-right: 10px;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      video {
+        width: 100%;
+        height: auto;
+        border-radius: 5px;
+        margin-top: 20px;
+      }
+
+      .status {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+      }
+
+      .status.offline {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+
+      .status.live {
+        background-color: #d4edda;
+        color: #155724;
+      }
+
+      .status.connecting {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Simple Stream Viewer</h1>
+
+      <div class="input-group">
+        <input
+          type="text"
+          id="streamUrl"
+          placeholder="Enter stream URL (e.g., http://example.com/stream.m3u8)"
+        />
+      </div>
+
+      <button onclick="loadStream()">Load Stream</button>
+      <button onclick="stopStream()">Stop Stream</button>
+
+      <video id="videoPlayer" controls autoplay muted playsinline>
+        Your browser doesn&apos;t support HTML5 video.
+      </video>
+
+      <div class="status offline" id="status">Offline</div>
+    </div>
+
+    <script>
+      function loadStream() {
+        const url = document.getElementById("streamUrl").value.trim();
+        const video = document.getElementById("videoPlayer");
+        const status = document.getElementById("status");
+
+        if (!url) {
+          alert("Please enter a stream URL");
+          return;
+        }
+
+        status.textContent = "Connecting...";
+        status.className = "status connecting";
+
+        video.src = url;
+        video.load();
+
+        video.addEventListener("canplay", function () {
+          status.textContent = "Live";
+          status.className = "status live";
+        });
+
+        video.addEventListener("error", function () {
+          status.textContent = "Error loading stream";
+          status.className = "status offline";
+        });
+      }
+
+      function stopStream() {
+        const video = document.getElementById("videoPlayer");
+        const status = document.getElementById("status");
+
+        video.pause();
+        video.src = "";
+        status.textContent = "Offline";
+        status.className = "status offline";
+      }
+
+      // Handle Enter key
+      document
+        .getElementById("streamUrl")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            loadStream();
+          }
+        });
+    </script>
+  </body>
+</html>

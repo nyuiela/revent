@@ -122,15 +122,19 @@ const CreateEventForm = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [currentStep, setCurrentStep] = useState(1);
-  const [transactionStep, setTransactionStep] = useState<'event' | 'tickets' | 'complete'>('event');
+  const [transactionStep, setTransactionStep] = useState<'event' | 'tickets' | 'domain' | 'complete'>('event');
   const [createdEventId, setCreatedEventId] = useState<string | null>(null);
   const [transactionTimeout, setTransactionTimeout] = useState<NodeJS.Timeout | null>(null);
   const [useSimpleMode, setUseSimpleMode] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<string>('');
   const [preparedContracts, setPreparedContracts] = useState<Record<string, unknown>[] | null>(null);
   const [preparedTicketContracts, setPreparedTicketContracts] = useState<Record<string, unknown>[] | null>(null);
+  const [preparedDomainContracts, setPreparedDomainContracts] = useState<Record<string, unknown>[] | null>(null);
   const [isPreparing, setIsPreparing] = useState(false);
   const [isAutoFilled, setIsAutoFilled] = useState(false);
+  const [domainName, setDomainName] = useState<string>('');
+  const [domainAvailable, setDomainAvailable] = useState<boolean | null>(null);
+  const [checkingDomain, setCheckingDomain] = useState(false);
   const sendNotification = useNotification();
 
   const handleSuccess = useCallback(async (response: TransactionResponse) => {
@@ -255,7 +259,11 @@ const CreateEventForm = () => {
     setVerificationStatus('');
     setPreparedContracts(null);
     setPreparedTicketContracts(null);
+    setPreparedDomainContracts(null);
     setIsPreparing(false);
+    setDomainName('');
+    setDomainAvailable(null);
+    setCheckingDomain(false);
     if (transactionTimeout) {
       clearTimeout(transactionTimeout);
       setTransactionTimeout(null);
@@ -551,7 +559,7 @@ const CreateEventForm = () => {
             BigInt(startTime),
             BigInt(endTime),
             BigInt(formData.maxParticipants),
-            BigInt(0.005 * 10 ** 18),
+            BigInt(50000000000),
           ],
         },
       ];
@@ -603,6 +611,79 @@ const CreateEventForm = () => {
     return ticketContracts;
   };
 
+  // Function to check domain availability
+  const checkDomainAvailability = async (domain: string) => {
+    if (!domain || !domain.endsWith('.nyuiela.eth')) {
+      setDomainAvailable(false);
+      return false;
+    }
+
+    setCheckingDomain(true);
+    try {
+      // In a real implementation, you would check ENS registry
+      // For demo purposes, we'll simulate availability checking
+      console.log(`Checking availability for: ${domain}`);
+
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Mock availability check - some domains are "taken"
+      const takenDomains = ['vitalik.nyuiela.eth', 'ethereum.nyuiela.eth', 'uniswap.nyuiela.eth', 'opensea.nyuiela.eth'];
+      const isAvailable = !takenDomains.includes(domain.toLowerCase());
+
+      setDomainAvailable(isAvailable);
+      return isAvailable;
+    } catch (error) {
+      console.error('Domain availability check failed:', error);
+      setDomainAvailable(false);
+      return false;
+    } finally {
+      setCheckingDomain(false);
+    }
+  };
+
+  // Function to prepare domain minting contracts
+  const prepareDomainMinting = async (eventId: string) => {
+    try {
+      setIsPreparing(true);
+      setVerificationStatus('Preparing domain minting...');
+
+      // In a real implementation, you would:
+      // 1. Check if domain is available
+      // 2. Prepare ENS registration contract calls
+      // 3. Set up content hash to point to event IPFS metadata
+
+      // For demo purposes, we'll create mock contracts
+      const domainContracts = [
+        {
+          abi: eventAbi.abi, // Using event ABI for demo
+          address: eventAddress as `0x${string}`,
+          functionName: "createEvent", // Mock function
+          args: [
+            `ipfs://event-${eventId}`, // IPFS hash for event metadata
+            BigInt(0), // Mock timestamp
+            BigInt(0), // Mock timestamp
+            BigInt(0), // Mock participants
+            BigInt(0), // Mock fee
+          ],
+        },
+      ];
+
+      console.log(`Prepared domain contracts for: ${domainName}`);
+      console.log('Domain contracts:', domainContracts);
+      setPreparedDomainContracts(domainContracts);
+      setVerificationStatus(`Domain contracts prepared for ${domainName}!`);
+
+      return domainContracts;
+    } catch (error) {
+      console.error('Error preparing domain contracts:', error);
+      setVerificationStatus('Failed to prepare domain contracts');
+      throw error;
+    } finally {
+      setIsPreparing(false);
+    }
+  };
+
   const steps = [
     { id: 1, title: "Basic Info", icon: "home" },
     { id: 2, title: "Details", icon: "share" },
@@ -610,6 +691,7 @@ const CreateEventForm = () => {
     { id: 4, title: "Agenda", icon: "calendar" },
     { id: 5, title: "Tickets", icon: "plus" },
     { id: 6, title: "Review", icon: "check" },
+    { id: 7, title: "Domain", icon: "globe" },
   ];
 
   // register event on contract
@@ -1720,13 +1802,9 @@ const CreateEventForm = () => {
 
                         if (verification.success) {
                           console.log('Event verified successfully:', verification.eventId);
-                          setTransactionStep('complete');
+                          setCreatedEventId(verification.eventId);
+                          setTransactionStep('domain');
                           setIsSubmitting(false);
-                          if (transactionTimeout) {
-                            clearTimeout(transactionTimeout);
-                            setTransactionTimeout(null);
-                          }
-                          router.push(`/e/${verification.eventId}`);
                         } else {
                           console.error('Event verification failed:', verification.error);
                           setIsSubmitting(false);
@@ -1745,6 +1823,63 @@ const CreateEventForm = () => {
                     <TransactionStatusAction />
                   </TransactionStatus>
                 </Transaction>
+              ) : null}
+
+              {/* Simple Domain Minting Transaction */}
+              {isConnected && canUseTransaction && useSimpleMode && createdEventId ? (
+                <div className="space-y-3">
+                  <Transaction
+                    chainId={1}
+                    calls={(preparedDomainContracts || []) as never}
+                    onSuccess={handleSuccess}
+                    onStatus={async (lifecycle) => {
+                      console.log('Simple domain transaction lifecycle:', lifecycle.statusName);
+
+                      if (lifecycle.statusName === 'transactionPending' || lifecycle.statusName === 'buildingTransaction') {
+                        setIsSubmitting(true);
+                      } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
+                        if (lifecycle.statusName === 'success') {
+                          console.log('Domain minted successfully');
+                          setTransactionStep('complete');
+                          setIsSubmitting(false);
+                          if (transactionTimeout) {
+                            clearTimeout(transactionTimeout);
+                            setTransactionTimeout(null);
+                          }
+                          router.push(`/e/${createdEventId}`);
+                        } else {
+                          console.log('Domain transaction failed or error');
+                          setIsSubmitting(false);
+                        }
+                      }
+                    }}
+                  >
+                    <TransactionButton text={isSubmitting ? "Minting Domain..." : `Mint ${domainName}`} />
+                    <TransactionSponsor />
+                    <TransactionStatus>
+                      <TransactionStatusLabel />
+                      <TransactionStatusAction />
+                    </TransactionStatus>
+                  </Transaction>
+
+                  {/* Skip Domain Button for Simple Mode */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      console.log('Skipping domain minting');
+                      setTransactionStep('complete');
+                      setIsSubmitting(false);
+                      if (transactionTimeout) {
+                        clearTimeout(transactionTimeout);
+                        setTransactionTimeout(null);
+                      }
+                      router.push(`/e/${createdEventId}`);
+                    }}
+                    className="w-full px-4 py-2 text-sm text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] underline"
+                  >
+                    Skip Domain (Complete Event Creation)
+                  </button>
+                </div>
               ) : null}
 
               {/* Advanced Event Creation Transaction */}
@@ -1790,15 +1925,10 @@ const CreateEventForm = () => {
                               setIsSubmitting(false);
                             }
                           } else {
-                            // No tickets to add, complete the process
-                            console.log('No tickets to add, completing process');
-                            setTransactionStep('complete');
+                            // No tickets to add, move to domain minting
+                            console.log('No tickets to add, moving to domain minting');
+                            setTransactionStep('domain');
                             setIsSubmitting(false);
-                            if (transactionTimeout) {
-                              clearTimeout(transactionTimeout);
-                              setTransactionTimeout(null);
-                            }
-                            router.push(`/e/${verification.eventId}`);
                           }
                         } else {
                           console.error('Event verification failed:', verification.error);
@@ -1835,15 +1965,10 @@ const CreateEventForm = () => {
                         setIsSubmitting(true);
                       } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
                         if (lifecycle.statusName === 'success') {
-                          // Tickets added successfully
-                          console.log('Tickets added successfully');
-                          setTransactionStep('complete');
+                          // Tickets added successfully, move to domain minting
+                          console.log('Tickets added successfully, moving to domain minting');
+                          setTransactionStep('domain');
                           setIsSubmitting(false);
-                          if (transactionTimeout) {
-                            clearTimeout(transactionTimeout);
-                            setTransactionTimeout(null);
-                          }
-                          router.push(`/e/${createdEventId}`);
                         } else {
                           // Transaction failed or error
                           console.log('Ticket transaction failed or error: ', lifecycle.statusData);
@@ -1876,6 +2001,65 @@ const CreateEventForm = () => {
                     className="w-full px-4 py-2 text-sm text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] underline"
                   >
                     Skip Tickets (Complete Event Creation)
+                  </button>
+                </div>
+              ) : null}
+
+              {/* Domain Minting Transaction */}
+              {address && isConnected && canUseTransaction && !useSimpleMode && transactionStep === 'domain' && createdEventId && preparedDomainContracts ? (
+                <div className="space-y-3">
+                  <Transaction
+                    chainId={chainId}
+                    onSuccess={handleSuccess}
+                    calls={(preparedDomainContracts || []) as never}
+                    onStatus={async (lifecycle) => {
+                      console.log('Domain transaction lifecycle:', lifecycle.statusName);
+
+                      if (lifecycle.statusName === 'transactionPending' || lifecycle.statusName === 'buildingTransaction') {
+                        setIsSubmitting(true);
+                      } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
+                        if (lifecycle.statusName === 'success') {
+                          // Domain minted successfully
+                          console.log('Domain minted successfully');
+                          setTransactionStep('complete');
+                          setIsSubmitting(false);
+                          if (transactionTimeout) {
+                            clearTimeout(transactionTimeout);
+                            setTransactionTimeout(null);
+                          }
+                          router.push(`/e/${createdEventId}`);
+                        } else {
+                          // Transaction failed or error
+                          console.log('Domain transaction failed or error: ', lifecycle.statusData);
+                          setIsSubmitting(false);
+                        }
+                      }
+                    }}
+                  >
+                    <TransactionButton text={isSubmitting ? "Minting Domain..." : `Mint ${domainName}`} />
+                    <TransactionSponsor />
+                    <TransactionStatus>
+                      <TransactionStatusLabel />
+                      <TransactionStatusAction />
+                    </TransactionStatus>
+                  </Transaction>
+
+                  {/* Skip Domain Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      console.log('Skipping domain minting');
+                      setTransactionStep('complete');
+                      setIsSubmitting(false);
+                      if (transactionTimeout) {
+                        clearTimeout(transactionTimeout);
+                        setTransactionTimeout(null);
+                      }
+                      router.push(`/e/${createdEventId}`);
+                    }}
+                    className="w-full px-4 py-2 text-sm text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] underline"
+                  >
+                    Skip Domain (Complete Event Creation)
                   </button>
                 </div>
               ) : null}
@@ -1964,6 +2148,7 @@ const CreateEventForm = () => {
                     <div className="text-sm text-[var(--app-foreground)]">
                       {transactionStep === 'event' && "Creating your event on the blockchain..."}
                       {transactionStep === 'tickets' && "Adding tickets to your event..."}
+                      {transactionStep === 'domain' && "Minting domain name for your event..."}
                       {transactionStep === 'complete' && "Event created successfully!"}
                     </div>
                   </div>
@@ -1989,6 +2174,184 @@ const CreateEventForm = () => {
                   Cancel
                 </button>
               </p>
+            </div>
+          )}
+
+          {currentStep === 7 && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-center mb-8">Mint Domain Name</h2>
+              <p className="text-center text-[var(--app-foreground-muted)] mb-6">
+                Create a decentralized domain name for your event using the nyuiela.eth ecosystem
+              </p>
+
+              {/* Domain Input */}
+              <div className="space-y-4 p-6 bg-transparent border border-[var(--app-card-border)] rounded-lg">
+                <h3 className="text-lg font-medium">Choose Your Domain</h3>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[var(--app-foreground)]">
+                      Domain Name *
+                    </label>
+                    <div className="flex gap-3">
+                      <input
+                        type="text"
+                        placeholder="abc"
+                        value={domainName.replace('.nyuiela.eth', '')}
+                        onChange={(e) => {
+                          const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                          setDomainName(value + '.nyuiela.eth');
+                          setDomainAvailable(null);
+                        }}
+                        className="flex-1 px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                      />
+                      <div className="px-4 py-3 bg-[var(--app-card-bg)] border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground-muted)] flex items-center">
+                        .nyuiela.eth
+                      </div>
+                    </div>
+                    <p className="text-xs text-[var(--app-foreground-muted)]">
+                      Only lowercase letters, numbers, and hyphens allowed
+                    </p>
+                  </div>
+
+                  {/* Domain Availability Check */}
+                  {domainName && (
+                    <div className="space-y-3">
+                      <button
+                        type="button"
+                        onClick={() => checkDomainAvailability(domainName)}
+                        disabled={checkingDomain || !domainName}
+                        className="px-4 py-2 bg-[var(--app-accent)] text-white rounded-lg hover:bg-[var(--app-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {checkingDomain ? (
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Checking...
+                          </div>
+                        ) : (
+                          'Check Availability'
+                        )}
+                      </button>
+
+                      {/* Availability Status */}
+                      {domainAvailable !== null && (
+                        <div className={`p-3 rounded-lg border ${domainAvailable
+                          ? 'bg-green-50 border-green-200 text-green-800'
+                          : 'bg-red-50 border-red-200 text-red-800'
+                          }`}>
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${domainAvailable ? 'bg-green-500' : 'bg-red-500'
+                              }`}></div>
+                            <span className="font-medium">
+                              {domainAvailable ? 'Available!' : 'Not Available'}
+                            </span>
+                          </div>
+                          <p className="text-sm mt-1">
+                            {domainAvailable
+                              ? `You can mint ${domainName} for your event`
+                              : `${domainName} is already taken. Try a different name.`
+                            }
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Mint Domain Button */}
+                  {domainAvailable && domainName && (
+                    <div className="space-y-3">
+                      <button
+                        type="button"
+                        onClick={() => prepareDomainMinting(createdEventId || '')}
+                        disabled={isPreparing || !createdEventId}
+                        className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {isPreparing ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Preparing Domain Minting...
+                          </div>
+                        ) : (
+                          `Mint ${domainName}`
+                        )}
+                      </button>
+
+                      {verificationStatus && (
+                        <div className="text-xs text-[var(--app-foreground-muted)] text-center">
+                          {verificationStatus}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Domain Benefits */}
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 className="font-medium text-blue-800 mb-2">🌐 Domain Benefits</h4>
+                    <ul className="text-sm text-blue-700 space-y-1">
+                      <li>• Easy-to-remember URL for your event (e.g., abc.nyuiela.eth)</li>
+                      <li>• Decentralized and censorship-resistant</li>
+                      <li>• Points directly to your event&apos;s IPFS metadata</li>
+                      <li>• Works with any IPFS gateway</li>
+                      <li>• You own the domain permanently</li>
+                      <li>• Part of the nyuiela.eth ecosystem</li>
+                    </ul>
+                  </div>
+
+                  {/* Prepared Domain Status */}
+                  {preparedDomainContracts && (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <div className="text-sm text-green-800">
+                            Domain contracts prepared! Ready to mint {domainName}.
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPreparedDomainContracts(null);
+                            setVerificationStatus('');
+                          }}
+                          className="text-xs text-green-600 hover:text-green-800 underline"
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Domain Examples */}
+              <div className="p-4 bg-[var(--app-card-bg)] border border-[var(--app-card-border)] rounded-lg">
+                <h4 className="font-medium mb-2">💡 Domain Examples</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-[var(--app-foreground-muted)]">
+                  <div>• web3summit2024.nyuiela.eth</div>
+                  <div>• defi-conference.nyuiela.eth</div>
+                  <div>• nft-gallery-opening.nyuiela.eth</div>
+                  <div>• blockchain-workshop.nyuiela.eth</div>
+                </div>
+              </div>
+
+              {/* Skip Domain Option */}
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    console.log('Skipping domain minting');
+                    setTransactionStep('complete');
+                    if (transactionTimeout) {
+                      clearTimeout(transactionTimeout);
+                      setTransactionTimeout(null);
+                    }
+                    router.push(`/e/${createdEventId}`);
+                  }}
+                  className="text-sm text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] underline"
+                >
+                  Skip Domain Minting
+                </button>
+              </div>
             </div>
           )}
         </div>

@@ -1,0 +1,40 @@
+{
+  "name": "EthAccra Live Stream",
+  "description": "Live streaming from EthAccra event",
+  "version": "1.0.0",
+  "streamKey": "ethaccra",
+  "server": "http://207.180.247.72:8888",
+  "protocols": {
+    "hls": {
+      "url": "http://207.180.247.72:8888/ethaccra/index.m3u8",
+      "enabled": true
+    },
+    "webrtc": {
+      "url": "http://207.180.247.72:8889/ethaccra/whip",
+      "enabled": true
+    },
+    "rtmp": {
+      "url": "rtmp://207.180.247.72:8888/ethaccra",
+      "enabled": true
+    }
+  },
+  "metadata": {
+    "title": "EthAccra 2024",
+    "category": "Conference",
+    "tags": ["ethereum", "accra", "conference", "live"],
+    "startTime": "2024-01-01T00:00:00Z",
+    "endTime": "2024-01-01T23:59:59Z",
+    "organizer": "EthAccra Team",
+    "location": "Accra, Ghana"
+  },
+  "quality": {
+    "default": "720p",
+    "available": ["480p", "720p", "1080p"]
+  },
+  "access": {
+    "public": true,
+    "requiresAuth": false
+  },
+  "created": "2024-01-01T00:00:00Z",
+  "updated": "2024-01-01T00:00:00Z"
+}

@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Domain Minting Test - nyuiela.eth</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .domain-input {
+        margin-bottom: 20px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+        margin-bottom: 10px;
+      }
+
+      .domain-suffix {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #666;
+        margin-bottom: 20px;
+      }
+
+      button {
+        background-color: #007bff;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-right: 10px;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      .status {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 5px;
+        text-align: center;
+      }
+
+      .status.available {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .status.taken {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .status.checking {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+
+      .examples {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+      }
+
+      .examples h3 {
+        margin-top: 0;
+        color: #333;
+      }
+
+      .examples ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      .examples li {
+        padding: 5px 0;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🌐 Domain Minting Test</h1>
+      <p style="text-align: center; color: #666; margin-bottom: 30px">
+        Test the nyuiela.eth domain minting functionality
+      </p>
+
+      <div class="domain-input">
+        <input
+          type="text"
+          id="domainInput"
+          placeholder="Enter domain name (e.g., abc)"
+          value="abc"
+        />
+        <div class="domain-suffix">.nyuiela.eth</div>
+      </div>
+
+      <button onclick="checkDomain()">Check Availability</button>
+      <button onclick="mintDomain()" id="mintButton" style="display: none">
+        Mint Domain
+      </button>
+
+      <div id="status" class="status" style="display: none"></div>
+
+      <div class="examples">
+        <h3>💡 Example Domains</h3>
+        <ul>
+          <li>• abc.nyuiela.eth</li>
+          <li>• web3summit2024.nyuiela.eth</li>
+          <li>• defi-conference.nyuiela.eth</li>
+          <li>• nft-gallery-opening.nyuiela.eth</li>
+          <li>• blockchain-workshop.nyuiela.eth</li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      let currentDomain = "";
+
+      // Mock taken domains
+      const takenDomains = [
+        "vitalik.nyuiela.eth",
+        "ethereum.nyuiela.eth",
+        "uniswap.nyuiela.eth",
+        "opensea.nyuiela.eth",
+      ];
+
+      function getFullDomain() {
+        const input = document.getElementById("domainInput").value.trim();
+        const cleanInput = input.toLowerCase().replace(/[^a-z0-9-]/g, "");
+        return cleanInput + ".nyuiela.eth";
+      }
+
+      function showStatus(message, type) {
+        const status = document.getElementById("status");
+        status.textContent = message;
+        status.className = `status ${type}`;
+        status.style.display = "block";
+      }
+
+      function hideStatus() {
+        document.getElementById("status").style.display = "none";
+      }
+
+      async function checkDomain() {
+        const domain = getFullDomain();
+        currentDomain = domain;
+
+        if (!domain || domain === ".nyuiela.eth") {
+          showStatus("Please enter a domain name", "taken");
+          return;
+        }
+
+        showStatus("Checking availability...", "checking");
+
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        const isAvailable = !takenDomains.includes(domain.toLowerCase());
+
+        if (isAvailable) {
+          showStatus(`✅ ${domain} is available!`, "available");
+          document.getElementById("mintButton").style.display = "inline-block";
+        } else {
+          showStatus(`❌ ${domain} is already taken`, "taken");
+          document.getElementById("mintButton").style.display = "none";
+        }
+      }
+
+      async function mintDomain() {
+        const domain = getFullDomain();
+
+        if (!domain || domain === ".nyuiela.eth") {
+          showStatus("Please enter a domain name", "taken");
+          return;
+        }
+
+        if (!currentDomain) {
+          showStatus("Please check domain availability first", "taken");
+          return;
+        }
+
+        showStatus("Minting domain...", "checking");
+
+        // Simulate minting process
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        const isAvailable = !takenDomains.includes(domain.toLowerCase());
+
+        if (isAvailable) {
+          showStatus(`🎉 Successfully minted ${domain}!`, "available");
+        } else {
+          showStatus(`❌ Cannot mint ${domain} - already taken`, "taken");
+        }
+      }
+
+      // Handle Enter key
+      document
+        .getElementById("domainInput")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            checkDomain();
+          }
+        });
+
+      // Auto-check on input change
+      document
+        .getElementById("domainInput")
+        .addEventListener("input", function () {
+          hideStatus();
+          document.getElementById("mintButton").style.display = "none";
+        });
+    </script>
+  </body>
+</html>

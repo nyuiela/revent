@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Decentralized Stream Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/ipfs-http-client@60.0.1/dist/index.min.js"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        max-width: 1200px;
+        width: 100%;
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+        font-size: 2.5rem;
+      }
+
+      .video-container {
+        position: relative;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        background: #000;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      video {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .stream-info {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+      }
+
+      .status {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9rem;
+      }
+
+      .status.live {
+        background: #d4edda;
+        color: #155724;
+      }
+      .status.offline {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .status.connecting {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .controls {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 20px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 25px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+      }
+
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+      .btn-primary:hover {
+        background: #0056b3;
+        transform: translateY(-2px);
+      }
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+      .btn-secondary:hover {
+        background: #545b62;
+        transform: translateY(-2px);
+      }
+
+      .input-group {
+        margin-bottom: 20px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+      }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: #007bff;
+      }
+
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+        display: none;
+      }
+
+      .metadata {
+        background: #e9ecef;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+        font-family: monospace;
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px;
+          margin: 10px;
+        }
+        h1 {
+          font-size: 2rem;
+        }
+        .controls {
+          flex-direction: column;
+          align-items: center;
+        }
+        button {
+          width: 100%;
+          max-width: 300px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🌐 Decentralized Stream Viewer</h1>
+
+      <div class="input-group">
+        <input
+          type="text"
+          id="streamInput"
+          placeholder="Enter ENS name or CID (e.g., ethaccra.eth or QmXxXxXx...)"
+        />
+      </div>
+
+      <div class="controls">
+        <button class="btn-primary" onclick="loadStream()">Load Stream</button>
+        <button class="btn-secondary" onclick="stopStream()">
+          Stop Stream
+        </button>
+      </div>
+
+      <div class="error" id="errorMessage"></div>
+
+      <div class="video-container">
+        <video id="videoPlayer" controls autoplay muted playsinline>
+          <p>Your browser doesn't support HTML5 video.</p>
+        </video>
+      </div>
+
+      <div class="stream-info">
+        <h3>Stream Information</h3>
+        <p>
+          <strong>Status:</strong>
+          <span class="status offline" id="streamStatus">Offline</span>
+        </p>
+        <p><strong>Source:</strong> <span id="streamSource">None</span></p>
+        <p><strong>Protocol:</strong> <span id="streamProtocol">None</span></p>
+        <p><strong>CID:</strong> <span id="streamCID">None</span></p>
+        <p><strong>ENS:</strong> <span id="streamENS">None</span></p>
+      </div>
+
+      <div class="metadata" id="streamMetadata" style="display: none">
+        <h4>Stream Metadata:</h4>
+        <pre id="metadataContent"></pre>
+      </div>
+    </div>
+
+    <script>
+      let currentStream = null;
+      let ipfs = null;
+      let provider = null;
+
+      // Initialize IPFS and Ethereum provider
+      async function initialize() {
+        try {
+          // Initialize IPFS client
+          ipfs = window.IpfsHttpClient.create({
+            host: "ipfs.infura.io",
+            port: 5001,
+            protocol: "https",
+          });
+
+          // Initialize Ethereum provider (for ENS resolution)
+          provider = new ethers.providers.JsonRpcProvider(
+            "https://mainnet.infura.io/v3/YOUR_INFURA_KEY",
+          );
+
+          console.log("IPFS and Ethereum provider initialized");
+        } catch (error) {
+          console.error("Initialization error:", error);
+          showError("Failed to initialize IPFS or Ethereum provider");
+        }
+      }
+
+      // Resolve ENS name to IPFS CID
+      async function resolveENS(ensName) {
+        try {
+          if (!provider) {
+            throw new Error("Ethereum provider not initialized");
+          }
+
+          console.log(`Resolving ENS: ${ensName}`);
+
+          // Resolve ENS name to address
+          const address = await provider.resolveName(ensName);
+          if (!address) {
+            throw new Error(`ENS name not found: ${ensName}`);
+          }
+
+          // Get the text record for IPFS content
+          const resolver = await provider.getResolver(ensName);
+          if (!resolver) {
+            throw new Error(`No resolver found for: ${ensName}`);
+          }
+
+          // Get the IPFS content hash
+          const contentHash = await resolver.getText("contenthash");
+          if (!contentHash) {
+            throw new Error(`No content hash found for: ${ensName}`);
+          }
+
+          // Convert content hash to IPFS CID
+          const cid = contentHash.replace("ipfs://", "");
+          console.log(`Resolved ${ensName} to CID: ${cid}`);
+
+          return cid;
+        } catch (error) {
+          console.error("ENS resolution error:", error);
+          throw error;
+        }
+      }
+
+      // Fetch stream metadata from IPFS
+      async function fetchStreamMetadata(cid) {
+        try {
+          if (!ipfs) {
+            throw new Error("IPFS client not initialized");
+          }
+
+          console.log(`Fetching metadata for CID: ${cid}`);
+
+          // Fetch the content from IPFS
+          const chunks = [];
+          for await (const chunk of ipfs.cat(cid)) {
+            chunks.push(chunk);
+          }
+
+          const content = new TextDecoder().decode(
+            new Uint8Array(chunks.flat()),
+          );
+          const metadata = JSON.parse(content);
+
+          console.log("Stream metadata:", metadata);
+          return metadata;
+        } catch (error) {
+          console.error("Metadata fetch error:", error);
+          throw error;
+        }
+      }
+
+      // Get stream URL from metadata
+      function getStreamUrl(metadata) {
+        const baseUrl = metadata.server || "http://207.180.247.72:8888";
+        const streamKey = metadata.streamKey || "ethaccra";
+
+        return {
+          hls: `${baseUrl}/${streamKey}/index.m3u8`,
+          webrtc: `${baseUrl.replace("8888", "8889")}/${streamKey}/whip`,
+          rtmp: `rtmp://${baseUrl.replace("http://", "")}/${streamKey}`,
+        };
+      }
+
+      // Load and play stream
+      async function loadStream() {
+        const input = document.getElementById("streamInput").value.trim();
+        if (!input) {
+          showError("Please enter a stream identifier (ENS name or CID)");
+          return;
+        }
+
+        try {
+          setStatus("connecting", "Resolving...");
+          showError("");
+
+          let cid = input;
+          let ensName = null;
+
+          // Check if it's an ENS name
+          if (input.endsWith(".eth")) {
+            ensName = input;
+            cid = await resolveENS(input);
+            document.getElementById("streamENS").textContent = ensName;
+          } else {
+            document.getElementById("streamENS").textContent = "None";
+          }
+
+          document.getElementById("streamCID").textContent = cid;
+
+          // Fetch stream metadata
+          setStatus("connecting", "Loading metadata...");
+          const metadata = await fetchStreamMetadata(cid);
+
+          // Display metadata
+          document.getElementById("metadataContent").textContent =
+            JSON.stringify(metadata, null, 2);
+          document.getElementById("streamMetadata").style.display = "block";
+
+          // Get stream URLs
+          const streamUrls = getStreamUrl(metadata);
+          const video = document.getElementById("videoPlayer");
+
+          // Try HLS first
+          if (streamUrls.hls) {
+            video.src = streamUrls.hls;
+            currentStream = streamUrls;
+            updateStreamInfo(input, "HLS");
+          }
+
+          // Set up event listeners
+          video.addEventListener("loadstart", () => {
+            setStatus("connecting", "Loading stream...");
+          });
+
+          video.addEventListener("canplay", () => {
+            setStatus("live", "Live");
+          });
+
+          video.addEventListener("error", (e) => {
+            console.error("Video error:", e);
+            setStatus("offline", "Error");
+            showError(
+              "Failed to load stream. Please check the stream identifier.",
+            );
+          });
+
+          // Try to play
+          await video.play();
+        } catch (error) {
+          console.error("Stream loading error:", error);
+          setStatus("offline", "Error");
+          showError(`Error loading stream: ${error.message}`);
+        }
+      }
+
+      // Stop current stream
+      function stopStream() {
+        const video = document.getElementById("videoPlayer");
+        video.pause();
+        video.src = "";
+        currentStream = null;
+        setStatus("offline", "Offline");
+        updateStreamInfo("None", "None");
+        document.getElementById("streamCID").textContent = "None";
+        document.getElementById("streamENS").textContent = "None";
+        document.getElementById("streamMetadata").style.display = "none";
+      }
+
+      // Update stream status
+      function setStatus(type, text) {
+        const statusEl = document.getElementById("streamStatus");
+        statusEl.className = `status ${type}`;
+        statusEl.textContent = text;
+      }
+
+      // Update stream information
+      function updateStreamInfo(source, protocol) {
+        document.getElementById("streamSource").textContent = source;
+        document.getElementById("streamProtocol").textContent = protocol;
+      }
+
+      // Show error message
+      function showError(message) {
+        const errorEl = document.getElementById("errorMessage");
+        if (message) {
+          errorEl.textContent = message;
+          errorEl.style.display = "block";
+        } else {
+          errorEl.style.display = "none";
+        }
+      }
+
+      // Handle Enter key in input
+      document
+        .getElementById("streamInput")
+        .addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            loadStream();
+          }
+        });
+
+      // Initialize on page load
+      window.addEventListener("load", async () => {
+        await initialize();
+        document.getElementById("streamInput").value = "ethaccra.eth";
+      });
+    </script>
+  </body>
+</html>

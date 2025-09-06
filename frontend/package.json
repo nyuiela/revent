@@ -38,6 +38,7 @@
     "pinata": "^2.5.0",
     "react": "^18",
     "react-dom": "^18",
+    "simple-peer": "^9.11.1",
     "viem": "^2.27.2",
     "wagmi": "^2.16.0"
   },
@@ -45,6 +46,7 @@
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/simple-peer": "^9.11.8",
     "eslint": "^8",
     "eslint-config-next": "15.3.3",
     "eslint-config-prettier": "^10.1.1",
