@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  nginx-rtmp:
+    image: alfg/nginx-rtmp
+    container_name: nginx-rtmp
+    ports:
+      - "1935:1935" # RTMP
+      - "8080:80" # Web server for stats
+    volumes:
+      - ./default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./hls:/mnt/hls
