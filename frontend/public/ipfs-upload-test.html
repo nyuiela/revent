@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IPFS Stream Upload Test</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+        font-size: 2.5rem;
+      }
+
+      .section {
+        margin-bottom: 30px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+      }
+
+      .section h2 {
+        color: #495057;
+        margin-bottom: 15px;
+      }
+
+      button {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 25px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+        margin: 5px;
+      }
+
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #0056b3;
+        transform: translateY(-2px);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #545b62;
+        transform: translateY(-2px);
+      }
+
+      .result {
+        background: #e9ecef;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+        font-family: monospace;
+        white-space: pre-wrap;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .loading {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+
+      .url-list {
+        background: #e3f2fd;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+      }
+
+      .url-list h4 {
+        margin-bottom: 10px;
+        color: #1976d2;
+      }
+
+      .url-list a {
+        display: block;
+        margin: 5px 0;
+        color: #1976d2;
+        text-decoration: none;
+        word-break: break-all;
+      }
+
+      .url-list a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚀 IPFS Stream Upload Test</h1>
+
+      <div class="section">
+        <h2>Upload Stream Iframe to IPFS</h2>
+        <p>Upload the stream-iframe.html file to IPFS and get the CID.</p>
+        <button class="btn-primary" onclick="uploadStreamIframe()">
+          Upload Stream Iframe
+        </button>
+        <button class="btn-secondary" onclick="checkStreamIframe()">
+          Check File Info
+        </button>
+        <div id="iframeResult" class="result" style="display: none"></div>
+      </div>
+
+      <div class="section">
+        <h2>Upload All Stream Files to IPFS</h2>
+        <p>Upload all stream-related HTML files to IPFS.</p>
+        <button class="btn-primary" onclick="uploadAllStreamFiles()">
+          Upload All Stream Files
+        </button>
+        <button class="btn-secondary" onclick="checkAllStreamFiles()">
+          Check All Files Info
+        </button>
+        <div id="allFilesResult" class="result" style="display: none"></div>
+      </div>
+
+      <div class="section">
+        <h2>Upload Specific File</h2>
+        <p>Upload a specific stream file to IPFS.</p>
+        <select id="fileSelect">
+          <option value="stream-iframe.html">stream-iframe.html</option>
+          <option value="stream-embed.html">stream-embed.html</option>
+          <option value="stream-interface.html">stream-interface.html</option>
+          <option value="stream-interface-advanced.html">
+            stream-interface-advanced.html
+          </option>
+          <option value="simple-stream.html">simple-stream.html</option>
+          <option value="test-hls.html">test-hls.html</option>
+        </select>
+        <button class="btn-primary" onclick="uploadSpecificFile()">
+          Upload Selected File
+        </button>
+        <div id="specificFileResult" class="result" style="display: none"></div>
+      </div>
+    </div>
+
+    <script>
+      // Upload stream iframe to IPFS
+      async function uploadStreamIframe() {
+        const resultDiv = document.getElementById("iframeResult");
+        resultDiv.style.display = "block";
+        resultDiv.className = "result loading";
+        resultDiv.textContent = "Uploading stream-iframe.html to IPFS...";
+
+        try {
+          const response = await fetch("/api/ipfs/stream-iframe", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            resultDiv.className = "result success";
+            resultDiv.textContent = JSON.stringify(data, null, 2);
+
+            // Show gateway URLs
+            const urlList = document.createElement("div");
+            urlList.className = "url-list";
+            urlList.innerHTML = `
+              <h4>🌐 Access Your Stream Iframe:</h4>
+              ${data.gatewayUrls.map((url) => `<a href="${url}" target="_blank">${url}</a>`).join("")}
+            `;
+            resultDiv.appendChild(urlList);
+          } else {
+            resultDiv.className = "result error";
+            resultDiv.textContent = JSON.stringify(data, null, 2);
+          }
+        } catch (error) {
+          resultDiv.className = "result error";
+          resultDiv.textContent = `Error: ${error.message}`;
+        }
+      }
+
+      // Check stream iframe file info
+      async function checkStreamIframe() {
+        const resultDiv = document.getElementById("iframeResult");
+        resultDiv.style.display = "block";
+        resultDiv.className = "result loading";
+        resultDiv.textContent = "Checking stream-iframe.html file...";
+
+        try {
+          const response = await fetch("/api/ipfs/stream-iframe", {
+            method: "GET",
+          });
+
+          const data = await response.json();
+          resultDiv.className = "result success";
+          resultDiv.textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+          resultDiv.className = "result error";
+          resultDiv.textContent = `Error: ${error.message}`;
+        }
+      }
+
+      // Upload all stream files to IPFS
+      async function uploadAllStreamFiles() {
+        const resultDiv = document.getElementById("allFilesResult");
+        resultDiv.style.display = "block";
+        resultDiv.className = "result loading";
+        resultDiv.textContent = "Uploading all stream files to IPFS...";
+
+        try {
+          const response = await fetch("/api/ipfs/stream-files", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            resultDiv.className = "result success";
+            resultDiv.textContent = JSON.stringify(data, null, 2);
+          } else {
+            resultDiv.className = "result error";
+            resultDiv.textContent = JSON.stringify(data, null, 2);
+          }
+        } catch (error) {
+          resultDiv.className = "result error";
+          resultDiv.textContent = `Error: ${error.message}`;
+        }
+      }
+
+      // Check all stream files info
+      async function checkAllStreamFiles() {
+        const resultDiv = document.getElementById("allFilesResult");
+        resultDiv.style.display = "block";
+        resultDiv.className = "result loading";
+        resultDiv.textContent = "Checking all stream files...";
+
+        try {
+          const response = await fetch("/api/ipfs/stream-files", {
+            method: "GET",
+          });
+
+          const data = await response.json();
+          resultDiv.className = "result success";
+          resultDiv.textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+          resultDiv.className = "result error";
+          resultDiv.textContent = `Error: ${error.message}`;
+        }
+      }
+
+      // Upload specific file to IPFS
+      async function uploadSpecificFile() {
+        const fileSelect = document.getElementById("fileSelect");
+        const selectedFile = fileSelect.value;
+        const resultDiv = document.getElementById("specificFileResult");
+
+        resultDiv.style.display = "block";
+        resultDiv.className = "result loading";
+        resultDiv.textContent = `Uploading ${selectedFile} to IPFS...`;
+
+        try {
+          const response = await fetch(
+            `/api/ipfs/stream-files?file=${selectedFile}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            },
+          );
+
+          const data = await response.json();
+
+          if (data.success) {
+            resultDiv.className = "result success";
+            resultDiv.textContent = JSON.stringify(data, null, 2);
+          } else {
+            resultDiv.className = "result error";
+            resultDiv.textContent = JSON.stringify(data, null, 2);
+          }
+        } catch (error) {
+          resultDiv.className = "result error";
+          resultDiv.textContent = `Error: ${error.message}`;
+        }
+      }
+    </script>
+  </body>
+</html>

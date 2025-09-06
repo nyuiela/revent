@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stream Embed</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        font-family: Arial, sans-serif;
+      }
+
+      video {
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+
+      .loading {
+        color: white;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .error {
+        color: #ff6b6b;
+        text-align: center;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        margin: 20px;
+      }
+
+      .status {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        z-index: 1000;
+      }
+
+      .status.live {
+        background: rgba(40, 167, 69, 0.8);
+      }
+
+      .status.offline {
+        background: rgba(220, 53, 69, 0.8);
+      }
+
+      .status.connecting {
+        background: rgba(255, 193, 7, 0.8);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="status offline" id="status">Offline</div>
+
+    <video id="video" controls autoplay muted playsinline>
+      <p>Your browser doesn&apos;t support HTML5 video.</p>
+    </video>
+
+    <div class="loading" id="loading" style="display: none">
+      Loading stream...
+    </div>
+
+    <div class="error" id="error" style="display: none">
+      Failed to load stream
+    </div>
+    <iframe
+      src="http://207.180.247.72:8889/ethAccra"
+      width="800"
+      height="450"
+      allowfullscreen
+      sandbox="allow-same-origin allow-scripts"
+    >
+    </iframe>
+    <!-- 
+    <script>
+      const video = document.getElementById("video");
+      const status = document.getElementById("status");
+      const loading = document.getElementById("loading");
+      const error = document.getElementById("error");
+
+      // Get stream URL from URL parameters
+      // const urlParams = new URLSearchParams(window.location.search);
+      // const streamUrl = urlParams.get("url");
+      const streamUrl = "http://207.180.247.72:8889/ethAccra";
+
+      // if (!streamUrl) {
+      //   showError("No stream URL provided");
+      //   return;
+      // }
+
+      // Detect protocol and convert URL if needed
+      let finalUrl = streamUrl;
+      // if (
+      //   streamUrl.includes("207.180.247.72:8888") &&
+      //   !streamUrl.includes(".m3u8")
+      // ) {
+      //   finalUrl = streamUrl + "/index.m3u8";
+      // } else if (
+      //   streamUrl.includes("207.180.247.72:8889") &&
+      //   !streamUrl.includes(".m3u8")
+      // ) {
+      //   finalUrl = streamUrl + "/index.m3u8";
+      // }
+
+      console.log("Loading stream:", finalUrl);
+
+      // Set up video event listeners
+      video.addEventListener("loadstart", () => {
+        setStatus("connecting", "Connecting...");
+        loading.style.display = "block";
+        error.style.display = "none";
+      });
+
+      video.addEventListener("canplay", () => {
+        setStatus("live", "Live");
+        loading.style.display = "none";
+        error.style.display = "none";
+      });
+
+      video.addEventListener("error", (e) => {
+        console.error("Video error:", e);
+        setStatus("offline", "Error");
+        loading.style.display = "none";
+        showError(
+          "Failed to load stream: " +
+            (e.target.error?.message || "Unknown error"),
+        );
+      });
+
+      // Set video source
+      video.src = finalUrl;
+      // video.type = "application";
+
+      function setStatus(type, text) {
+        status.className = `status ${type}`;
+        status.textContent = text;
+      }
+
+      function showError(message) {
+        error.textContent = message;
+        error.style.display = "block";
+        loading.style.display = "none";
+      }
+
+      // Handle fullscreen requests from parent
+      window.addEventListener("message", (event) => {
+        if (event.data === "requestFullscreen") {
+          if (video.requestFullscreen) {
+            video.requestFullscreen();
+          } else if (video.webkitRequestFullscreen) {
+            video.webkitRequestFullscreen();
+          } else if (video.msRequestFullscreen) {
+            video.msRequestFullscreen();
+          }
+        }
+      });
+    </script> -->
+  </body>
+</html>

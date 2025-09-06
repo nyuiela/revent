@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Live Stream Interface</title>
+    <title>Stream Iframe Viewer</title>
     <style>
       * {
         margin: 0;
@@ -42,7 +42,7 @@
         margin-bottom: 30px;
       }
 
-      .video-container {
+      .iframe-container {
         position: relative;
         width: 100%;
         max-width: 800px;
@@ -51,11 +51,13 @@
         border-radius: 15px;
         overflow: hidden;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        aspect-ratio: 16/9;
       }
 
-      video {
+      iframe {
         width: 100%;
-        height: auto;
+        height: 100%;
+        border: none;
         display: block;
       }
 
@@ -179,6 +181,37 @@
         }
       }
 
+      .iframe-options {
+        background: #e9ecef;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+      }
+
+      .iframe-options h4 {
+        margin-bottom: 10px;
+        color: #495057;
+      }
+
+      .option-group {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .option-group label {
+        font-weight: 500;
+        min-width: 120px;
+      }
+
+      .option-group input,
+      .option-group select {
+        padding: 5px 10px;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+      }
+
       @media (max-width: 768px) {
         .container {
           padding: 20px;
@@ -203,7 +236,7 @@
   </head>
   <body>
     <div class="container">
-      <h1>🎥 Live Stream Interface</h1>
+      <h1>EthAccra Live Hackathon Event</h1>
 
       <div class="stream-section">
         <div class="input-group">
@@ -215,9 +248,40 @@
           />
         </div>
 
+        <div class="iframe-options">
+          <h4>Iframe Options</h4>
+          <div class="option-group">
+            <label>Width:</label>
+            <input type="text" id="iframeWidth" value="100%" />
+          </div>
+          <div class="option-group">
+            <label>Height:</label>
+            <input type="text" id="iframeHeight" value="400px" />
+          </div>
+          <div class="option-group">
+            <label>Allow Fullscreen:</label>
+            <select id="allowFullscreen">
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div class="option-group">
+            <label>Sandbox:</label>
+            <select id="sandboxMode">
+              <option value="allow-same-origin allow-scripts">Standard</option>
+              <option
+                value="allow-same-origin allow-scripts allow-presentation"
+              >
+                With Presentation
+              </option>
+              <option value="">No Sandbox</option>
+            </select>
+          </div>
+        </div>
+
         <div class="controls">
           <button class="btn-primary" onclick="loadStream()">
-            Load Stream
+            Load Stream in Iframe
           </button>
           <button class="btn-secondary" onclick="loadEthAccraStream()">
             Load EthAccra Stream
@@ -233,11 +297,17 @@
         <div class="error" id="errorMessage"></div>
       </div>
 
-      <div class="video-container">
-        <video id="videoPlayer" controls autoplay muted playsinline>
-          <p>Your browser doesn&apos;t support HTML5 video.</p>
-        </video>
-      </div>
+      <!-- <div class="iframe-container"> -->
+      <iframe
+        id="streamIframe"
+        src="http://207.180.247.72:8889/ethAccra"
+        allowfullscreen
+        sandbox="allow-same-origin allow-scripts"
+        class="iframe-container"
+      >
+        <p>Your browser doesn&apos;t support iframes.</p>
+      </iframe>
+      <!-- </div> -->
 
       <div class="stream-info">
         <h3>Stream Information</h3>
@@ -247,6 +317,7 @@
         </p>
         <p><strong>Source:</strong> <span id="streamSource">None</span></p>
         <p><strong>Protocol:</strong> <span id="streamProtocol">None</span></p>
+        <p><strong>Iframe URL:</strong> <span id="iframeUrl">None</span></p>
       </div>
 
       <div class="stream-info" style="margin-top: 20px">
@@ -295,7 +366,7 @@
         }
       }
 
-      // Load and play stream
+      // Load and play stream in iframe
       async function loadStream() {
         const input = document.getElementById("streamInput").value.trim();
         if (!input) {
@@ -307,7 +378,7 @@
           setStatus("connecting", "Connecting...");
           showError(""); // Clear any previous errors
 
-          const video = document.getElementById("videoPlayer");
+          const iframe = document.getElementById("streamIframe");
           const protocol = detectProtocol(input);
 
           // Convert MediaMTX server URLs to proper HLS format
@@ -330,124 +401,43 @@
           console.log("Stream URL:", streamUrl);
           console.log("Protocol:", protocol);
 
-          // Set up event listeners
-          video.addEventListener("loadstart", () => {
-            setStatus("connecting", "Loading...");
-          });
+          // Get iframe options
+          const width = document.getElementById("iframeWidth").value;
+          const height = document.getElementById("iframeHeight").value;
+          const allowFullscreen =
+            document.getElementById("allowFullscreen").value === "true";
+          const sandbox = document.getElementById("sandboxMode").value;
 
-          video.addEventListener("canplay", () => {
+          // Update iframe attributes
+          iframe.style.width = width;
+          iframe.style.height = height;
+          iframe.allowFullscreen = allowFullscreen;
+          iframe.sandbox = sandbox;
+
+          // Set iframe source - use embed page for better control
+          const embedUrl = `stream-embed.html?url=${encodeURIComponent(streamUrl)}`;
+          iframe.src = embedUrl;
+
+          // Update stream info
+          updateStreamInfo(input, protocol, embedUrl);
+
+          // Set up iframe load event
+          iframe.onload = () => {
             setStatus("live", "Live");
             currentStream = streamUrl;
             currentSource = input;
-          });
+          };
 
-          video.addEventListener("error", (e) => {
-            console.error("Video error:", e);
-            console.error("Error details:", e.target.error);
-
-            // Try fallback URLs for MediaMTX servers
-            if (input.includes("207.180.247.72") && !input.includes(".m3u8")) {
-              console.log("Trying fallback URLs...");
-              tryFallbackUrls(input, video, protocol);
-            } else {
-              setStatus("offline", "Error");
-              showError(
-                "Failed to load stream. Please check the URL and try again.",
-              );
-            }
-          });
-
-          // Set video source
-          video.src = streamUrl;
-          video.type = getVideoType(protocol);
-
-          // Update stream info
-          updateStreamInfo(input, protocol);
-
-          // Try to play
-          await video.play();
+          iframe.onerror = () => {
+            setStatus("offline", "Error");
+            showError(
+              "Failed to load stream in iframe. The stream may not support iframe embedding or the server may not be accessible.",
+            );
+          };
         } catch (error) {
           console.error("Stream loading error:", error);
           setStatus("offline", "Error");
           showError(`Error loading stream: ${error.message}`);
-        }
-      }
-
-      // Try fallback URLs for MediaMTX servers
-      async function tryFallbackUrls(originalUrl, video, protocol) {
-        const fallbackUrls = [
-          originalUrl + "/index.m3u8",
-          originalUrl + "/playlist.m3u8",
-          originalUrl + "/hls/index.m3u8",
-          originalUrl.replace("8889", "8888") + "/index.m3u8",
-          originalUrl.replace("8888", "8889") + "/index.m3u8",
-        ];
-
-        for (let i = 0; i < fallbackUrls.length; i++) {
-          try {
-            console.log(`Trying fallback URL ${i + 1}:`, fallbackUrls[i]);
-            video.src = fallbackUrls[i];
-            video.type = getVideoType(protocol);
-
-            // Wait a bit to see if this URL works
-            await new Promise((resolve, reject) => {
-              const timeout = setTimeout(() => {
-                reject(new Error("Timeout"));
-              }, 5000);
-
-              video.addEventListener(
-                "canplay",
-                () => {
-                  clearTimeout(timeout);
-                  resolve();
-                },
-                { once: true },
-              );
-
-              video.addEventListener(
-                "error",
-                () => {
-                  clearTimeout(timeout);
-                  reject(new Error("Failed"));
-                },
-                { once: true },
-              );
-            });
-
-            // If we get here, the stream loaded successfully
-            setStatus("live", "Live");
-            currentStream = fallbackUrls[i];
-            currentSource = originalUrl;
-            updateStreamInfo(originalUrl, protocol);
-            console.log(
-              "Successfully loaded with fallback URL:",
-              fallbackUrls[i],
-            );
-            return;
-          } catch (error) {
-            console.log(`Fallback URL ${i + 1} failed:`, error.message);
-            continue;
-          }
-        }
-
-        // All fallback URLs failed
-        setStatus("offline", "Error");
-        showError(
-          "Failed to load stream with all available formats. The stream may be offline or the server may not be accessible.",
-        );
-      }
-
-      // Get appropriate MIME type for video
-      function getVideoType(protocol) {
-        switch (protocol) {
-          case "HLS":
-            return "application/x-mpegURL";
-          case "WebRTC":
-            return "application/webrtc";
-          case "Direct Video":
-            return "video/mp4";
-          default:
-            return "video/mp4";
         }
       }
 
@@ -502,13 +492,12 @@
 
       // Stop current stream
       function stopStream() {
-        const video = document.getElementById("videoPlayer");
-        video.pause();
-        video.src = "";
+        const iframe = document.getElementById("streamIframe");
+        iframe.src = "about:blank";
         currentStream = null;
         currentSource = null;
         setStatus("offline", "Offline");
-        updateStreamInfo("None", "None");
+        updateStreamInfo("None", "None", "None");
       }
 
       // Update stream status
@@ -519,9 +508,10 @@
       }
 
       // Update stream information
-      function updateStreamInfo(source, protocol) {
+      function updateStreamInfo(source, protocol, iframeUrl) {
         document.getElementById("streamSource").textContent = source;
         document.getElementById("streamProtocol").textContent = protocol;
+        document.getElementById("iframeUrl").textContent = iframeUrl || "None";
       }
 
       // Show error message

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HLS Stream Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      video {
+        width: 100%;
+        max-width: 600px;
+        height: auto;
+      }
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>HLS Stream Test</h1>
+
+    <div id="status" class="status info">Testing HLS stream...</div>
+
+    <video id="video" controls autoplay muted>
+      <p>Your browser doesn't support HTML5 video.</p>
+    </video>
+
+    <div>
+      <h3>Test URLs:</h3>
+      <ul>
+        <li>
+          <a
+            href="http://207.180.247.72:8888/ethAccra/index.m3u8"
+            target="_blank"
+            >HLS Playlist (Port 8888)</a
+          >
+        </li>
+        <li>
+          <a
+            href="http://207.180.247.72:8889/ethAccra/index.m3u8"
+            target="_blank"
+            >HLS Playlist (Port 8889)</a
+          >
+        </li>
+      </ul>
+    </div>
+
+    <script>
+      const video = document.getElementById("video");
+      const status = document.getElementById("status");
+
+      // Test URLs to try
+      const testUrls = [
+        "http://207.180.247.72:8888/ethAccra/index.m3u8",
+        "http://207.180.247.72:8889/ethAccra/index.m3u8",
+        "http://207.180.247.72:8888/ethaccra/index.m3u8",
+        "http://207.180.247.72:8889/ethaccra/index.m3u8",
+      ];
+
+      async function testHLSStream() {
+        for (let i = 0; i < testUrls.length; i++) {
+          const url = testUrls[i];
+          status.textContent = `Testing ${url}...`;
+          status.className = "status info";
+
+          try {
+            // First, try to fetch the playlist
+            const response = await fetch(url);
+            if (response.ok) {
+              const playlist = await response.text();
+              console.log("Playlist content:", playlist);
+
+              // Set video source
+              video.src = url;
+              video.type = "application/x-mpegURL";
+
+              // Wait for video to load
+              await new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                  reject(new Error("Timeout"));
+                }, 10000);
+
+                video.addEventListener(
+                  "canplay",
+                  () => {
+                    clearTimeout(timeout);
+                    resolve();
+                  },
+                  { once: true },
+                );
+
+                video.addEventListener(
+                  "error",
+                  (e) => {
+                    clearTimeout(timeout);
+                    reject(e);
+                  },
+                  { once: true },
+                );
+              });
+
+              status.textContent = `✅ Success! Stream loaded from ${url}`;
+              status.className = "status success";
+              return;
+            }
+          } catch (error) {
+            console.log(`Failed to load ${url}:`, error.message);
+            continue;
+          }
+        }
+
+        status.textContent =
+          "❌ All HLS streams failed to load. Check MediaMTX configuration.";
+        status.className = "status error";
+      }
+
+      // Start testing when page loads
+      testHLSStream();
+    </script>
+  </body>
+</html>
