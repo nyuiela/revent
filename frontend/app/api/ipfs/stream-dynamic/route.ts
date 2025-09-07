@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let fileContent = fs.readFileSync(filePath, 'utf-8');
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
     const fileStats = fs.statSync(filePath);
 
     // Show what the modified content would look like
@@ -145,3 +145,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+

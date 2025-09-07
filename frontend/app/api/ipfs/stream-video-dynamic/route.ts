@@ -27,10 +27,10 @@ export async function POST(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const streamUrl = searchParams.get('streamUrl') || 'http://207.180.247.72:8889/ethAccra';
-    
+
     // Read the video-based dynamic stream file
     const filePath = path.join(process.cwd(), 'public', 'stream-video-dynamic.html');
-    
+
     if (!fs.existsSync(filePath)) {
       return NextResponse.json(
         { error: 'stream-video-dynamic.html file not found' },
@@ -39,29 +39,29 @@ export async function POST(request: NextRequest) {
     }
 
     let fileContent = fs.readFileSync(filePath, 'utf-8');
-    
+
     // Replace the default stream URL with the provided one
     fileContent = fileContent.replace(
       "const streamUrl = urlParams.get(\"url\") || \"http://207.180.247.72:8889/ethAccra\";",
       `const streamUrl = urlParams.get("url") || "${streamUrl}";`
     );
-    
+
     // Add a comment with the stream URL for reference
     fileContent = fileContent.replace(
       '<head>',
       `<head>\n    <!-- Embedded Stream URL: ${streamUrl} -->`
     );
-    
+
     // Create a unique filename with stream URL hash
     const streamUrlHash = Buffer.from(streamUrl).toString('base64').replace(/[^a-zA-Z0-9]/g, '').substring(0, 10);
     const fileName = `ethaccra-video-stream-${streamUrlHash}.html`;
-    
+
     // Add file to IPFS
     const result = await uploadToIPFS(fileContent, fileName);
     const cid = result.Hash;
-    
+
     console.log(`Video-based dynamic stream interface with URL ${streamUrl} uploaded to IPFS with CID: ${cid}`);
-    
+
     // Return the CID and IPFS gateway URL
     return NextResponse.json({
       success: true,
@@ -97,9 +97,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error uploading video-based dynamic stream interface to IPFS:', error);
-    
+
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to upload video-based dynamic stream interface to IPFS',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -112,10 +112,10 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const streamUrl = searchParams.get('streamUrl') || 'http://207.180.247.72:8889/ethAccra';
-    
+
     // Read the video-based dynamic stream file
     const filePath = path.join(process.cwd(), 'public', 'stream-video-dynamic.html');
-    
+
     if (!fs.existsSync(filePath)) {
       return NextResponse.json(
         { error: 'stream-video-dynamic.html file not found' },
@@ -123,15 +123,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let fileContent = fs.readFileSync(filePath, 'utf-8');
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
     const fileStats = fs.statSync(filePath);
-    
+
     // Show what the modified content would look like
     const modifiedContent = fileContent.replace(
       "const streamUrl = urlParams.get(\"url\") || \"http://207.180.247.72:8889/ethAccra\";",
       `const streamUrl = urlParams.get("url") || "${streamUrl}";`
     );
-    
+
     // Return file information without uploading
     return NextResponse.json({
       success: true,
@@ -157,9 +157,9 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error reading video-based dynamic stream interface file:', error);
-    
+
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to read video-based dynamic stream interface file',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -167,3 +167,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
