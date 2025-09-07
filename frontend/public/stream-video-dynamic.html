@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EthAccra Live Stream</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        max-width: 1200px;
+        width: 100%;
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+        font-size: 2.5rem;
+      }
+
+      .stream-section {
+        margin-bottom: 30px;
+      }
+
+      .video-container {
+        position: relative;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        background: #000;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        aspect-ratio: 16/9;
+      }
+
+      video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .stream-info {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+      }
+
+      .status {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9rem;
+      }
+
+      .status.live {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status.offline {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .status.connecting {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+        display: none;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #007bff;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .url-display {
+        background: #e9ecef;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+        font-family: monospace;
+        word-break: break-all;
+      }
+
+      .controls {
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      .btn {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 0 5px;
+        font-size: 14px;
+      }
+
+      .btn:hover {
+        background: #0056b3;
+      }
+
+      .btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px;
+          margin: 10px;
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>EthAccra Live Stream</h1>
+
+      <div class="stream-section">
+        <div class="loading" id="loading">
+          <div class="spinner"></div>
+          Loading stream...
+        </div>
+
+        <div class="error" id="errorMessage"></div>
+
+        <div class="video-container" id="videoContainer" style="display: none;">
+          <video
+            id="streamVideo"
+            controls
+            autoplay
+            muted
+            playsinline
+            preload="metadata"
+          >
+            <p>Your browser doesn&apos;t support video playback.</p>
+          </video>
+        </div>
+
+        <div class="controls" id="controls" style="display: none;">
+          <button class="btn" id="playBtn" onclick="togglePlay()">Play</button>
+          <button class="btn" id="muteBtn" onclick="toggleMute()">Unmute</button>
+          <button class="btn" onclick="reloadStream()">Reload Stream</button>
+        </div>
+      </div>
+
+      <div class="stream-info">
+        <h3>Stream Information</h3>
+        <p>
+          <strong>Status:</strong>
+          <span class="status offline" id="streamStatus">Offline</span>
+        </p>
+        <p><strong>Source:</strong> <span id="streamSource">None</span></p>
+        <p><strong>Protocol:</strong> <span id="streamProtocol">None</span></p>
+        <div class="url-display" id="urlDisplay" style="display: none">
+          <strong>Stream URL:</strong> <span id="streamUrl"></span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Get stream URL from URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const streamUrl =
+        urlParams.get("url") || "http://207.180.247.72:8889/ethAccra";
+
+      const video = document.getElementById("streamVideo");
+      const loading = document.getElementById("loading");
+      const errorMessage = document.getElementById("errorMessage");
+      const videoContainer = document.getElementById("videoContainer");
+      const controls = document.getElementById("controls");
+      const streamStatus = document.getElementById("streamStatus");
+      const streamSource = document.getElementById("streamSource");
+      const streamProtocol = document.getElementById("streamProtocol");
+      const urlDisplay = document.getElementById("urlDisplay");
+      const streamUrlSpan = document.getElementById("streamUrl");
+      const playBtn = document.getElementById("playBtn");
+      const muteBtn = document.getElementById("muteBtn");
+
+      // Detect stream protocol from URL
+      function detectProtocol(url) {
+        if (url.includes(".m3u8")) {
+          return "HLS";
+        } else if (url.includes("webrtc") || url.includes("whip")) {
+          return "WebRTC";
+        } else if (url.includes("rtmp://207.180.247.72")) {
+          return "RTMP";
+        } else if (url.match(/\.(mp4|webm|ogg|avi|mov)$/i)) {
+          return "Direct Video";
+        } else if (url.includes("207.180.247.72:8888")) {
+          return "HLS";
+        } else if (url.includes("207.180.247.72:8889")) {
+          return "HLS";
+        } else {
+          return "Unknown";
+        }
+      }
+
+      // Convert MediaMTX server URLs to proper HLS format
+      function getStreamUrl(url) {
+        if (url.includes("207.180.247.72:8888") && !url.includes(".m3u8")) {
+          return url + "/index.m3u8";
+        } else if (
+          url.includes("207.180.247.72:8889") &&
+          !url.includes(".m3u8")
+        ) {
+          return url + "/index.m3u8";
+        }
+        return url;
+      }
+
+      // Load the stream
+      async function loadStream() {
+        try {
+          loading.style.display = "block";
+          errorMessage.style.display = "none";
+          videoContainer.style.display = "none";
+          controls.style.display = "none";
+
+          setStatus("connecting", "Connecting...");
+
+          const finalStreamUrl = getStreamUrl(streamUrl);
+          const protocol = detectProtocol(streamUrl);
+
+          console.log("Loading stream:", finalStreamUrl);
+          console.log("Protocol:", protocol);
+
+          // Update stream info first
+          streamSource.textContent = streamUrl;
+          streamProtocol.textContent = protocol;
+          streamUrlSpan.textContent = finalStreamUrl;
+          urlDisplay.style.display = "block";
+
+          // Set video source
+          video.src = finalStreamUrl;
+
+          // Set up video event listeners
+          video.addEventListener('loadstart', () => {
+            console.log("Video load started");
+          });
+
+          video.addEventListener('loadedmetadata', () => {
+            console.log("Video metadata loaded");
+            loading.style.display = "none";
+            videoContainer.style.display = "block";
+            controls.style.display = "block";
+            setStatus("live", "Live");
+          });
+
+          video.addEventListener('canplay', () => {
+            console.log("Video can start playing");
+            setStatus("live", "Live");
+          });
+
+          video.addEventListener('error', (e) => {
+            console.error("Video error:", e);
+            loading.style.display = "none";
+            setStatus("offline", "Error");
+            showError(
+              "Failed to load stream. The stream may be offline or the server may not be accessible.",
+            );
+          });
+
+          video.addEventListener('stalled', () => {
+            console.warn("Video stalled");
+            setStatus("connecting", "Buffering...");
+          });
+
+          video.addEventListener('waiting', () => {
+            console.log("Video waiting for data");
+            setStatus("connecting", "Buffering...");
+          });
+
+          video.addEventListener('playing', () => {
+            console.log("Video playing");
+            setStatus("live", "Live");
+          });
+
+          video.addEventListener('pause', () => {
+            console.log("Video paused");
+            setStatus("offline", "Paused");
+          });
+
+          // Set a timeout for stream loading
+          setTimeout(() => {
+            if (video.readyState === 0) {
+              loading.style.display = "none";
+              setStatus("offline", "Timeout");
+              showError(
+                "Stream loading timed out. The server may be slow or unreachable.",
+              );
+              console.warn("Stream loading timeout");
+            }
+          }, 15000); // 15 second timeout
+
+        } catch (error) {
+          console.error("Stream loading error:", error);
+          loading.style.display = "none";
+          setStatus("offline", "Error");
+          showError(`Error loading stream: ${error.message}`);
+        }
+      }
+
+      // Toggle play/pause
+      function togglePlay() {
+        if (video.paused) {
+          video.play();
+          playBtn.textContent = "Pause";
+        } else {
+          video.pause();
+          playBtn.textContent = "Play";
+        }
+      }
+
+      // Toggle mute/unmute
+      function toggleMute() {
+        if (video.muted) {
+          video.muted = false;
+          muteBtn.textContent = "Mute";
+        } else {
+          video.muted = true;
+          muteBtn.textContent = "Unmute";
+        }
+      }
+
+      // Reload stream
+      function reloadStream() {
+        video.load();
+        loadStream();
+      }
+
+      // Update stream status
+      function setStatus(type, text) {
+        streamStatus.className = `status ${type}`;
+        streamStatus.textContent = text;
+      }
+
+      // Show error message
+      function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = "block";
+      }
+
+      // Start loading the stream when page loads
+      loadStream();
+    </script>
+  </body>
+</html>

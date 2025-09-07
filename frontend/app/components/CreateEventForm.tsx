@@ -559,7 +559,7 @@ const CreateEventForm = () => {
             BigInt(startTime),
             BigInt(endTime),
             BigInt(formData.maxParticipants),
-            BigInt(50000000000),
+            BigInt(0.006 * 10 ** 18),
           ],
         },
       ];

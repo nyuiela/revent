@@ -161,6 +161,40 @@
       </div>
 
       <div class="section">
+        <h2>Upload Dynamic Stream Interface</h2>
+        <p>
+          Upload a dynamic stream interface with embedded stream URL to IPFS.
+        </p>
+        <input
+          type="text"
+          id="dynamicStreamUrl"
+          placeholder="Enter stream URL (e.g., http://207.180.247.72:8889/ethAccra)"
+          value="http://207.180.247.72:8889/ethAccra"
+          style="
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+          "
+        />
+        <button class="btn-primary" onclick="uploadDynamicStream()">
+          Upload Iframe Stream Interface
+        </button>
+        <button class="btn-primary" onclick="uploadVideoDynamicStream()">
+          Upload Video Stream Interface
+        </button>
+        <button class="btn-secondary" onclick="checkDynamicStream()">
+          Check Dynamic Stream Info
+        </button>
+        <div
+          id="dynamicStreamResult"
+          class="result"
+          style="display: none"
+        ></div>
+      </div>
+
+      <div class="section">
         <h2>Upload Specific File</h2>
         <p>Upload a specific stream file to IPFS.</p>
         <select id="fileSelect">
@@ -282,6 +316,148 @@
           const response = await fetch("/api/ipfs/stream-files", {
             method: "GET",
           });
+
+          const data = await response.json();
+          resultDiv.className = "result success";
+          resultDiv.textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+          resultDiv.className = "result error";
+          resultDiv.textContent = `Error: ${error.message}`;
+        }
+      }
+
+      // Upload dynamic stream interface to IPFS
+      async function uploadDynamicStream() {
+        const streamUrlInput = document.getElementById("dynamicStreamUrl");
+        const streamUrl = streamUrlInput.value.trim();
+        const resultDiv = document.getElementById("dynamicStreamResult");
+
+        if (!streamUrl) {
+          alert("Please enter a stream URL");
+          return;
+        }
+
+        resultDiv.style.display = "block";
+        resultDiv.className = "result loading";
+        resultDiv.textContent = `Uploading dynamic stream interface with URL: ${streamUrl}...`;
+
+        try {
+          const response = await fetch(
+            `/api/ipfs/stream-dynamic?streamUrl=${encodeURIComponent(streamUrl)}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            },
+          );
+
+          const data = await response.json();
+
+          if (data.success) {
+            resultDiv.className = "result success";
+            resultDiv.textContent = JSON.stringify(data, null, 2);
+
+            // Show usage examples
+            const usageDiv = document.createElement("div");
+            usageDiv.className = "url-list";
+            usageDiv.innerHTML = `
+              <h4>🌐 Access Your Dynamic Stream Interface:</h4>
+              <a href="${data.ipfsUrl}" target="_blank">Direct Access: ${data.ipfsUrl}</a>
+              <a href="${data.usage.withCustomUrl}" target="_blank">With Custom URL: ${data.usage.withCustomUrl}</a>
+              <h4>📋 Embed Code:</h4>
+              <code>${data.usage.embedCode}</code>
+            `;
+            resultDiv.appendChild(usageDiv);
+          } else {
+            resultDiv.className = "result error";
+            resultDiv.textContent = JSON.stringify(data, null, 2);
+          }
+        } catch (error) {
+          resultDiv.className = "result error";
+          resultDiv.textContent = `Error: ${error.message}`;
+        }
+      }
+
+      // Upload video-based dynamic stream interface to IPFS
+      async function uploadVideoDynamicStream() {
+        const streamUrlInput = document.getElementById("dynamicStreamUrl");
+        const streamUrl = streamUrlInput.value.trim();
+        const resultDiv = document.getElementById("dynamicStreamResult");
+
+        if (!streamUrl) {
+          alert("Please enter a stream URL");
+          return;
+        }
+
+        resultDiv.style.display = "block";
+        resultDiv.className = "result loading";
+        resultDiv.textContent = `Uploading video-based dynamic stream interface with URL: ${streamUrl}...`;
+
+        try {
+          const response = await fetch(
+            `/api/ipfs/stream-video-dynamic?streamUrl=${encodeURIComponent(streamUrl)}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            },
+          );
+
+          const data = await response.json();
+
+          if (data.success) {
+            resultDiv.className = "result success";
+            resultDiv.textContent = JSON.stringify(data, null, 2);
+
+            // Show usage examples
+            const usageDiv = document.createElement("div");
+            usageDiv.className = "url-list";
+            usageDiv.innerHTML = `
+              <h4>🌐 Access Your Video Stream Interface:</h4>
+              <a href="${data.ipfsUrl}" target="_blank">Direct Access: ${data.ipfsUrl}</a>
+              <a href="${data.usage.withCustomUrl}" target="_blank">With Custom URL: ${data.usage.withCustomUrl}</a>
+              <h4>📋 Embed Code:</h4>
+              <code>${data.usage.embedCode}</code>
+              <h4>✨ Features:</h4>
+              <ul>
+                ${data.features.map(feature => `<li>${feature}</li>`).join('')}
+              </ul>
+            `;
+            resultDiv.appendChild(usageDiv);
+          } else {
+            resultDiv.className = "result error";
+            resultDiv.textContent = JSON.stringify(data, null, 2);
+          }
+        } catch (error) {
+          resultDiv.className = "result error";
+          resultDiv.textContent = `Error: ${error.message}`;
+        }
+      }
+
+      // Check dynamic stream interface info
+      async function checkDynamicStream() {
+        const streamUrlInput = document.getElementById("dynamicStreamUrl");
+        const streamUrl = streamUrlInput.value.trim();
+        const resultDiv = document.getElementById("dynamicStreamResult");
+
+        if (!streamUrl) {
+          alert("Please enter a stream URL");
+          return;
+        }
+
+        resultDiv.style.display = "block";
+        resultDiv.className = "result loading";
+        resultDiv.textContent = `Checking dynamic stream interface with URL: ${streamUrl}...`;
+
+        try {
+          const response = await fetch(
+            `/api/ipfs/stream-dynamic?streamUrl=${encodeURIComponent(streamUrl)}`,
+            {
+              method: "GET",
+            },
+          );
 
           const data = await response.json();
           resultDiv.className = "result success";
