@@ -1,0 +1,8 @@
+Custom Deployment Info:
+Contract: 0xe43D53747b3d65A1A983428e6a3A79058FDe633a
+Network: 84532
+Owner: 0xf0830060f836B8d54bF02049E5905F619487989e
+Platform Fee: 100 basis points
+Min Reg Fee: 50000000000 wei
+Max Reg Fee: 200000000000 wei
+Timestamp: 1757151588

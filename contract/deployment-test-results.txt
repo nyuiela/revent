@@ -1,0 +1,8 @@
+Deployment and Test Results:
+Contract: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+Network: 31337
+Owner: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+Test Event ID: 1
+Test Ticket ID: 1
+Final Platform Fee: 300 basis points
+Timestamp: 1756625572
