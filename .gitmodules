@@ -1,0 +1,6 @@
+[submodule "revent/lib/forge-std"]
+	path = revent/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "revent/lib/openzeppelin-contracts"]
+	path = revent/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts

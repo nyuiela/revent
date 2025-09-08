@@ -6,12 +6,13 @@ import "./events/Attendees.sol";
 import "./events/Queries.sol";
 import "./events/Admin.sol";
 import "./events/Tickets.sol";
+import "./events/DomaIntegration.sol";
 
 /**
  * @title StreamEvents
  * @dev Facade contract that composes modular event features
  */
-contract StreamEvents is EventAttendees, EventQueries, EventAdmin, EventTickets {
+contract StreamEvents is EventAttendees, EventQueries, EventAdmin, EventTickets, EventDomaIntegration {
     constructor() Ownable(msg.sender) {
         _transferOwnership(msg.sender);
         feeRecipient = msg.sender;
