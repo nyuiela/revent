@@ -4,7 +4,6 @@ import {
   Calendar,
   MapPin,
   Users,
-  Eye,
   Clock,
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -13,12 +12,9 @@ import { Transaction, TransactionButton, TransactionStatus, TransactionStatusAct
 import { ConnectWallet } from "@coinbase/onchainkit/wallet";
 import { eventAbi, eventAddress } from "@/lib/contract";
 import type { Abi } from "viem";
-import { EventCam } from "./eventcam";
 import Image from "next/image";
-import EventManagement from "./EventManagement";
 import config from "@/lib/wagmi";
 import ParticipantsGrid from "./ParticipantsGrid";
-import StreamPublisher from "./live-peer";
 
 
 type EventParticipant = {
@@ -610,7 +606,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
   //   .sort((a, b) => b.contribution - a.contribution)
   //   .slice(0, 10);
 
-  const liveStreamers = event.participants.filter(p => p.isLive && p.role === "streamer");
+  // const liveStreamers = event.participants.filter(p => p.isLive && p.role === "streamer");
 
   // const handleQuickAmount = (amount: string) => {
   //   if (amount === "Reset") {
@@ -644,7 +640,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
 
   return (
     <div className="min-h-screen text-[var(--events-foreground)] bg-black/80 relative z-[20]">
-      <StreamPublisher />
+      {/* <StreamPublisher /> */}
       {/* Header */}
       {/* <div className="sticky top-0 z-40 bg-[var(--app-background)] border-b border-[var(--app-card-border)]">
         <div className="flex items-center justify-between p-4">
@@ -714,7 +710,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
 
       {/* Content */}
       <div className="p-0 max-w-7xl mx-auto space-y-0 pt-6 mt-4 bg-red-transparent">
-        <EventManagement eventId={eventId || "1"} defaultIpfsHash={ipfsHash || "bafkreia2uchzmzosieaj6tyim4qzq5xvxhlyapq2gzacen2tffknfeco6u"} />
+        {/* <EventManagement eventId={eventId || "1"} defaultIpfsHash={ipfsHash || "bafkreia2uchzmzosieaj6tyim4qzq5xvxhlyapq2gzacen2tffknfeco6u"} /> */}
 
         {/* Tickets Section */}
         <div className="border border-[var(--events-card-border)] rounded-xl p-6 py-0 border-none bg-transparent">
@@ -821,7 +817,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
 
 
         {/* Live Streamers */}
-        {liveStreamers.length > 0 && (
+        {/* {liveStreamers.length > 0 && (
           <div className="border border-[var(--events-card-border)] rounded-xl p-6 border-none bg-transparent">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               Live Now
@@ -830,7 +826,6 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
               {liveStreamers.map((streamer) => (
                 <div key={streamer.id} className="flex flex-col items-center min-w-[72px]">
                   <div className="relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-red-500 shadow">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={streamer.avatar} alt={streamer.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="text-xs mt-1">{streamer.name}</div>
@@ -842,7 +837,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
               ))}
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Overview Content - All Sections Combined */}
         <div className="space-y-2">
@@ -855,7 +850,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
           </div>
 
           {/* Registration */}
-          <div className="border border-[var(--events-card-border)] rounded-xl p-6 border-none bg-transparent">
+          {/* <div className="border border-[var(--events-card-border)] rounded-xl p-6 border-none bg-transparent">
             <h2 className="text-xl font-semibold mb-4">Register</h2>
             <div className="flex items-center gap-3">
               {canTransact ? (
@@ -881,7 +876,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
                 <ConnectWallet />
               )}
             </div>
-          </div>
+          </div> */}
 
           {/* Agenda Section */}
           <div className="border border-[var(--events-card-border)] rounded-xl p-6 border-none bg-transparent">
@@ -995,7 +990,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
 
             </div>
           </div>
-          <EventCam setActiveTab={() => { }} />
+          {/* <EventCam setActiveTab={() => { }} /> */}
 
           {/* Participants Section */}
           <div className="border border-[var(--events-card-border)] rounded-xl p-6 border-none bg-transparent">

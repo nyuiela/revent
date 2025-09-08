@@ -130,7 +130,7 @@ const EventsPage = () => {
             <button
               onClick={fetchEvents}
               disabled={loading}
-              className="px-3 py-2 text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 disabled:opacity-50 rounded-lg transition-colors flex items-center gap-2"
+              className="px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50 rounded-lg transition-colors flex items-center gap-2"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               Refresh

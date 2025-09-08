@@ -9,6 +9,13 @@ import { request } from "graphql-request";
 import { headers, url } from "@/context/queryProvider";
 import { eventsCreatedQuery } from "@/context/queryProvider";
 import 'ethereum-identity-kit/css'
+import { Plus_Jakarta_Sans } from 'next/font/google'
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-plus-jakarta',
+  display: 'swap'
+})
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -70,7 +77,7 @@ export default async function RootLayout({
     }
   })
   return (
-    <html lang="en">
+    <html lang="en" className={plusJakarta.variable}>
       <body className="bg-background">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={true}>
           <Providers>{children}</Providers>

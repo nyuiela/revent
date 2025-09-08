@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Button } from "./DemoComponents";
 import { Icon } from "./DemoComponents";
 import { ChevronLeftIcon, ChevronRightIcon, Upload, X, Loader2 } from "lucide-react";
@@ -10,75 +10,13 @@ import { Transaction, TransactionButton, TransactionResponse, TransactionSponsor
 import { useNotification } from "@coinbase/onchainkit/minikit";
 import { ConnectWallet } from "@coinbase/onchainkit/wallet";
 import { useRouter } from 'next/navigation';
+import { EventFormData } from "@/utils/types";
+import VerticalLinearStepper from "./register-stepper";
+import { useQuery } from "@tanstack/react-query";
+import { headers, namesQuery, url } from "@/utils/subgraph";
+import request from "graphql-request";
 // Removed unused import
 
-
-type EventFormData = {
-  title: string;
-  description: string;
-  date: string;
-  time: string;
-  startDateTime: string;
-  endDateTime: string;
-  location: string;
-  coordinates: { lat: number; lng: number };
-  image: string;
-  category: string;
-  maxParticipants: number;
-  isLive: boolean;
-  platforms: string[];
-  totalRewards: number;
-  hosts: {
-    name: string;
-    avatar: string;
-    role: string;
-    bio?: string;
-    social?: {
-      twitter?: string;
-      linkedin?: string;
-      website?: string;
-    };
-  }[];
-  agenda: {
-    title: string;
-    description: string;
-    startTime: string;
-    endTime: string;
-    speakers?: string[];
-  }[];
-  sponsors: {
-    name: string;
-    logo: string;
-    link: string;
-  }[];
-  tickets: {
-    available: boolean;
-    types: { type: string; price: number; currency: string; quantity: number; perks?: string[] }[];
-  };
-  socialLinks: {
-    twitter?: string;
-    discord?: string;
-    website?: string;
-  };
-  tempHost?: {
-    name: string;
-    role: string;
-  };
-  tempAgenda?: {
-    title: string;
-    description: string;
-    startTime: string;
-    endTime: string;
-    speakers: string[];
-  };
-  tempTicket?: {
-    type: string;
-    price: number;
-    currency: string;
-    quantity: number;
-    perks: string[];
-  };
-};
 
 const CreateEventForm = () => {
   const { address, isConnected } = useAccount()
@@ -589,13 +527,6 @@ const CreateEventForm = () => {
           address: eventAddress as `0x${string}`,
           functionName: "addTicket",
           args: [
-            // uint256 eventId,
-            // string memory name,
-            // string memory ticketType,
-            // uint256 price,
-            // string memory currency,
-            // uint256 totalQuantity,
-            // string[] memory perks
             BigInt(eventId),
             ticketType.type,
             ticketType.type,
@@ -611,25 +542,25 @@ const CreateEventForm = () => {
     return ticketContracts;
   };
 
-  // Function to check domain availability
+  type NamesQueryResult = { names?: { items?: { name: string }[] } }
+
+  // Function to check domain availability against fetched registry (full domain input)
   const checkDomainAvailability = async (domain: string) => {
-    if (!domain || !domain.endsWith('.nyuiela.eth')) {
-      setDomainAvailable(false);
-      return false;
+    const normalized = (domain || '').trim().toLowerCase()
+    if (!normalized) {
+      setDomainAvailable(false)
+      return false
     }
 
     setCheckingDomain(true);
     try {
-      // In a real implementation, you would check ENS registry
-      // For demo purposes, we'll simulate availability checking
-      console.log(`Checking availability for: ${domain}`);
-
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Mock availability check - some domains are "taken"
-      const takenDomains = ['vitalik.nyuiela.eth', 'ethereum.nyuiela.eth', 'uniswap.nyuiela.eth', 'opensea.nyuiela.eth'];
-      const isAvailable = !takenDomains.includes(domain.toLowerCase());
+      console.log(`Checking availability for: ${normalized}`);
+      // If query still loading, wait briefly
+      if (isLoading || error) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+      const isTaken = takenDomainSet.has(normalized)
+      const isAvailable = !isTaken
 
       setDomainAvailable(isAvailable);
       return isAvailable;
@@ -648,12 +579,6 @@ const CreateEventForm = () => {
       setIsPreparing(true);
       setVerificationStatus('Preparing domain minting...');
 
-      // In a real implementation, you would:
-      // 1. Check if domain is available
-      // 2. Prepare ENS registration contract calls
-      // 3. Set up content hash to point to event IPFS metadata
-
-      // For demo purposes, we'll create mock contracts
       const domainContracts = [
         {
           abi: eventAbi.abi, // Using event ABI for demo
@@ -693,53 +618,22 @@ const CreateEventForm = () => {
     { id: 6, title: "Review", icon: "check" },
     { id: 7, title: "Domain", icon: "globe" },
   ];
+  const { data, error, isLoading } = useQuery<NamesQueryResult>({
+    queryKey: ['domains'],
+    queryFn: () => request(url, namesQuery, {}, headers),
+  })
+  const takenDomainSet = useMemo(() => {
+    const items = data?.names?.items || []
+    return new Set(items.map((i) => i.name.toLowerCase()))
+  }, [data])
 
-  // register event on contract
-  // function createEvent(uri: string) {
-  //   console.log("Registering event on contract");
-  //   // Build placeholder IPFS hash; replace with real IPFS upload integration
-  //   const ipfsHash = `ipfs://placeholder-${Date.now()}`;
-
-  //   // Prefer explicit start/end datetime; fallback to separate date/time if provided
-  //   const startIso = formData.startDateTime || (formData.date && formData.time ? `${formData.date}T${formData.time}` : "");
-  //   const endIso = formData.endDateTime || "";
-
-  //   if (!startIso || !endIso) {
-  //     alert("Please set both start time and end time");
-  //     return;
-  //   }
-
-  //   const startTime = Math.floor(new Date(startIso).getTime() / 1000);
-  //   const endTime = Math.floor(new Date(endIso).getTime() / 1000);
-
-  //   if (!Number.isFinite(startTime) || !Number.isFinite(endTime)) {
-  //     alert("Invalid start or end time");
-  //     return;
-  //   }
-
-  //   if (startTime >= endTime) {
-  //     alert("End time must be after start time");
-  //     return;
-  //   }
-
-  //   writeContract({
-  //     abi: eventAbi.abi,
-  //     address: eventAddress as `0x${string}`,
-  //     account: address,
-  //     functionName: "createEvent",
-  //     args: [
-  //       ipfsHash,
-  //       BigInt(startTime),
-  //       BigInt(endTime),
-  //       BigInt(formData.maxParticipants),
-  //       0,
-  //     ],
-  //   })
-  // }
-
+  // suggestions removed; availability is checked only against fetched names
+  console.log('domains: ', data);
+  console.log('error: ', error);
+  console.log('isLoading: ', isLoading);
   return (
-    <div className="min-h-screen text-[var(--app-foreground)] bg-background relative z-[20] pt-10 pb-24">
-      <div className="max-w-4xl mx-auto p-4 md:p-6">
+    <div className="min-h-screen text-[var(--app-foreground)] bg-background relative z-[20] pt-14 pb-28">
+      <div className="max-w-5xl mx-auto p-6 md:p-10">
         {/* Progress Steps */}
         <div className="mb-8">
           {/* Desktop Steps */}
@@ -782,37 +676,6 @@ const CreateEventForm = () => {
 
           {/* Mobile Steps */}
           <div className="md:hidden">
-            {/* <div className="flex items-center justify-center mb-4">
-              <div className="flex items-center gap-2">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all ${currentStep >= 1
-                    ? "bg-[var(--app-accent)] text-white"
-                    : "bg-transparent border border-[var(--app-card-border)] text-[var(--app-foreground-muted)]"
-                    }`}
-                >
-                  <Icon name="home" size="sm" />
-                </div>
-                <span className="text-xs text-[var(--app-foreground-muted)]">→</span>
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all ${currentStep >= 2
-                    ? "bg-[var(--app-accent)] text-white"
-                    : "bg-transparent border border-[var(--app-card-border)] text-[var(--app-foreground-muted)]"
-                    }`}
-                >
-                  <Icon name="share" size="sm" />
-                </div>
-                <span className="text-xs text-[var(--app-foreground-muted)]">→</span>
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all ${currentStep >= 3
-                    ? "bg-[var(--app-accent)] text-white"
-                    : "bg-transparent border border-[var(--app-card-border)] text-[var(--app-foreground-muted)]"
-                    }`}
-                >
-                  <Icon name="users" size="sm" />
-                </div>
-                <span className="text-xs text-[var(--app-foreground-muted)]">...</span>
-              </div>
-            </div> */}
 
             <div className="text-center">
               <span className="text-sm font-medium text-[var(--app-accent)]">
@@ -826,13 +689,13 @@ const CreateEventForm = () => {
         </div>
 
         {/* Form Content */}
-        <div className="bg-transparent border-none border-[var(--app-card-border)] rounded-xl p-4 md:p-8">
+        <div className="bg-transparent border-none border-[var(--app-card-border)] rounded-2xl p-6 md:p-10">
           {currentStep === 1 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-center mb-8">Basic Event Information</h2>
+              <h2 className="text-3xl font-semibold text-center mb-10 tracking-tight">Basic Event Information</h2>
 
               {/* Auto-fill Mock Data Button */}
-              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="mb-6 p-4 bg-foreground border border-blue-200 rounded-lg">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-medium text-blue-800">Quick Start</h3>
@@ -846,7 +709,7 @@ const CreateEventForm = () => {
                       onClick={autoFillMockData}
                       className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
                     >
-                      {isAutoFilled ? "✓ Auto-filled" : "Auto-fill Mock Data"}
+                      {isAutoFilled ? "✓ Auto-filled" : "Auto-fill"}
                     </button>
                     {(isAutoFilled || formData.title) && (
                       <button
@@ -903,14 +766,14 @@ const CreateEventForm = () => {
 
               {/* Event Title */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[var(--app-foreground)]">
+                <label className="text-base font-medium text-[var(--app-foreground)]">
                   Event Title *
                 </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
-                  className="w-full px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                  className="w-full px-4 py-3.5 bg-transparent border border-[var(--app-card-border)] rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
                   placeholder="Enter event title"
                   required
                 />
@@ -918,14 +781,14 @@ const CreateEventForm = () => {
 
               {/* Event Description */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[var(--app-foreground)]">
+                <label className="text-base font-medium text-[var(--app-foreground)]">
                   Description *
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   rows={4}
-                  className="w-full px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors resize-none"
+                  className="w-full px-4 py-3.5 bg-transparent border border-[var(--app-card-border)] rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors resize-none"
                   placeholder="Describe your event..."
                   required
                 />
@@ -933,13 +796,13 @@ const CreateEventForm = () => {
 
               {/* Category */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[var(--app-foreground)]">
+                <label className="text-base font-medium text-[var(--app-foreground)]">
                   Category *
                 </label>
                 <select
                   value={formData.category}
                   onChange={(e) => handleInputChange('category', e.target.value)}
-                  className="w-full px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                  className="w-full px-4 py-3.5 bg-transparent border border-[var(--app-card-border)] rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
                   required
                 >
                   <option value="">Select a category</option>
@@ -953,11 +816,11 @@ const CreateEventForm = () => {
 
           {currentStep === 2 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-center mb-8">Event Details</h2>
+              <h2 className="text-3xl font-semibold text-center mb-10 tracking-tight">Event Details</h2>
 
               {/* Event Image */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[var(--app-foreground)]">
+                <label className="text-base font-medium text-[var(--app-foreground)]">
                   Event Image
                 </label>
 
@@ -997,7 +860,7 @@ const CreateEventForm = () => {
                   {/* File Preview */}
                   {previewUrl && (
                     <div className="relative">
-                      <div className="relative w-full h-48 rounded-lg overflow-hidden border border-[var(--app-card-border)]">
+                      <div className="relative w-full h-52 rounded-xl overflow-hidden border border-[var(--app-card-border)]">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={previewUrl}
@@ -1035,7 +898,7 @@ const CreateEventForm = () => {
                           type="text"
                           value={formData.image}
                           onChange={(e) => handleInputChange('image', e.target.value)}
-                          className="flex-1 px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                          className="flex-1 px-4 py-3.5 bg-transparent border border-[var(--app-card-border)] rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                           placeholder="https://example.com/image.jpg"
                         />
                         <Button
@@ -2178,14 +2041,14 @@ const CreateEventForm = () => {
           )}
 
           {currentStep === 7 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-center mb-8">Mint Domain Name</h2>
+            <div className="">
+              <h2 className="text-2xl font-bold text-center mb-0">Mint Domain Name</h2>
               <p className="text-center text-[var(--app-foreground-muted)] mb-6">
                 Create a decentralized domain name for your event using the nyuiela.eth ecosystem
               </p>
 
               {/* Domain Input */}
-              <div className="space-y-4 p-6 bg-transparent border border-[var(--app-card-border)] rounded-lg">
+              <div className="space-y-4 p-6 bg-transparent">
                 <h3 className="text-lg font-medium">Choose Your Domain</h3>
 
                 <div className="space-y-4">
@@ -2193,25 +2056,17 @@ const CreateEventForm = () => {
                     <label className="text-sm font-medium text-[var(--app-foreground)]">
                       Domain Name *
                     </label>
-                    <div className="flex gap-3">
-                      <input
-                        type="text"
-                        placeholder="abc"
-                        value={domainName.replace('.nyuiela.eth', '')}
-                        onChange={(e) => {
-                          const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
-                          setDomainName(value + '.nyuiela.eth');
-                          setDomainAvailable(null);
-                        }}
-                        className="flex-1 px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
-                      />
-                      <div className="px-4 py-3 bg-[var(--app-card-bg)] border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground-muted)] flex items-center">
-                        .nyuiela.eth
-                      </div>
-                    </div>
-                    <p className="text-xs text-[var(--app-foreground-muted)]">
-                      Only lowercase letters, numbers, and hyphens allowed
-                    </p>
+                    <input
+                      type="text"
+                      placeholder="e.g. myevent.io or myevent.core"
+                      value={domainName}
+                      onChange={(e) => {
+                        setDomainName(e.target.value);
+                        setDomainAvailable(null);
+                      }}
+                      className="w-full px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                    />
+                    <p className="text-xs text-[var(--app-foreground-muted)]">Enter full domain including ending (e.g., .io, .core)</p>
                   </div>
 
                   {/* Domain Availability Check */}
@@ -2249,7 +2104,7 @@ const CreateEventForm = () => {
                           <p className="text-sm mt-1">
                             {domainAvailable
                               ? `You can mint ${domainName} for your event`
-                              : `${domainName} is already taken. Try a different name.`
+                              : `${domainName} is already taken.`
                             }
                           </p>
                         </div>
@@ -2320,17 +2175,7 @@ const CreateEventForm = () => {
                       </div>
                     </div>
                   )}
-                </div>
-              </div>
-
-              {/* Domain Examples */}
-              <div className="p-4 bg-[var(--app-card-bg)] border border-[var(--app-card-border)] rounded-lg">
-                <h4 className="font-medium mb-2">💡 Domain Examples</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-[var(--app-foreground-muted)]">
-                  <div>• web3summit2024.nyuiela.eth</div>
-                  <div>• defi-conference.nyuiela.eth</div>
-                  <div>• nft-gallery-opening.nyuiela.eth</div>
-                  <div>• blockchain-workshop.nyuiela.eth</div>
+                  <VerticalLinearStepper />
                 </div>
               </div>
 
@@ -2354,6 +2199,7 @@ const CreateEventForm = () => {
               </div>
             </div>
           )}
+
         </div>
 
       </div>
