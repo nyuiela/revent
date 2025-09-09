@@ -1,231 +1,461 @@
-## StreamEvents Protocol
+# StreamEvents Protocol
 
-An onchain events and ticketing protocol with domain ownership integration and optional investor revenue sharing. The main entrypoint is the `StreamEvents` facade contract, which composes modular features for event lifecycle, attendee registration, ticketing, Doma domain tokenization, and revenue distribution.
+A comprehensive onchain events and ticketing protocol with Doma domain ownership integration, gasless transactions via ERC-2771, and optional investor revenue sharing. The protocol enables event creators to tokenize their event domains, trade them on Doma marketplace, and share revenue with investors while supporting gasless meta-transactions through Doma's trusted forwarder.
 
-### Table of Contents
-- Overview
-- Architecture
-- Event Lifecycle
-- Registration and Attendance
-- Ticketing
-- Doma Integration (Domains and Bridging)
-- Investment and Revenue Sharing
-- Fees and Administration
-- Read APIs
-- Events Emitted
-- Deploy and Configure
-- Example Usage
-- Testing
-- Security Notes
-- Repository Structure
+## Key Features
 
-### Overview
-The protocol enables creators to:
-- Create and manage events with metadata stored off-chain (IPFS hash) and lifecycle states: DRAFT → PUBLISHED → LIVE → COMPLETED/CANCELLED.
-- Accept registrations with optional fees and confirmations; auto-generate unique confirmation codes.
-- Define ticket SKUs with pricing, supply, and perks; support free and paid tickets.
-- Integrate with Doma domain ownership tokens to tokenize event domains, claim ownership, and bridge across chains.
-- Pool a portion of net revenue for investors and allow pro‑rata claims.
+- **Event Management**: Complete lifecycle from creation to completion with IPFS metadata storage
+- **Gasless Transactions**: ERC-2771 meta-transaction support via Doma's trusted forwarder
+- **Domain Tokenization**: Integrate with Doma protocol to tokenize event domains as NFTs
+- **Marketplace Trading**: Built-in support for trading domains on Doma marketplace with Seaport protocol
+- **Revenue Sharing**: Optional investor pools with pro-rata revenue distribution
+- **Ticketing System**: Flexible ticket creation with pricing, supply limits, and perks
+- **Attendance Tracking**: Confirmation codes and attendance verification
+- **Cross-chain Bridging**: Bridge tokenized domains across supported blockchains
 
-### Architecture
-- `src/event.sol` → `StreamEvents` facade that inherits feature modules:
-  - `EventManagement`: create/update/publish/start/end/cancel events and Doma linking hooks.
-  - `EventAttendees`: registration, attendance confirmation, attendance marking.
-  - `EventTickets`: ticket CRUD and purchase; auto-registers buyers.
-  - `EventDomaIntegration`: Doma tokenization, claiming, bridging; investor pool; revenue claims; tipping.
-  - `EventQueries`: read-only getters across events, attendees, tickets, and Doma info.
-  - `EventAdmin`: protocol-wide admin for fees and Doma config (`onlyOwner`).
-  - `EventModifiers`, `EventInternalUtils`: shared modifiers and helpers.
-- `EventStorage` centralizes state:
-  - Events, attendees, tickets, creator indexes
-  - Platform fee, min/max registration fee, fee recipient
-  - Doma config: `domaProxy`, `ownershipToken`, `trustedForwarder`, `registrarIanaId`, `domaChainId`
-  - Doma per-event linkage: `eventToDomaTokenId`, `eventToDomaStatus`
-  - Investor pool: `totalInvested`, `investorShares`, `revenueAccrued`, `revenueClaimed`, `investorBps`
-- External deps: OpenZeppelin `Ownable`, `ReentrancyGuard`.
+## Table of Contents
+- [Architecture Overview](#architecture-overview)
+- [System Architecture Diagram](#system-architecture-diagram)
+- [Event Lifecycle Flow](#event-lifecycle-flow)
+- [Doma Integration Flow](#doma-integration-flow)
+- [Marketplace Trading Flow](#marketplace-trading-flow)
+- [Revenue Sharing Flow](#revenue-sharing-flow)
+- [Gasless Transactions](#gasless-transactions)
+- [Core Components](#core-components)
+- [Deployment and Configuration](#deployment-and-configuration)
+- [Usage Examples](#usage-examples)
+- [Security Considerations](#security-considerations)
+- [Testing](#testing)
 
-### Event Lifecycle
-- `createEvent(ipfsHash, startTime, endTime, maxAttendees, registrationFee)`
-  - Validates time bounds, non-empty IPFS hash, `maxAttendees > 0`, and `registrationFee` within limits.
-  - Initializes as `DRAFT`, `isActive=true`, `isLive=false`.
-- `updateEvent(...)` (creator only)
-  - Updates metadata and constraints while preserving invariants.
-- `publishEvent(eventId)` → sets status to `PUBLISHED`.
-- `startLiveEvent(eventId)` → requires now ≥ `startTime`; sets status to `LIVE`, `isLive=true`.
-- `endEvent(eventId)` (creator) → requires `LIVE`, sets `COMPLETED`.
-- `cancelEvent(eventId)` (creator) → sets `CANCELLED`, deactivates event.
+## Architecture Overview
 
-### Registration and Attendance
-- `registerForEvent(eventId)`
-  - Requires `PUBLISHED`, event active, capacity available, and exact `msg.value == registrationFee`.
-  - Generates a unique confirmation code; splits payment into platform fee and creator payout.
-- `confirmAttendance(eventId, attendee, confirmationCode)` (creator)
-- `markAttended(eventId, attendee)` (creator)
-- Internals
-  - Confirmation codes are generated from eventId, attendee, timestamp, and deduplicated.
-  - Fees: platform fee in basis points (bps) to `feeRecipient` or owner fallback.
+StreamEvents is built as a modular system with a facade pattern, where the main `StreamEvents` contract composes multiple feature modules. The architecture supports gasless transactions through ERC-2771, integrates with Doma's domain tokenization protocol, and provides marketplace trading capabilities.
 
-### Ticketing
-- `addTicket(eventId, name, ticketType, price, currency, totalQuantity, perks[])` (creator)
-- `updateTicket(eventId, ticketId, ...)` (creator)
-- `removeTicket(eventId, ticketId)` (creator)
-- `buyTicket(eventId, ticketId)`
-  - Validates SKU, activity, and supply; enforces exact pricing when `price > 0`.
-  - Splits payment into platform fee and creator payout.
-  - Auto-registers the buyer as an attendee if not already registered (free, with generated code).
+### Core Design Principles
 
-### Doma Integration (Domains and Bridging)
-Owner-configured settings via `setDomaConfig` in `EventAdmin` or `EventManagement`:
-- `domaProxy`, `ownershipToken`, `trustedForwarder`, `registrarIanaId`, `domaChainId`.
+1. **Modular Architecture**: Each feature is isolated in its own module for maintainability
+2. **Gasless Support**: ERC-2771 meta-transactions via Doma's trusted forwarder
+3. **Domain Integration**: Seamless tokenization and trading of event domains
+4. **Revenue Sharing**: Flexible investor participation with pro-rata distribution
+5. **Security First**: Reentrancy protection, access controls, and input validation
 
-Flows:
-- `createEventWithTokenization(..., voucher, registrarSignature)`
-  - Creates the event, then calls the Doma proxy `requestTokenization` (payable), marks status as requested.
-- `linkDomaMinted(eventId, tokenId)`, `linkDomaClaimed(eventId)`
-  - Hooks to link off-chain tokenization/claiming outcomes.
-- `claimEventDomain(eventId, isSynthetic, proof, proofSignature)` (creator, payable)
-- `bridgeEventDomain(eventId, isSynthetic, targetChainId, targetOwnerAddress)` (creator, payable)
-- `getEventDomaInfo(eventId)` → returns token info via `IOwnershipToken` if configured.
-- `tipDomainOwner(eventId)` (payable) → forwards value to ownership token owner.
+## System Architecture Diagram
 
-### Investment and Revenue Sharing
-- `investInEvent(eventId)` (payable)
-  - Tracks investor deposits per event.
-- `registerForEventWithRevenuePool(eventId)` (payable)
-  - Similar to `registerForEvent`, but splits net revenue: a share to investors (by `investorBps`, default 5000 = 50%) and the rest to the creator.
-  - Accrues investor portion into `revenueAccrued[eventId]`.
-- `claimRevenue(eventId)`
-  - Investors claim pro‑rata accrued revenue by `investorShares / totalInvested`.
-
-### Fees and Administration
-- Parameters:
-  - `platformFee` (bps), `feeRecipient`, `minRegistrationFee`, `maxRegistrationFee`.
-- Admin functions (`onlyOwner`):
-  - `updatePlatformFee(newFee)` (capped at 10%)
-  - `updateRegistrationFeeLimits(minFee, maxFee)`
-  - `emergencyWithdraw()` → drains contract balance to `feeRecipient` or owner.
-
-### Read APIs
-- Events and creators: `getEvent(eventId)`, `getCreatorEvents(creator)`
-- Attendees: `getEventAttendees(eventId)`, `getAttendee(eventId, user)`, `isRegisteredForEvent(eventId, user)`
-- Tickets: `getEventTickets(eventId)`, `getTicket(ticketId)`
-- Doma info: `getEventDomaInfo(eventId)`
-- Counters: `getTotalEvents()`
-
-### Events Emitted
-- `EventCreated`, `EventUpdated`, `EventStatusChanged`
-- `AttendeeRegistered`, `AttendeeConfirmed`, `AttendeeAttended`
-- `TicketAdded`, `TicketUpdated`, `TicketRemoved`, `TicketPurchased`
-- Admin: `PlatformFeeUpdated`, `RegistrationFeeLimitsUpdated`
-- Doma: `DomaRequested`, `DomaClaimed`, `DomaBridged`
-
-### Deploy and Configure
-- Build contracts:
-  ```bash
-  forge build
-  ```
-- Deploy `StreamEvents` (example):
-  ```bash
-  forge create src/event.sol:StreamEvents --rpc-url <RPC_URL> --private-key <PRIVATE_KEY>
-  ```
-- Configure protocol admin (owner account):
-  ```bash
-  cast send <STREAM_EVENTS_ADDRESS> "updatePlatformFee(uint256)" 250 --rpc-url <RPC_URL> --private-key <PRIVATE_KEY>
-  cast send <STREAM_EVENTS_ADDRESS> "updateRegistrationFeeLimits(uint256,uint256)" 1000000000000000 1000000000000000000 --rpc-url <RPC_URL> --private-key <PRIVATE_KEY>
-  ```
-- Configure Doma (owner account):
-  ```bash
-  cast send <STREAM_EVENTS_ADDRESS> "setDomaConfig(address,address,address,uint256,string)" <DOMA_PROXY> <OWNERSHIP_TOKEN> <TRUSTED_FORWARDER> <REGISTRAR_IANA_ID> <CHAIN_ID> --rpc-url <RPC_URL> --private-key <PRIVATE_KEY>
-  ```
-
-### Example Usage
-1) Creator creates and publishes an event:
-```bash
-cast send <STREAM_EVENTS> "createEvent(string,uint256,uint256,uint256,uint256)" <IPFS_HASH> <START_TS> <END_TS> 100 1000000000000000 --rpc-url <RPC_URL> --private-key <CREATOR_PK>
-cast call <STREAM_EVENTS> "getCreatorEvents(address)" <CREATOR_ADDRESS> --rpc-url <RPC_URL>
-cast send <STREAM_EVENTS> "publishEvent(uint256)" <EVENT_ID> --rpc-url <RPC_URL> --private-key <CREATOR_PK>
-```
-2) Attendee registers:
-```bash
-cast send <STREAM_EVENTS> "registerForEvent(uint256)" <EVENT_ID> --value 1000000000000000 --rpc-url <RPC_URL> --private-key <USER_PK>
-```
-3) Creator manages tickets:
-```bash
-cast send <STREAM_EVENTS> "addTicket(uint256,string,string,uint256,string,uint256,string[])" <EVENT_ID> "General" "GA" 0 "NATIVE" 0 [] --rpc-url <RPC_URL> --private-key <CREATOR_PK>
-```
-4) Investor deposits and claims:
-```bash
-cast send <STREAM_EVENTS> "investInEvent(uint256)" <EVENT_ID> --value 1000000000000000000 --rpc-url <RPC_URL> --private-key <INVESTOR_PK>
-cast send <STREAM_EVENTS> "claimRevenue(uint256)" <EVENT_ID> --rpc-url <RPC_URL> --private-key <INVESTOR_PK>
+```mermaid
+graph TB
+    subgraph "StreamEvents Protocol"
+        SE[StreamEvents Facade]
+        
+        subgraph "Core Modules"
+            EM[EventManagement]
+            EA[EventAttendees]
+            ET[EventTickets]
+            EDI[EventDomaIntegration]
+            EQ[EventQueries]
+            EAD[EventAdmin]
+        end
+        
+        subgraph "Storage & Utils"
+            ES[EventStorage]
+            EMOD[EventModifiers]
+            EIU[EventInternalUtils]
+        end
+        
+        subgraph "External Integrations"
+            DOMA[Doma Protocol]
+            MARKET[Doma Marketplace]
+            FORWARDER[ERC-2771 Forwarder]
+        end
+        
+        SE --> EM
+        SE --> EA
+        SE --> ET
+        SE --> EDI
+        SE --> EQ
+        SE --> EAD
+        
+        EM --> ES
+        EA --> ES
+        ET --> ES
+        EDI --> ES
+        EQ --> ES
+        EAD --> ES
+        
+        EDI --> DOMA
+        EDI --> MARKET
+        SE --> FORWARDER
+    end
+    
+    subgraph "Users"
+        CREATOR[Event Creator]
+        ATTENDEE[Attendee]
+        INVESTOR[Investor]
+        BUYER[Domain Buyer]
+    end
+    
+    CREATOR --> SE
+    ATTENDEE --> SE
+    INVESTOR --> SE
+    BUYER --> MARKET
 ```
 
-### Testing
-- Run all tests (uses Foundry):
+## Event Lifecycle Flow
+
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT: createEvent()
+    DRAFT --> PUBLISHED: publishEvent()
+    PUBLISHED --> LIVE: startLiveEvent()
+    LIVE --> COMPLETED: endEvent()
+    LIVE --> CANCELLED: cancelEvent()
+    PUBLISHED --> CANCELLED: cancelEvent()
+    COMPLETED --> [*]
+    CANCELLED --> [*]
+    
+    note right of DRAFT
+        Event created with metadata
+        IPFS hash, timing, capacity
+    end note
+    
+    note right of PUBLISHED
+        Open for registration
+        Tickets can be added
+    end note
+    
+    note right of LIVE
+        Event is active
+        Attendance tracking
+    end note
+```
+
+## Doma Integration Flow
+
+```mermaid
+sequenceDiagram
+    participant C as Creator
+    participant SE as StreamEvents
+    participant DP as Doma Proxy
+    participant OT as Ownership Token
+    participant M as Marketplace
+    
+    C->>SE: createEventWithTokenization()
+    SE->>DP: requestTokenization()
+    DP-->>SE: Domain tokenized
+    SE->>SE: linkDomaMinted()
+    
+    C->>SE: claimEventDomain()
+    SE->>DP: claimOwnership()
+    DP-->>SE: Ownership claimed
+    SE->>SE: linkDomaClaimed()
+    
+    C->>SE: approveOwnershipTokenOperator()
+    SE->>OT: setApprovalForAll()
+    
+    C->>M: Create listing/offer
+    M->>OT: Transfer ownership
+    OT-->>M: Domain transferred
+    
+    C->>SE: bridgeEventDomain()
+    SE->>DP: bridge()
+    DP-->>SE: Domain bridged
+```
+
+## Marketplace Trading Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant SE as StreamEvents
+    participant OT as Ownership Token
+    participant M as Doma Marketplace
+    participant S as Seaport
+    
+    U->>SE: getUSDC() / getWETH()
+    SE-->>U: Currency addresses
+    
+    U->>SE: getProtocolFee()
+    SE-->>U: Fee receiver & bps
+    
+    U->>SE: getRoyaltyInfo()
+    SE->>OT: royaltyInfo()
+    OT-->>SE: Royalty details
+    SE-->>U: Royalty info
+    
+    U->>M: Create listing with fees
+    M->>S: Submit order
+    S->>OT: Transfer token
+    OT-->>S: Transfer complete
+    S-->>M: Order filled
+    M-->>U: Payment received
+```
+
+## Revenue Sharing Flow
+
+```mermaid
+sequenceDiagram
+    participant I as Investor
+    participant A as Attendee
+    participant SE as StreamEvents
+    participant C as Creator
+    
+    I->>SE: investInEvent()
+    SE->>SE: Track investment
+    
+    A->>SE: registerForEventWithRevenuePool()
+    SE->>SE: Calculate fees
+    SE->>C: Creator portion
+    SE->>SE: Investor portion (accrued)
+    
+    I->>SE: claimRevenue()
+    SE->>SE: Calculate pro-rata share
+    SE->>I: Revenue payout
+```
+
+## Gasless Transactions
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Forwarder
+    participant SE as StreamEvents
+    participant R as Relayer
+    
+    U->>F: Sign meta-transaction
+    F->>R: Forward signed tx
+    R->>SE: Execute with gas
+    SE->>F: Verify signature
+    F->>SE: Return original sender
+    SE->>SE: Process as _msgSender()
+    SE-->>R: Transaction result
+    R-->>U: Result
+```
+
+## Core Components
+
+### StreamEvents Facade
+The main contract that composes all feature modules and provides the public API.
+
+**Key Features:**
+- ERC-2771 meta-transaction support
+- Doma marketplace integration
+- Owner-configurable addresses
+- Comprehensive event management
+
+### Event Management Module
+Handles the complete event lifecycle from creation to completion.
+
+**Functions:**
+- `createEvent()` - Create new events with validation
+- `updateEvent()` - Modify event details (creator only)
+- `publishEvent()` - Make event public for registration
+- `startLiveEvent()` - Begin live event
+- `endEvent()` / `cancelEvent()` - Complete or cancel events
+
+### Doma Integration Module
+Manages domain tokenization, claiming, and marketplace interactions.
+
+**Functions:**
+- `createEventWithTokenization()` - Create event and tokenize domain
+- `claimEventDomain()` - Claim ownership of tokenized domain
+- `bridgeEventDomain()` - Bridge domain to other chains
+- `approveOwnershipTokenOperator()` - Approve marketplace operators
+- `getRoyaltyInfo()` - Query domain royalties for marketplace
+
+### Revenue Sharing Module
+Enables investor participation and pro-rata revenue distribution.
+
+**Functions:**
+- `investInEvent()` - Deposit funds for revenue sharing
+- `registerForEventWithRevenuePool()` - Registration with investor split
+- `claimRevenue()` - Claim accrued revenue (investors)
+
+### Ticketing Module
+Comprehensive ticket management with pricing and supply controls.
+
+**Functions:**
+- `addTicket()` - Create ticket types with pricing
+- `updateTicket()` - Modify ticket details
+- `buyTicket()` - Purchase tickets with auto-registration
+- `removeTicket()` - Deactivate tickets
+
+## Deployment and Configuration
+
+### Prerequisites
+- Foundry installed
+- Private key with deployment funds
+- Doma testnet RPC URL
+
+### Build and Deploy
+
 ```bash
+# Build contracts
+forge build
+
+# Deploy to Doma testnet
+forge script script/DeployDoma.s.sol --rpc-url <DOMA_RPC> --broadcast --private-key <PRIVATE_KEY>
+```
+
+### Configuration
+
+The deploy script automatically configures:
+- Doma testnet addresses (Proxy, Ownership Token, Forwarder)
+- Marketplace currencies (USDC, wETH)
+- Protocol fees (0.5% to Doma protocol)
+- Platform settings (2.5% platform fee)
+
+### Manual Configuration
+
+```bash
+# Set Doma configuration
+cast send <CONTRACT> "setDomaConfig(address,address,address,uint256,string)" \
+  <DOMA_PROXY> <OWNERSHIP_TOKEN> <FORWARDER> 0 "doma" \
+  --rpc-url <RPC> --private-key <PRIVATE_KEY>
+
+# Set marketplace currencies
+cast send <CONTRACT> "setMarketplaceCurrencies(address,address)" \
+  <USDC_ADDRESS> <WETH_ADDRESS> \
+  --rpc-url <RPC> --private-key <PRIVATE_KEY>
+
+# Set protocol fees
+cast send <CONTRACT> "setMarketplaceProtocolFee(address,uint256)" \
+  <FEE_RECEIVER> 50 \
+  --rpc-url <RPC> --private-key <PRIVATE_KEY>
+```
+
+## Usage Examples
+
+### 1. Create and Tokenize Event
+
+```bash
+# Create event with domain tokenization
+cast send <CONTRACT> "createEventWithTokenization(string,uint256,uint256,uint256,uint256,tuple,bytes)" \
+  "QmHash..." $(date -d "+1 day" +%s) $(date -d "+2 days" +%s) 100 1000000000000000 \
+  '["example.com","eth"]' 0 0 0x0000000000000000000000000000000000000000 0 \
+  0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 \
+  --value 1000000000000000 --rpc-url <RPC> --private-key <CREATOR_KEY>
+```
+
+### 2. Register for Event
+
+```bash
+# Standard registration
+cast send <CONTRACT> "registerForEvent(uint256)" <EVENT_ID> \
+  --value 1000000000000000 --rpc-url <RPC> --private-key <USER_KEY>
+
+# Registration with revenue sharing
+cast send <CONTRACT> "registerForEventWithRevenuePool(uint256)" <EVENT_ID> \
+  --value 1000000000000000 --rpc-url <RPC> --private-key <USER_KEY>
+```
+
+### 3. Manage Tickets
+
+```bash
+# Add ticket
+cast send <CONTRACT> "addTicket(uint256,string,string,uint256,string,uint256,string[])" \
+  <EVENT_ID> "VIP" "Premium" 50000000000000000 "ETH" 50 '["Backstage access","Free drinks"]' \
+  --rpc-url <RPC> --private-key <CREATOR_KEY>
+
+# Buy ticket
+cast send <CONTRACT> "buyTicket(uint256,uint256)" <EVENT_ID> <TICKET_ID> \
+  --value 50000000000000000 --rpc-url <RPC> --private-key <USER_KEY>
+```
+
+### 4. Domain Trading
+
+```bash
+# Approve marketplace operator
+cast send <CONTRACT> "approveOwnershipTokenOperator(address,bool)" \
+  <SEAPORT_CONDUIT> true --rpc-url <RPC> --private-key <CREATOR_KEY>
+
+# Query marketplace info
+cast call <CONTRACT> "getUSDC()" --rpc-url <RPC>
+cast call <CONTRACT> "getWETH()" --rpc-url <RPC>
+cast call <CONTRACT> "getProtocolFee()" --rpc-url <RPC>
+cast call <CONTRACT> "getRoyaltyInfo(uint256,uint256)" <TOKEN_ID> 1000000000000000000 --rpc-url <RPC>
+```
+
+### 5. Revenue Sharing
+
+```bash
+# Invest in event
+cast send <CONTRACT> "investInEvent(uint256)" <EVENT_ID> \
+  --value 1000000000000000000 --rpc-url <RPC> --private-key <INVESTOR_KEY>
+
+# Claim revenue
+cast send <CONTRACT> "claimRevenue(uint256)" <EVENT_ID> \
+  --rpc-url <RPC> --private-key <INVESTOR_KEY>
+```
+
+## Security Considerations
+
+### Access Control
+- **Owner Functions**: Protocol configuration and emergency controls
+- **Creator Functions**: Event management and domain operations
+- **Public Functions**: Registration, ticketing, and revenue claims
+
+### Reentrancy Protection
+- All payable functions use `nonReentrant` modifier
+- State changes before external calls
+- Safe transfer patterns
+
+### Input Validation
+- Time bounds validation for events
+- Fee limits and capacity checks
+- Domain tokenization verification
+
+### Gasless Transaction Security
+- Trusted forwarder verification
+- Signature validation through ERC-2771
+- Original sender preservation
+
+## Testing
+
+### Run Tests
+```bash
+# Run all tests
 forge test -vvvv
+
+# Run specific test
+forge test --match-test testCreateEvent -vvvv
+
+# Gas report
+forge test --gas-report
 ```
-- The sample test `test/event.t.sol` covers creating an event, publishing, starting, and registering.
 
-### Security Notes
-- Access control:
-  - Protocol admin via `onlyOwner` in `EventAdmin`.
-  - Event mutation guarded by `onlyEventCreator`.
-- Reentrancy protection on payable flows in registration and ticket purchase.
-- Payments use `transfer`/`call` where appropriate; ensure recipients are trusted.
-- `trustedForwarder` exists for potential gasless flows but is not enforced in current functions.
-- Always validate Doma contracts and vouchers off-chain prior to calling payable functions.
+### Test Coverage
+- Event lifecycle management
+- Registration and attendance flows
+- Ticket creation and purchasing
+- Doma integration (mocking)
+- Revenue sharing calculations
+- Access control enforcement
 
-### Repository Structure
-- `src/event.sol` → Facade `StreamEvents`.
-- `src/events/*` → Modules (`Storage`, `Modifiers`, `Management`, `Attendees`, `Tickets`, `Queries`, `Admin`, `DomaIntegration`, `Types`).
-- `src/doma/*` → Doma interfaces and utils.
-- `test/event.t.sol` → Basic unit tests.
-- `REGISTERE_USAGE.md` → Example script usage notes for a separate `registere(string,bytes)` interaction.
+## Repository Structure
 
-### License
+```
+contract/
+├── src/
+│   ├── event.sol                 # Main StreamEvents facade
+│   ├── events/                   # Feature modules
+│   │   ├── Storage.sol          # Centralized state
+│   │   ├── Management.sol       # Event lifecycle
+│   │   ├── Attendees.sol        # Registration & attendance
+│   │   ├── Tickets.sol          # Ticket management
+│   │   ├── DomaIntegration.sol  # Domain tokenization
+│   │   ├── Queries.sol          # Read-only APIs
+│   │   ├── Admin.sol            # Protocol administration
+│   │   └── Types.sol            # Data structures
+│   └── doma/                    # Doma integration
+│       └── interfaces/          # External contract interfaces
+├── script/
+│   ├── DeployDoma.s.sol         # Doma testnet deployment
+│   └── DeployAndTest.s.sol      # General deployment
+├── test/
+│   └── event.t.sol              # Unit tests
+└── foundry.toml                 # Build configuration
+```
+
+## License
+
 MIT
 
-### Doma Path: Detailed Flow
-
-This expands on Doma integration with step-by-step flows and references to functions and state.
-
-#### Configuration (owner)
-- `setDomaConfig(address domaProxy, address ownershipToken, address trustedForwarder, uint256 registrarIanaId, string domaChainId)`
-- Required before tokenization/claim/bridge; otherwise Doma functions revert with "doma proxy not set".
-
-#### State tracked per event
-- `eventToDomaTokenId[eventId]`: linked ownership tokenId
-- `eventToDomaStatus[eventId]`: 0 None, 1 Requested, 2 Minted, 3 Claimed
-
-#### End-to-end sequence
-1) Request tokenization during creation (creator):
-   - `createEventWithTokenization(..., IDomaProxy.TokenizationVoucher voucher, bytes registrarSignature)` (payable)
-   - Validates `voucher.ownerAddress == msg.sender`; calls `IDomaProxy.requestTokenization{value: msg.value}(...)`.
-   - Sets status → Requested (1); emits `DomaRequested(eventId)`.
-
-2) Link minted token (off-chain agent/registrar role in production):
-   - `linkDomaMinted(eventId, tokenId)`
-   - Sets `eventToDomaTokenId[eventId] = tokenId`, status → Minted (2).
-
-3) Claim domain ownership (creator):
-   - `claimEventDomain(eventId, bool isSynthetic, IDomaProxy.ProofOfContactsVoucher proof, bytes proofSignature)` (payable)
-   - Requires token linked; calls `IDomaProxy.claimOwnership{value: msg.value}(tokenId, ...)`.
-   - Sets status → Claimed (3) optimistically.
-
-4) Bridge domain cross-chain (creator):
-   - `bridgeEventDomain(eventId, bool isSynthetic, string targetChainId, string targetOwnerAddress)` (payable)
-   - Calls `IDomaProxy.bridge{value: msg.value}(tokenId, isSynthetic, targetChainId, targetOwnerAddress)`.
-   - Emits `DomaBridged(eventId, targetChainId, targetOwnerAddress)`.
-
-#### Read APIs
-- `getEventDomaInfo(eventId)` → `(tokenId, status, expiration, isLocked, registrar)` by querying `IOwnershipToken` when configured.
-- Ownership lookup for tipping uses `IOwnershipToken.ownerOf(tokenId)`.
-
-#### Tipping the domain owner
-- `tipDomainOwner(eventId)` (payable) → forwards `msg.value` to `ownerOf(tokenId)` of `ownershipToken`.
-
-#### Failure modes and guardrails
-- Missing config: Doma calls revert if `domaProxy == address(0)`.
-- Unlinked token: Claim/bridge require `eventToDomaTokenId[eventId] != 0`.
-- Access: Only the event creator may call claim/bridge. In production, restrict `linkDomaMinted/Claimed` to trusted roles.
-- Fees: Payable functions must include sufficient ETH for Doma proxy operations.
