@@ -36,9 +36,21 @@ abstract contract EventAdmin is Ownable, EventStorage {
     ) external onlyOwner {
         domaProxy = _domaProxy;
         ownershipToken = _ownershipToken;
-        trustedForwarder = _trustedForwarder;
+        trustedForwarderAddr = _trustedForwarder;
         registrarIanaId = _registrarIanaId;
         domaChainId = _domaChainId;
+    }
+
+    // Marketplace config (owner-only)
+    function setMarketplaceCurrencies(address usdc, address weth) external onlyOwner {
+        marketplaceUSDC = usdc;
+        marketplaceWETH = weth;
+    }
+
+    function setMarketplaceProtocolFee(address receiver, uint256 feeBps) external onlyOwner {
+        require(feeBps <= 1000, "fee too high");
+        marketplaceProtocolFeeReceiver = receiver;
+        marketplaceProtocolFeeBps = feeBps;
     }
 }
 

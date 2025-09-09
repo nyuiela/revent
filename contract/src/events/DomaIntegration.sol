@@ -21,7 +21,7 @@ abstract contract EventDomaIntegration is EventManagement {
         bytes calldata registrarSignature
     ) external payable validRegistrationFee(registrationFee) returns (uint256) {
         require(domaProxy != address(0), "doma proxy not set");
-        require(voucher.ownerAddress == msg.sender, "voucher owner != sender");
+        require(voucher.ownerAddress == _msgSender(), "voucher owner != sender");
 
         uint256 eventId = this.createEvent(ipfsHash, startTime, endTime, maxAttendees, registrationFee);
 
@@ -63,7 +63,7 @@ abstract contract EventDomaIntegration is EventManagement {
     function investInEvent(uint256 eventId) external payable eventExists(eventId) {
         require(msg.value > 0, "no value");
         totalInvested[eventId] += msg.value;
-        investorShares[eventId][msg.sender] += msg.value;
+        investorShares[eventId][_msgSender()] += msg.value;
     }
 
     // Registration with revenue pooling: platform fee paid out, investor pool accrues a portion
@@ -72,9 +72,10 @@ abstract contract EventDomaIntegration is EventManagement {
         EventTypes.EventData storage eventData = events[eventId];
         require(msg.value == eventData.registrationFee, "bad fee");
 
-        string memory confirmationCode = _generateConfirmationCode(eventId, msg.sender);
-        attendees[eventId][msg.sender] = EventTypes.AttendeeData({
-            attendeeAddress: msg.sender,
+        address sender = _msgSender();
+        string memory confirmationCode = _generateConfirmationCode(eventId, sender);
+        attendees[eventId][sender] = EventTypes.AttendeeData({
+            attendeeAddress: sender,
             eventId: eventId,
             confirmationCode: confirmationCode,
             isConfirmed: false,
@@ -83,7 +84,7 @@ abstract contract EventDomaIntegration is EventManagement {
             confirmedAt: 0
         });
         eventData.currentAttendees++;
-        eventAttendees[eventId].push(msg.sender);
+        eventAttendees[eventId].push(sender);
 
         uint256 platformFeeAmount = (msg.value * platformFee) / 10000; //basis points
         uint256 net = msg.value - platformFeeAmount;
@@ -95,21 +96,21 @@ abstract contract EventDomaIntegration is EventManagement {
         revenueAccrued[eventId] += toInvestors;
         payable(eventData.creator).transfer(toCreator);
 
-        emit EventEvents.AttendeeRegistered(eventId, msg.sender, confirmationCode, msg.value);
+        emit EventEvents.AttendeeRegistered(eventId, sender, confirmationCode, msg.value);
     }
 
     // Investors claim pro-rata share of accrued revenue
     function claimRevenue(uint256 eventId) external {
-        uint256 invested = investorShares[eventId][msg.sender];
+        uint256 invested = investorShares[eventId][_msgSender()];
         require(invested > 0, "no shares");
         uint256 total = totalInvested[eventId];
         require(total > 0, "no total");
         uint256 entitled = (revenueAccrued[eventId] * invested) / total;
-        uint256 already = revenueClaimed[eventId][msg.sender];
+        uint256 already = revenueClaimed[eventId][_msgSender()];
         require(entitled > already, "nothing to claim");
         uint256 payout = entitled - already;
-        revenueClaimed[eventId][msg.sender] = entitled;
-        (bool ok, ) = payable(msg.sender).call{value: payout}("");
+        revenueClaimed[eventId][_msgSender()] = entitled;
+        (bool ok, ) = payable(_msgSender()).call{value: payout}("");
         require(ok, "payout failed");
     }
 

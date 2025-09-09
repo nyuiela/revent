@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import "@openzeppelin/contracts/utils/Context.sol";
 import "./Storage.sol";
 
-abstract contract EventModifiers is EventStorage {
+abstract contract EventModifiers is Context, EventStorage {
     modifier eventExists(uint256 eventId) {
         require(events[eventId].creator != address(0), "Event does not exist");
         _;
     }
 
     modifier onlyEventCreator(uint256 eventId) {
-        require(events[eventId].creator == msg.sender, "Only event creator can perform this action");
+        require(events[eventId].creator == _msgSender(), "Only event creator can perform this action");
         _;
     }
 
@@ -25,7 +26,7 @@ abstract contract EventModifiers is EventStorage {
     }
 
     modifier notAlreadyRegistered(uint256 eventId) {
-        require(attendees[eventId][msg.sender].attendeeAddress == address(0), "Already registered for this event");
+        require(attendees[eventId][_msgSender()].attendeeAddress == address(0), "Already registered for this event");
         _;
     }
 

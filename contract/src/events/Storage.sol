@@ -31,7 +31,7 @@ abstract contract EventStorage {
     // Doma integration config
     address public domaProxy;
     address public ownershipToken;
-    address public trustedForwarder;
+    address public trustedForwarderAddr;
     uint256 public registrarIanaId;
     string public domaChainId; // CAIP-2 string if needed for bridging
 
@@ -47,6 +47,12 @@ abstract contract EventStorage {
     // Revenue claims tracking and investor split bps
     mapping(uint256 => mapping(address => uint256)) public revenueClaimed; // eventId => investor => cumulative claimed
     uint256 public investorBps = 5000; // default 50% of net to investors
+
+    // Marketplace configuration (owner-settable)
+    address public marketplaceUSDC;
+    address public marketplaceWETH;
+    address public marketplaceProtocolFeeReceiver;
+    uint256 public marketplaceProtocolFeeBps; // e.g., 50 == 0.5%
 }
 
 

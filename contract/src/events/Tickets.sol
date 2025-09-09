@@ -103,14 +103,15 @@ abstract contract EventTickets is ReentrancyGuard, EventModifiers {
         }
 
         t.soldQuantity += 1;
-        purchasedTicketCounts[eventId][msg.sender] += 1;
+        address buyer = _msgSender();
+        purchasedTicketCounts[eventId][buyer] += 1;
 
         // Auto-register attendee if not registered
-        if (attendees[eventId][msg.sender].attendeeAddress == address(0)) {
+        if (attendees[eventId][buyer].attendeeAddress == address(0)) {
             // mimic registerForEvent but free
-            string memory code = _generateConfirmationCode(eventId, msg.sender);
-            attendees[eventId][msg.sender] = EventTypes.AttendeeData({
-                attendeeAddress: msg.sender,
+            string memory code = _generateConfirmationCode(eventId, buyer);
+            attendees[eventId][buyer] = EventTypes.AttendeeData({
+                attendeeAddress: buyer,
                 eventId: eventId,
                 confirmationCode: code,
                 isConfirmed: false,
@@ -119,10 +120,10 @@ abstract contract EventTickets is ReentrancyGuard, EventModifiers {
                 confirmedAt: 0
             });
             events[eventId].currentAttendees++;
-            eventAttendees[eventId].push(msg.sender);
+            eventAttendees[eventId].push(buyer);
         }
 
-        emit EventEvents.TicketPurchased(eventId, ticketId, msg.sender, price);
+        emit EventEvents.TicketPurchased(eventId, ticketId, buyer, price);
     }
 
     function _generateConfirmationCode(uint256 eventId, address attendee) internal virtual returns (string memory);
