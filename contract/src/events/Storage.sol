@@ -27,6 +27,32 @@ abstract contract EventStorage {
     uint256 public minRegistrationFee = 0.001 ether;
     uint256 public maxRegistrationFee = 1 ether;
     address public feeRecipient;
+
+    // Doma integration config
+    address public domaProxy;
+    address public ownershipToken;
+    address public trustedForwarderAddr;
+    uint256 public registrarIanaId;
+    string public domaChainId; // CAIP-2 string if needed for bridging
+
+    // Per-event doma linkage
+    mapping(uint256 => uint256) public eventToDomaTokenId; // eventId => tokenId
+    mapping(uint256 => uint8) public eventToDomaStatus; // 0-None,1-Requested,2-Minted,3-Claimed
+
+    // Investment and revenue sharing (simple pro-rata)
+    mapping(uint256 => uint256) public totalInvested; // eventId => total ETH invested
+    mapping(uint256 => mapping(address => uint256)) public investorShares; // eventId => investor => amount
+    mapping(uint256 => uint256) public revenueAccrued; // net revenue accrued per event
+
+    // Revenue claims tracking and investor split bps
+    mapping(uint256 => mapping(address => uint256)) public revenueClaimed; // eventId => investor => cumulative claimed
+    uint256 public investorBps = 5000; // default 50% of net to investors
+
+    // Marketplace configuration (owner-settable)
+    address public marketplaceUSDC;
+    address public marketplaceWETH;
+    address public marketplaceProtocolFeeReceiver;
+    uint256 public marketplaceProtocolFeeBps; // e.g., 50 == 0.5%
 }
 
 

@@ -6,10 +6,36 @@ import "./Modifiers.sol";
 import "./Events.sol";
 import "./Types.sol";
 import "./InternalUtils.sol";
+import "../doma/interfaces/IDomaProxy.sol";
+import "../doma/interfaces/IOwnershipToken.sol";
 
 abstract contract EventManagement is EventModifiers, EventInternalUtils {
     using Counters for Counters.Counter;
     using EventTypes for EventTypes.EventData;
+
+    event DomaConfigUpdated(address domaProxy, address ownershipToken, address trustedForwarder, uint256 registrarIanaId, string domaChainId);
+    event DomaRequested(uint256 indexed eventId);
+    event DomaClaimed(uint256 indexed eventId, uint256 tokenId);
+    event DomaBridged(uint256 indexed eventId, string targetChainId, string targetOwnerAddress);
+
+    function _afterEventCreated(uint256 eventId) internal virtual {}
+
+    function _linkDomaRequested(uint256 eventId) internal {
+        eventToDomaStatus[eventId] = 1; // Requested
+        emit DomaRequested(eventId);
+    }
+
+    function linkDomaMinted(uint256 eventId, uint256 tokenId) internal {
+        // callable by off-chain agent or registrar role in a fuller design
+        eventToDomaTokenId[eventId] = tokenId;
+        eventToDomaStatus[eventId] = 2; // Minted
+    }
+
+    function linkDomaClaimed(uint256 eventId) internal{
+        require(eventToDomaTokenId[eventId] != 0, "no token");
+        eventToDomaStatus[eventId] = 3; // Claimed
+        emit DomaClaimed(eventId, eventToDomaTokenId[eventId]);
+    }
 
     function createEvent(
         string memory ipfsHash,
@@ -28,7 +54,7 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils {
 
         events[eventId] = EventTypes.EventData({
             eventId: eventId,
-            creator: msg.sender,
+            creator: _msgSender(),
             ipfsHash: ipfsHash,
             startTime: startTime,
             endTime: endTime,
@@ -42,11 +68,11 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils {
             updatedAt: block.timestamp
         });
 
-        creatorEvents[msg.sender].push(eventId);
+        creatorEvents[_msgSender()].push(eventId);
 
         emit EventEvents.EventCreated(
             eventId,
-            msg.sender,
+            _msgSender(),
             ipfsHash,
             startTime,
             endTime,
@@ -80,7 +106,7 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils {
 
         emit EventEvents.EventUpdated(
             eventId,
-            msg.sender,
+            _msgSender(),
             ipfsHash,
             startTime,
             endTime,

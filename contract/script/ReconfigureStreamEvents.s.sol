@@ -16,15 +16,15 @@ contract ReconfigureStreamEvents is Script {
         // Get contract address from environment or use a default
         address contractAddress = vm.envAddress("CONTRACT_ADDRESS");
         if (contractAddress == address(0)) {
-            console.log("❌ CONTRACT_ADDRESS not set in environment");
+            console.log("ERROR: CONTRACT_ADDRESS not set in environment");
             console.log("Please set CONTRACT_ADDRESS in your .env file");
             return;
         }
         
-        console.log("🔧 Reconfiguring existing StreamEvents contract...");
-        console.log("📍 Network:", vm.toString(block.chainid));
-        console.log("👤 Deployer address:", deployer);
-        console.log("📋 Contract address:", contractAddress);
+        console.log("Reconfiguring existing StreamEvents contract...");
+        console.log("Network:", vm.toString(block.chainid));
+        console.log("Deployer address:", deployer);
+        console.log("Contract address:", contractAddress);
         
         // Get the existing contract instance
         streamEvents = StreamEvents(contractAddress);
@@ -32,7 +32,7 @@ contract ReconfigureStreamEvents is Script {
         // Verify ownership
         require(streamEvents.owner() == deployer, "Only owner can reconfigure");
         
-        console.log("\n📊 Current Configuration:");
+        console.log("\nCurrent Configuration:");
         console.log("   Platform fee:", streamEvents.platformFee(), "basis points");
         console.log("   Min registration fee:", vm.toString(streamEvents.minRegistrationFee()), "wei");
         console.log("   Max registration fee:", vm.toString(streamEvents.maxRegistrationFee()), "wei");
@@ -43,7 +43,7 @@ contract ReconfigureStreamEvents is Script {
         uint256 newMinRegFee = 0.002 ether; // 0.002 ETH
         uint256 newMaxRegFee = 0.5 ether; // 0.5 ETH
         
-        console.log("\n⚙️  New Configuration:");
+        console.log("\nNew Configuration:");
         console.log("   Platform fee:", newPlatformFee, "basis points (2%)");
         console.log("   Min registration fee:", vm.toString(newMinRegFee), "wei");
         console.log("   Max registration fee:", vm.toString(newMaxRegFee), "wei");
@@ -56,20 +56,20 @@ contract ReconfigureStreamEvents is Script {
         
         vm.stopBroadcast();
 
-        console.log("\n📋 Reconfiguration Summary:");
+        console.log("\nReconfiguration Summary:");
         console.log("   Contract address:", address(streamEvents));
         console.log("   New platform fee:", streamEvents.platformFee(), "basis points");
         console.log("   New min registration fee:", vm.toString(streamEvents.minRegistrationFee()), "wei");
         console.log("   New max registration fee:", vm.toString(streamEvents.maxRegistrationFee()), "wei");
         
         // Verify new configuration
-        console.log("\n🔍 Verifying new configuration...");
-        require(streamEvents.platformFee() == newPlatformFee, "❌ New platform fee not set correctly");
-        require(streamEvents.minRegistrationFee() == newMinRegFee, "❌ New min registration fee not set correctly");
-        require(streamEvents.maxRegistrationFee() == newMaxRegFee, "❌ New max registration fee not set correctly");
+        console.log("\nVerifying new configuration...");
+        require(streamEvents.platformFee() == newPlatformFee, "ERROR: New platform fee not set correctly");
+        require(streamEvents.minRegistrationFee() == newMinRegFee, "ERROR: New min registration fee not set correctly");
+        require(streamEvents.maxRegistrationFee() == newMaxRegFee, "ERROR: New max registration fee not set correctly");
         
-        console.log("✅ All new configurations verified!");
-        console.log("\n🎉 StreamEvents contract reconfigured successfully!");
+        console.log("All new configurations verified!");
+        console.log("\nStreamEvents contract reconfigured successfully!");
         
         // Save reconfiguration info
         string memory reconfigInfo = string.concat(
@@ -84,6 +84,6 @@ contract ReconfigureStreamEvents is Script {
         );
         
         vm.writeFile("reconfiguration-info.txt", reconfigInfo);
-        console.log("\n💾 Reconfiguration info saved to reconfiguration-info.txt");
+        console.log("\nReconfiguration info saved to reconfiguration-info.txt");
     }
 }
