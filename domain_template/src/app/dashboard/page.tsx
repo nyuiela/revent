@@ -4,9 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { graphqlClient } from "@/lib/graphqlClient";
 import { gql } from "graphql-request";
 import MediaGrid, { MediaItem } from "@/components/MediaGrid";
+import ThemeToggle from "@/components/ThemeToggle";
 import { useState } from "react";
 import Image from "next/image";
-import ethAccra from "../../../public/illustration.svg"
+// import ethAccra from "../../../public/illustration.svg"
 
 type Nameserver = { ldhName: string };
 type Chain = { name: string };
@@ -125,14 +126,45 @@ export default function DashboardPage() {
   ]);
   const { data, isLoading, error } = useQuery({
     queryKey: ["domain-data"],
-    queryFn: () => graphqlClient.request<QueryResponse>(namesQuery),
+    queryFn: async () => {
+      console.log('Fetching domain data...');
+      try {
+        const result = await graphqlClient.request<QueryResponse>(namesQuery);
+        console.log('Domain data fetched successfully:', result);
+        return result;
+      } catch (err) {
+        console.error('GraphQL query failed:', err);
+        // Return empty data structure as fallback
+        return { names: { items: [] } } as QueryResponse;
+      }
+    },
+    retry: 2,
+    retryDelay: 2000,
+    staleTime: 60000, // 1 minute
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
   });
 
   return (
-    <div className="p-6 bg-transparent">
+    <div className="min-h-screen p-6 bg-transparent overflow-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
+      {/* Header with Theme Toggle */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Domain Dashboard</h1>
+        <div className="flex items-center space-x-4">
+          <nav className="flex space-x-4">
+            <a href="/permissions" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              Permissions
+            </a>
+            <a href="/gallery" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              Gallery
+            </a>
+          </nav>
+          <ThemeToggle />
+        </div>
+      </div>
       {/* Hero */}
       <section className="bg-amber-300 border border-gray-200 rounded-xl mb-4 h-[45vh]">
-        <Image src={ethAccra} alt='hero' className="w-full h-full object-cover" />
+        <Image src="/illustration.svg" alt='hero' className="w-full h-full object-cover" width={192} height={192} unoptimized />
 
       </section>
 
@@ -154,8 +186,30 @@ export default function DashboardPage() {
           </div>
         </div>
       </section>
-      {isLoading && <p className="text-gray-600">Loading…</p>}
-      {error && <p className="text-red-600">Failed to load.</p>}
+      {isLoading && (
+        <div className="flex items-center justify-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <span className="ml-2 text-gray-600">Loading domain data...</span>
+        </div>
+      )}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <p className="text-red-600">Failed to load domain data: {error.message}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+      
+      {/* Show message when no data is available */}
+      {!isLoading && !error && data && data.names.items.length === 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <p className="text-blue-600">No domain data available. This is normal if you haven't created any domains yet.</p>
+        </div>
+      )}
       {/* {data && (
         <div className="grid gap-4">
           {data.names.items.map((item) => (
@@ -217,9 +271,11 @@ export default function DashboardPage() {
           items={mediaItems}
           setItemsExternal={setMediaItems}
           onUploadFiles={async () => {
+            console.log('Upload files clicked');
             // future IPFS upload integration
           }}
-          onRequestDownload={async () => {
+          onRequestDownload={async (item) => {
+            console.log('Download requested for:', item);
             // future permission trading flow
           }}
         />
@@ -237,8 +293,8 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold m-0">Event Chat</h2>
           <div className="flex gap-2">
-            <button className="px-2.5 py-1.5 border border-gray-200 rounded-md">Permission Trade</button>
-            <button className="px-2.5 py-1.5 border border-gray-200 rounded-md">Buy</button>
+            <button className="px-2.5 py-1.5 border cursor-pointer hover:bg-gray-100 hover:text-gray-900 border-gray-200 rounded-md">Permission Trade</button>
+            <button className="px-2.5 py-1.5 border cursor-pointer hover:bg-gray-100 hover:text-gray-900 border-gray-200 rounded-md">Buy</button>
           </div>
         </div>
         <div className="bg-transparent border border-gray-200 rounded-lg h-50 overflow-auto p-2 mb-2">
@@ -265,7 +321,7 @@ export default function DashboardPage() {
             placeholder="Type message…"
             className="flex-1 px-2.5 py-2 border border-gray-200 rounded-md"
           />
-          <button type="submit" className="px-3 py-2 border-gray-200 rounded-md">Send</button>
+          <button type="submit" className="px-3 py-2 border cursor-pointer hover:bg-gray-100 hover:text-gray-900 border-gray-200 rounded-md">Send</button>
         </form>
       </section>
 
