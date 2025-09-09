@@ -316,7 +316,8 @@ const PixelBlast = ({
   speed = 0.5,
   transparent = true,
   edgeFade = 0.5,
-  noiseAmount = 0
+  noiseAmount = 0,
+  children
 }) => {
   const containerRef = useRef(null);
   const visibilityRef = useRef({ visible: true });
@@ -593,7 +594,9 @@ const PixelBlast = ({
       className={`pixel-blast-container ${className ?? ''}`}
       style={style}
       aria-label="PixelBlast interactive background"
-    />
+    >
+      {children}
+    </div>
   );
 };
 

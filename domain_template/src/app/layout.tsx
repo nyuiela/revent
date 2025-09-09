@@ -30,52 +30,30 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
 
-        {/* <PixelBlast
-          variant="circle"
-          pixelSize={6}
-          color="#B19EEF"
-          patternScale={3}
-          patternDensity={1.2}
-          pixelSizeJitter={0.5}
-          enableRipples
-          rippleSpeed={0.4}
-          rippleThickness={0.12}
-          rippleIntensityScale={1.5}
-          liquid
-          liquidStrength={0.12}
-          liquidRadius={1.2}
-          liquidWobbleSpeed={5}
-          speed={0.6}
-          edgeFade={0.25}
-          transparent
-          className="w-full h-full"
-          style={{ width: '100%', height: '100%', position: 'relative' }}
-        > */}
         <Providers>
-
-          <div style={{ width: '100%', height: '600px', position: 'relative' }}>
-            <PixelBlast
-              variant="circle"
-              pixelSize={6}
-              color="#B19EEF"
-              patternScale={3}
-              patternDensity={1.2}
-              pixelSizeJitter={0.5}
-              enableRipples
-              rippleSpeed={0.4}
-              rippleThickness={0.12}
-              rippleIntensityScale={1.5}
-              liquid
-              liquidStrength={0.12}
-              liquidRadius={1.2}
-              liquidWobbleSpeed={5}
-              speed={0.6}
-              edgeFade={0.25}
-              transparent className={undefined} style={undefined} />
-          </div>
-          {children}
+          <PixelBlast
+            variant="circle"
+            pixelSize={6}
+            color="#B19EEF"
+            patternScale={3}
+            patternDensity={1.2}
+            pixelSizeJitter={0.5}
+            enableRipples
+            rippleSpeed={0.4}
+            rippleThickness={0.12}
+            rippleIntensityScale={1.5}
+            liquid
+            liquidStrength={0.12}
+            liquidRadius={1.2}
+            liquidWobbleSpeed={5}
+            speed={0.6}
+            edgeFade={0}
+            className="w-full h-full"
+            style={{}}
+          >
+            {children}
+          </PixelBlast>
         </Providers>
-        {/* </PixelBlast> */}
 
       </body>
     </html>

@@ -128,123 +128,66 @@ export default function DashboardPage() {
   });
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="p-6 bg-transparent">
       {/* Hero */}
-      <section
-        style={{
-          border: "1px solid #e5e7eb",
-          borderRadius: 12,
-          padding: 20,
-          marginBottom: 16,
-          background: "linear-gradient(180deg, #ffffff, #f8fafc)",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <div>
-            <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>Event Tokenization Dashboard</h1>
-            <p style={{ marginTop: 6, color: "#4b5563" }}>
-              Manage domain assets, tokens, media, and participant interactions for your event.
-            </p>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <Link href="/media" style={{ textDecoration: "none" }}>
-              <button style={{ padding: "8px 12px", border: "1px solid #e5e7eb", borderRadius: 8 }}>Manage Media</button>
-            </Link>
-            <button style={{ padding: "8px 12px", border: "1px solid #e5e7eb", borderRadius: 8 }}>Tokenize Event</button>
-          </div>
-        </div>
+      <section className="bg-amber-300 border border-gray-200 rounded-xl p-5 mb-4 h-[45vh]">
+
       </section>
 
-      {/* Chat + Quick Trade Actions */}
-      <section style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 16, marginBottom: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Event Chat</h2>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button style={{ padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 6 }}>Permission Trade</button>
-            <button style={{ padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 6 }}>Buy</button>
-          </div>
-        </div>
-        <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, height: 200, overflow: "auto", padding: 8, background: "#fafafa", marginBottom: 8 }}>
-          {chatMessages.map((m) => (
-            <div key={m.id} style={{ fontSize: 14, marginBottom: 6 }}>
-              <span style={{ fontWeight: 600, color: m.role === "user" ? "#111827" : "#6b7280" }}>{m.role === "user" ? "You" : "System"}:</span>
-              <span style={{ marginLeft: 6 }}>{m.text}</span>
-            </div>
-          ))}
-        </div>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            const txt = chatInput.trim();
-            if (!txt) return;
-            setChatMessages((prev) => [{ id: `m-${Date.now()}`, role: "user", text: txt }, ...prev]);
-            setChatInput("");
-          }}
-          style={{ display: "flex", gap: 8 }}
-        >
-          <input
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            placeholder="Type message…"
-            style={{ flex: 1, padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 6 }}
-          />
-          <button type="submit" style={{ padding: "8px 12px", border: "1px solid #e5e7eb", borderRadius: 6 }}>Send</button>
-        </form>
-      </section>
 
       {/* Stats */}
-      <section style={{ marginBottom: 16 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
-          <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 12 }}>
-            <div style={{ fontSize: 12, color: "#6b7280" }}>Media Items</div>
-            <div style={{ fontSize: 22, fontWeight: 700 }}>{mediaItems.length}</div>
+      <section className="mb-4">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
+          <div className="bg-transparent border border-gray-200 rounded-xl p-3">
+            <div className="text-xs text-gray-500">Media Items</div>
+            <div className="text-2xl font-bold">{mediaItems.length}</div>
           </div>
-          <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 12 }}>
-            <div style={{ fontSize: 12, color: "#6b7280" }}>Participants</div>
-            <div style={{ fontSize: 22, fontWeight: 700 }}>0</div>
+          <div className="bg-transparent border border-gray-200 rounded-xl p-3">
+            <div className="text-xs text-gray-500">Participants</div>
+            <div className="text-2xl font-bold">0</div>
           </div>
-          <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 12 }}>
-            <div style={{ fontSize: 12, color: "#6b7280" }}>Token Types</div>
-            <div style={{ fontSize: 22, fontWeight: 700 }}>{data?.names.items.reduce((acc, n) => acc + (n.tokens?.length ?? 0), 0) ?? 0}</div>
+          <div className="bg-transparent border border-gray-200 rounded-xl p-3">
+            <div className="text-xs text-gray-500">Token Types</div>
+            <div className="text-2xl font-bold">{data?.names.items.reduce((acc, n) => acc + (n.tokens?.length ?? 0), 0) ?? 0}</div>
           </div>
         </div>
       </section>
-      {isLoading && <p>Loading…</p>}
-      {error && <p>Failed to load.</p>}
-      {data && (
-        <div style={{ display: "grid", gap: 16 }}>
+      {isLoading && <p className="text-gray-600">Loading…</p>}
+      {error && <p className="text-red-600">Failed to load.</p>}
+      {/* {data && (
+        <div className="grid gap-4">
           {data.names.items.map((item) => (
-            <div key={item.name} style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 16 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div key={item.name} className="bg-transparent border border-gray-200 rounded-lg p-4">
+              <div className="flex justify-between items-center">
                 <div>
-                  <div style={{ fontSize: 18, fontWeight: 600 }}>{item.name}</div>
-                  <div style={{ color: "#6b7280", fontSize: 12 }}>Expires {new Date(item.expiresAt).toLocaleString()}</div>
+                  <div className="text-lg font-semibold">{item.name}</div>
+                  <div className="text-gray-500 text-xs">Expires {new Date(item.expiresAt).toLocaleString()}</div>
                 </div>
-                <div style={{ fontSize: 12 }}>
-                  <span style={{ padding: "2px 8px", background: item.transferLock ? "#fee2e2" : "#ecfeff", borderRadius: 12 }}>
+                <div className="text-xs">
+                  <span className={`px-2 py-0.5 rounded-full ${item.transferLock ? "bg-red-100" : "bg-blue-100"}`}>
                     Transfer Lock: {item.transferLock ? "On" : "Off"}
                   </span>
                 </div>
               </div>
 
-              <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <div className="mt-3 flex flex-wrap gap-2">
                 {item.nameservers.map((ns) => (
-                  <span key={ns.ldhName} style={{ fontSize: 12, background: "#f3f4f6", padding: "2px 8px", borderRadius: 12 }}>{ns.ldhName}</span>
+                  <span key={ns.ldhName} className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">{ns.ldhName}</span>
                 ))}
               </div>
 
-              <div style={{ marginTop: 12 }}>
-                <div style={{ fontWeight: 600, marginBottom: 8 }}>Tokens</div>
-                <div style={{ display: "grid", gap: 8 }}>
+              <div className="mt-3">
+                <div className="font-semibold mb-2">Tokens</div>
+                <div className="grid gap-2">
                   {item.tokens.map((token) => (
-                    <div key={token.tokenId} style={{ fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 6, padding: 8 }}>
-                      <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                        <span style={{ fontWeight: 600 }}>{token.chain.name}</span>
+                    <div key={token.tokenId} className="text-xs border border-gray-200 rounded-md p-2">
+                      <div className="flex gap-3 items-center flex-wrap">
+                        <span className="font-semibold">{token.chain.name}</span>
                         <span>Owner: {token.ownerAddress}</span>
                         <span>Token: {token.tokenAddress}</span>
                         <span>ID: {token.tokenId.slice(0, 8)}…</span>
                       </div>
-                      <div style={{ color: "#6b7280", marginTop: 4 }}>
+                      <div className="text-gray-500 mt-1">
                         Created {new Date(token.createdAt).toLocaleString()} • Expires {new Date(token.expiresAt).toLocaleString()}
                       </div>
                     </div>
@@ -252,11 +195,11 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div style={{ marginTop: 12 }}>
-                <div style={{ fontWeight: 600, marginBottom: 8 }}>DS Keys</div>
-                <div style={{ display: "grid", gap: 8 }}>
+              <div className="mt-3">
+                <div className="font-semibold mb-2">DS Keys</div>
+                <div className="grid gap-2">
                   {item.dsKeys.map((k) => (
-                    <div key={`${k.keyTag}-${k.digest}`} style={{ fontSize: 12, background: "#f9fafb", padding: 8, borderRadius: 6 }}>
+                    <div key={`${k.keyTag}-${k.digest}`} className="text-xs bg-gray-50 p-2 rounded-md">
                       Tag {k.keyTag} • Alg {k.algorithm} • Digest {k.digestType}: {k.digest.slice(0, 24)}…
                     </div>
                   ))}
@@ -265,8 +208,8 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
-      )}
-      <div style={{ marginTop: 24 }}>
+      )} */}
+      <div className="mt-6">
         <MediaGrid
           title="Event Media"
           items={mediaItems}
@@ -279,12 +222,51 @@ export default function DashboardPage() {
           }}
         />
       </div>
-      <div style={{ marginTop: 24 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Participants & Interactions</h2>
-        <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
-          <p style={{ color: "#6b7280", fontSize: 14 }}>No participants yet. Hook this to your events API to display registrations and engagement.</p>
+      <div className="mt-6">
+        <h2 className="text-lg font-semibold mb-2">Participants & Interactions</h2>
+        <div className="bg-transparent border border-gray-200 rounded-lg p-3">
+          <p className="text-gray-500 text-sm">No participants yet. Hook this to your events API to display registrations and engagement.</p>
         </div>
       </div>
+
+
+      {/* Chat + Quick Trade Actions */}
+      <section className="bg-transparent border-gray-200 rounded-xl p-4 px-0 mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-lg font-semibold m-0">Event Chat</h2>
+          <div className="flex gap-2">
+            <button className="px-2.5 py-1.5 border border-gray-200 rounded-md">Permission Trade</button>
+            <button className="px-2.5 py-1.5 border border-gray-200 rounded-md">Buy</button>
+          </div>
+        </div>
+        <div className="bg-transparent border border-gray-200 rounded-lg h-50 overflow-auto p-2 mb-2">
+          {chatMessages.map((m) => (
+            <div key={m.id} className="text-sm mb-1.5">
+              <span className={`font-semibold ${m.role === "user" ? "text-gray-900" : "text-gray-500"}`}>{m.role === "user" ? "You" : "System"}:</span>
+              <span className="ml-1.5">{m.text}</span>
+            </div>
+          ))}
+        </div>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const txt = chatInput.trim();
+            if (!txt) return;
+            setChatMessages((prev) => [{ id: `m-${Date.now()}`, role: "user", text: txt }, ...prev]);
+            setChatInput("");
+          }}
+          className="flex gap-2"
+        >
+          <input
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            placeholder="Type message…"
+            className="flex-1 px-2.5 py-2 border border-gray-200 rounded-md"
+          />
+          <button type="submit" className="px-3 py-2 border-gray-200 rounded-md">Send</button>
+        </form>
+      </section>
+
     </div>
   );
 }
