@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import "./Modifiers.sol";
 import "./Types.sol";
 import "../utils/counter.sol";
+import "../doma/interfaces/IOwnershipToken.sol";
 
 abstract contract EventQueries is EventModifiers {
     function getEvent(uint256 eventId) external view eventExists(eventId) returns (EventTypes.EventData memory) {
@@ -39,6 +40,24 @@ abstract contract EventQueries is EventModifiers {
         return tickets[ticketId];
     }
 
+    // Doma-related views
+    function getEventDomaInfo(
+        uint256 eventId
+    ) external view returns (
+        uint256 tokenId,
+        uint8 status,
+        uint256 expiration,
+        bool isLocked,
+        uint256 registrar
+    ) {
+        tokenId = eventToDomaTokenId[eventId];
+        status = eventToDomaStatus[eventId];
+        if (tokenId != 0 && ownershipToken != address(0)) {
+            expiration = IOwnershipToken(ownershipToken).expirationOf(tokenId);
+            isLocked = IOwnershipToken(ownershipToken).lockStatusOf(tokenId);
+            registrar = IOwnershipToken(ownershipToken).registrarOf(tokenId);
+        }
+    }
 }
 
 
