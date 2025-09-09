@@ -3,9 +3,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { graphqlClient } from "@/lib/graphqlClient";
 import { gql } from "graphql-request";
-import Link from "next/link";
 import MediaGrid, { MediaItem } from "@/components/MediaGrid";
 import { useState } from "react";
+import Image from "next/image";
+import ethAccra from "../../../public/illustration.svg"
 
 type Nameserver = { ldhName: string };
 type Chain = { name: string };
@@ -130,7 +131,8 @@ export default function DashboardPage() {
   return (
     <div className="p-6 bg-transparent">
       {/* Hero */}
-      <section className="bg-amber-300 border border-gray-200 rounded-xl p-5 mb-4 h-[45vh]">
+      <section className="bg-amber-300 border border-gray-200 rounded-xl mb-4 h-[45vh]">
+        <Image src={ethAccra} alt='hero' className="w-full h-full object-cover" />
 
       </section>
 
