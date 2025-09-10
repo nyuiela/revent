@@ -9,13 +9,14 @@ import "./events/Queries.sol";
 import "./events/Admin.sol";
 import "./events/Tickets.sol";
 import "./events/DomaIntegration.sol";
+import "./events/Trading.sol";
 import "./doma/interfaces/IERC2981.sol";
 
 /**
  * @title StreamEvents
  * @dev Facade contract that composes modular event features
  */
-contract StreamEvents is EventAttendees, EventQueries, EventAdmin, EventTickets, EventDomaIntegration, ERC2771Context {
+contract StreamEvents is EventAttendees, EventQueries, EventAdmin, EventTickets, EventDomaIntegration, EventTrading, ERC2771Context {
 	// Trusted forwarder is owner-configurable via setDomaConfig; we initialize with zero and rely on setter.
 	constructor() Ownable(msg.sender) ERC2771Context(address(0)) {
 		_transferOwnership(msg.sender);
@@ -26,13 +27,13 @@ contract StreamEvents is EventAttendees, EventQueries, EventAdmin, EventTickets,
 		// Placeholder for future Pausable integration
 	}
 
-	function _owner() internal view override(EventAttendees, EventTickets, EventDomaIntegration) returns (address) {
+	function _owner() internal view override(EventAttendees, EventTickets, EventDomaIntegration, EventTrading) returns (address) {
 		return owner();
 	}
 
 	function _generateConfirmationCode(uint256 eventId, address attendee)
 		internal
-		override(EventAttendees, EventTickets, EventDomaIntegration)
+		override(EventAttendees, EventTickets, EventDomaIntegration, EventTrading)
 		returns (string memory)
 	{
 		return super._generateConfirmationCode(eventId, attendee);
@@ -85,5 +86,36 @@ contract StreamEvents is EventAttendees, EventQueries, EventAdmin, EventTickets,
 	function getRoyaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (address receiver, uint256 amount) {
 		require(ownershipToken != address(0), "ownership not set");
 		return IERC2981(ownershipToken).royaltyInfo(tokenId, salePrice);
+	}
+
+	// --- Trading Configuration ---
+	function setTradingFee(uint256 newFeeBps) external onlyOwner {
+		require(newFeeBps <= 1000, "fee too high"); // Max 10%
+		uint256 oldFee = tradingFeeBps;
+		tradingFeeBps = newFeeBps;
+		emit EventEvents.TradingFeeUpdated(oldFee, newFeeBps);
+	}
+
+	function setOrderValueLimits(uint256 minValue, uint256 maxValue) external onlyOwner {
+		require(minValue < maxValue, "invalid limits");
+		require(maxValue > 0, "max value must be positive");
+		minOrderValue = minValue;
+		maxOrderValue = maxValue;
+		emit EventEvents.OrderValueLimitsUpdated(minValue, maxValue);
+	}
+
+	function setOrderExpirationTime(uint256 newExpirationTime) external onlyOwner {
+		require(newExpirationTime > 0, "invalid expiration time");
+		uint256 oldExpiration = orderExpirationTime;
+		orderExpirationTime = newExpirationTime;
+		emit EventEvents.OrderExpirationTimeUpdated(oldExpiration, newExpirationTime);
+	}
+
+	// --- Investor Protection Configuration ---
+	function setDefaultInvestorApprovalRequired(uint256 eventId, bool required, uint256 thresholdBps) external onlyOwner {
+		require(!required || thresholdBps <= 10000, "invalid threshold");
+		requireInvestorApproval[eventId] = required;
+		investorApprovalThreshold[eventId] = thresholdBps;
+		emit EventEvents.InvestorApprovalRequired(eventId, required, thresholdBps);
 	}
 }

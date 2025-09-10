@@ -11,6 +11,8 @@ abstract contract EventStorage {
     Counters.Counter internal _eventIds;
     Counters.Counter internal _attendeeIds; // reserved if needed later
     Counters.Counter internal _ticketIds;
+    Counters.Counter internal _orderIds;
+    Counters.Counter internal _tradeIds;
 
     mapping(uint256 => EventTypes.EventData) public events;
     mapping(address => uint256[]) public creatorEvents;
@@ -53,6 +55,54 @@ abstract contract EventStorage {
     address public marketplaceWETH;
     address public marketplaceProtocolFeeReceiver;
     uint256 public marketplaceProtocolFeeBps; // e.g., 50 == 0.5%
+
+    // Trading system storage
+    mapping(uint256 => EventTypes.TradingOrder) public orders; // orderId => TradingOrder
+    mapping(uint256 => uint256[]) public eventOrders; // eventId => orderIds
+    mapping(address => uint256[]) public userOrders; // user => orderIds
+    mapping(uint256 => EventTypes.EventPriceRange) public eventPriceRanges; // eventId => price range
+    mapping(uint256 => EventTypes.TradeHistory) public tradeHistory; // tradeId => TradeHistory
+    mapping(uint256 => uint256[]) public eventTrades; // eventId => tradeIds
+    mapping(address => uint256[]) public userTrades; // user => tradeIds
+    
+    // Order matching and execution
+    mapping(uint256 => uint256[]) public activeBuyOrders; // eventId => orderIds (buy orders)
+    mapping(uint256 => uint256[]) public activeSellOrders; // eventId => orderIds (sell orders)
+    mapping(uint256 => uint256) public eventCurrentPrice; // eventId => current market price
+    
+    // Trading fees and limits
+    uint256 public tradingFeeBps = 100; // 1% trading fee
+    uint256 public minOrderValue = 0.001 ether; // minimum order value
+    uint256 public maxOrderValue = 1000 ether; // maximum order value
+    uint256 public orderExpirationTime = 7 days; // default order expiration
+
+    // Investor protection and distribution
+    mapping(uint256 => EventTypes.InvestorSaleDistribution) public investorSaleDistributions; // tradeId => distribution
+    mapping(uint256 => mapping(address => EventTypes.InvestorApproval)) public investorApprovals; // eventId => investor => approval
+    mapping(uint256 => bool) public requireInvestorApproval; // eventId => whether investor approval required for sale
+    mapping(uint256 => uint256) public investorApprovalThreshold; // eventId => minimum approval percentage required
+    mapping(uint256 => uint256) public totalInvestorApprovals; // eventId => total approval weight
+    mapping(uint256 => uint256) public totalInvestorWeight; // eventId => total investor weight
+    
+    // Efficient investor tracking (no loops needed)
+    mapping(uint256 => address[]) public eventInvestors; // eventId => list of investor addresses
+    mapping(uint256 => mapping(address => bool)) public isEventInvestor; // eventId => investor => is investor
+    mapping(uint256 => uint256) public totalInvestorShares; // eventId => total shares owned by investors
+    
+    // Dynamic share pricing system
+    mapping(uint256 => uint256) public eventShareBasePrice; // eventId => base price per share (in wei)
+    mapping(uint256 => uint256) public eventShareMultiplier; // eventId => current price multiplier (basis points)
+    mapping(uint256 => uint256) public eventTotalValue; // eventId => total event value (domain + revenue)
+    mapping(uint256 => uint256) public eventShareSupply; // eventId => total share supply (totalInvested)
+    mapping(uint256 => uint256) public lastPriceUpdate; // eventId => last price update timestamp
+    
+    // Trading-based price momentum
+    mapping(uint256 => uint256) public eventTradingVolume; // eventId => total trading volume (24h)
+    mapping(uint256 => uint256) public eventBuyVolume; // eventId => buy volume (24h)
+    mapping(uint256 => uint256) public eventSellVolume; // eventId => sell volume (24h)
+    mapping(uint256 => uint256) public eventLastTradingUpdate; // eventId => last trading volume reset
+    mapping(uint256 => uint256) public eventPriceMomentum; // eventId => price momentum factor (basis points)
+
 }
 
 
