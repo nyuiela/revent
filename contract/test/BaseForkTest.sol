@@ -6,6 +6,7 @@ import "../src/event.sol";
 import "../src/events/Types.sol";
 import "../src/doma/interfaces/IDomaProxy.sol";
 import "../src/doma/interfaces/IOwnershipToken.sol";
+import "./mocks/MockDomaProxy.sol";
 
 // Doma Protocol Interfaces
 interface IDomaRecord {
@@ -31,6 +32,9 @@ contract BaseForkTest is Test {
     address constant FORWARDER = 0xf17beC16794e018E2F0453a1282c3DA3d121f410;
     address constant OWNERSHIP_TOKEN = 0x424bDf2E8a6F52Bd2c1C81D9437b0DC0309DF90f;
     address constant PROXY_DOMA_RECORD = 0xb1508299A01c02aC3B70c7A8B0B07105aaB29E99;
+    
+    // Mock contracts for local testing
+    MockDomaProxy public mockDomaProxy;
     
     // Testnet Configuration
     string constant RPC_URL = "https://rpc-testnet.doma.xyz";
@@ -71,11 +75,14 @@ contract BaseForkTest is Test {
     uint256 public tokenId;
     
     function setUp() public {
-        // Fork the Doma testnet
-        vm.createFork(RPC_URL, FORK_BLOCK);
-        
-        // Verify we're on the correct chain
-        assertEq(block.chainid, CHAIN_ID);
+        // Only fork if not running locally
+        if (block.chainid != 31337) {
+            // Fork the Doma testnet
+            vm.createFork(RPC_URL, FORK_BLOCK);
+            
+            // Verify we're on the correct chain
+            assertEq(block.chainid, CHAIN_ID);
+        }
         
         // Initialize contract instances
         domaRecord = IDomaRecord(DOMA_RECORD);
@@ -87,8 +94,18 @@ contract BaseForkTest is Test {
         vm.startPrank(owner);
         streamEvents = new StreamEvents();
         
-        // Set up Doma integration (commented out - function doesn't exist)
-        // streamEvents.setDomaProxy(PROXY_DOMA_RECORD);
+        // Deploy mock Doma proxy for local testing
+        mockDomaProxy = new MockDomaProxy();
+        
+        // Set up Doma integration (use mock for local testing)
+        address domaProxyAddress = block.chainid == 31337 ? address(mockDomaProxy) : PROXY_DOMA_RECORD;
+        streamEvents.setDomaConfig(domaProxyAddress, OWNERSHIP_TOKEN, FORWARDER, 0, "doma");
+        
+        // Set up proper order value limits for testing
+        streamEvents.setOrderValueLimits(0.001 ether, 1000 ether);
+        streamEvents.setTradingFee(100); // 1%
+        streamEvents.setOrderExpirationTime(7 days);
+        
         vm.stopPrank();
         
         // Fund test accounts

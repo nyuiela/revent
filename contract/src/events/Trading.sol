@@ -105,8 +105,8 @@ abstract contract EventTrading is ReentrancyGuard, EventModifiers, PriceManager,
 
         // Get current dynamic price and validate
         uint256 currentPrice = this.getCurrentSharePrice(eventId);
-        require(pricePerShare <= currentPrice, "price too high");
         require(pricePerShare >= (currentPrice * 5000) / 10000, "price too low");
+        require(pricePerShare <= (currentPrice * 50000) / 10000, "price too high");
 
         uint256 totalPrice = shareAmount * pricePerShare;
         require(totalPrice >= minOrderValue, "total price too low");

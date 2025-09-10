@@ -24,6 +24,12 @@ contract CompleteTradingTests is Test {
     function setUp() public {
         vm.startPrank(owner);
         streamEvents = new StreamEvents();
+        
+        // Set up proper order value limits for testing
+        streamEvents.setOrderValueLimits(0.001 ether, 1000 ether);
+        streamEvents.setTradingFee(100); // 1%
+        streamEvents.setOrderExpirationTime(7 days);
+        
         vm.stopPrank();
 
         // Create an event

@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import "../src/event.sol";
 import "../src/events/Types.sol";
 import "../src/doma/interfaces/IDomaProxy.sol";
+import "./mocks/MockDomaProxy.sol";
 
 contract BaseTradingTest is Test {
     StreamEvents public streamEvents;
@@ -14,7 +15,7 @@ contract BaseTradingTest is Test {
     address public investor2 = address(0x4);
     address public trader1 = address(0x5);
     address public trader2 = address(0x6);
-    address public domaProxy = address(0x7);
+    MockDomaProxy public domaProxy;
     
     uint256 public eventId;
     uint256 public constant TICKET_PRICE = 0.1 ether;
@@ -32,8 +33,17 @@ contract BaseTradingTest is Test {
         vm.startPrank(owner);
         streamEvents = new StreamEvents();
         
-        // Set up Doma proxy (mock for testing)
-        // streamEvents.setDomaProxy(domaProxy);
+        // Deploy mock Doma proxy
+        domaProxy = new MockDomaProxy();
+        
+        // Set up Doma configuration (mock for testing)
+        streamEvents.setDomaConfig(address(domaProxy), address(0x8), address(0x9), 0, "test");
+        
+        // Set up proper order value limits for testing
+        streamEvents.setOrderValueLimits(0.001 ether, 1000 ether);
+        streamEvents.setTradingFee(100); // 1%
+        streamEvents.setOrderExpirationTime(7 days);
+        
         vm.stopPrank();
 
         // Fund accounts
