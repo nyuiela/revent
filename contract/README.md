@@ -19,6 +19,9 @@ A comprehensive onchain events and ticketing protocol with Doma domain ownership
 - [Event Lifecycle Flow](#event-lifecycle-flow)
 - [Doma Integration Flow](#doma-integration-flow)
 - [Marketplace Trading Flow](#marketplace-trading-flow)
+- [Trading System Architecture](#trading-system-architecture)
+- [Price Management Flow](#price-management-flow)
+- [Order Management Flow](#order-management-flow)
 - [Revenue Sharing Flow](#revenue-sharing-flow)
 - [Gasless Transactions](#gasless-transactions)
 - [Core Components](#core-components)
@@ -189,6 +192,137 @@ sequenceDiagram
     M-->>U: Payment received
 ```
 
+## Trading System Architecture
+
+```mermaid
+graph TB
+    subgraph "Trading System"
+        ET[EventTrading]
+        
+        subgraph "Trading Modules"
+            PM[PriceManager]
+            VM[VolumeManager]
+            OM[OrderManager]
+        end
+        
+        subgraph "Trading Types"
+            DT[Domain Trading]
+            ST[Share Trading]
+        end
+        
+        subgraph "Order Types"
+            BO[Buy Orders]
+            SO[Sell Orders]
+        end
+        
+        subgraph "Price Calculation"
+            BP[Base Price]
+            MP[Momentum Factor]
+            TV[Total Value]
+            CP[Current Price]
+        end
+        
+        ET --> PM
+        ET --> VM
+        ET --> OM
+        
+        ET --> DT
+        ET --> ST
+        
+        DT --> BO
+        DT --> SO
+        ST --> BO
+        ST --> SO
+        
+        PM --> BP
+        PM --> MP
+        PM --> TV
+        PM --> CP
+        
+        VM --> MP
+        OM --> BO
+        OM --> SO
+    end
+    
+    subgraph "External"
+        DOMA[Doma Protocol]
+        MARKET[Marketplace]
+    end
+    
+    DT --> DOMA
+    DT --> MARKET
+```
+
+## Price Management Flow
+
+```mermaid
+flowchart TD
+    A[Price Update Trigger] --> B{Total Value Set?}
+    
+    B -->|Yes| C[Calculate Value Per Share]
+    B -->|No| D[Use Momentum Only]
+    
+    C --> E[Apply Base Multiplier]
+    D --> F[Apply Momentum Factor]
+    
+    E --> G[Apply Momentum Factor]
+    F --> H[Set New Multiplier]
+    
+    G --> H
+    H --> I[Cap Multiplier 0.5x-100x]
+    I --> J[Update Share Price]
+    J --> K[Emit Price Update Event]
+    
+    subgraph "Momentum Calculation"
+        L[Trading Volume] --> M[Buy/Sell Ratio]
+        M --> N{Majority Buying?}
+        N -->|Yes| O[Momentum > 1.0x]
+        N -->|No| P{Majority Selling?}
+        P -->|Yes| Q[Momentum < 1.0x]
+        P -->|No| R[Momentum = 1.0x]
+    end
+    
+    VM --> L
+```
+
+## Order Management Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant ET as EventTrading
+    participant OM as OrderManager
+    participant PM as PriceManager
+    participant VM as VolumeManager
+    
+    Note over U,VM: Create Order
+    U->>ET: createBuyOrder() / createSellOrder()
+    ET->>PM: Validate price range
+    PM-->>ET: Price validation result
+    ET->>OM: _createOrder()
+    OM-->>ET: Order created
+    ET-->>U: Order ID
+    
+    Note over U,VM: Execute Trade
+    U->>ET: executeTrade()
+    ET->>OM: Validate orders
+    OM-->>ET: Orders valid
+    ET->>ET: _executeTradeInternal()
+    ET->>VM: _updateTradingVolume()
+    VM->>VM: _calculateMomentum()
+    ET->>PM: _updateSharePrice()
+    PM->>PM: Update price with momentum
+    ET->>ET: Transfer assets/payment
+    ET-->>U: Trade executed
+    
+    Note over U,VM: Cancel Order
+    U->>ET: cancelOrder()
+    ET->>OM: _cancelOrder()
+    OM->>OM: Update order status
+    ET->>ET: Refund payment
+    ET-->>U: Order cancelled
+```
+
 ## Revenue Sharing Flow
 
 ```mermaid
@@ -277,6 +411,43 @@ Comprehensive ticket management with pricing and supply controls.
 - `updateTicket()` - Modify ticket details
 - `buyTicket()` - Purchase tickets with auto-registration
 - `removeTicket()` - Deactivate tickets
+
+### Trading Module
+Advanced trading system for domains and investor shares with dynamic pricing.
+
+**Functions:**
+- `createBuyOrder()` / `createSellOrder()` - Create domain trading orders
+- `createInvestorShareBuyOrder()` / `createInvestorShareSellOrder()` - Create share trading orders
+- `executeTrade()` - Execute trades between matching orders
+- `cancelOrder()` / `updateOrder()` - Manage active orders
+- `getCurrentSharePrice()` - Get dynamic share pricing
+- `getTradingInfo()` - Get trading volume and momentum data
+
+### Price Management Module
+Dynamic pricing system with momentum-based adjustments.
+
+**Functions:**
+- `initializeDynamicPricing()` - Set up dynamic pricing for events
+- `updateEventTotalValue()` - Update event valuation
+- `getPricingInfo()` - Query pricing details
+- `_updateSharePrice()` - Internal price calculation with momentum
+
+### Volume Management Module
+Trading volume tracking and momentum calculation.
+
+**Functions:**
+- `_updateTradingVolume()` - Track trading activity
+- `_calculateMomentum()` - Calculate price momentum from trading
+- `getTradingInfo()` - Get comprehensive trading statistics
+
+### Order Management Module
+Order lifecycle management and matching.
+
+**Functions:**
+- `_createOrder()` - Create new trading orders
+- `_cancelOrder()` - Cancel active orders
+- `_updateOrder()` - Modify existing orders
+- `getActiveBuyOrders()` / `getActiveSellOrders()` - Query active orders
 
 ## Deployment and Configuration
 
@@ -386,6 +557,32 @@ cast send <CONTRACT> "claimRevenue(uint256)" <EVENT_ID> \
   --rpc-url <RPC> --private-key <INVESTOR_KEY>
 ```
 
+### 6. Trading System
+
+```bash
+# Initialize dynamic pricing
+cast send <CONTRACT> "initializeDynamicPricing(uint256,uint256)" <EVENT_ID> 1000000000000000 \
+  --rpc-url <RPC> --private-key <CREATOR_KEY>
+
+# Create buy order for domain
+cast send <CONTRACT> "createBuyOrder(uint256,uint256,address,uint256)" \
+  <EVENT_ID> 5000000000000000000 0x0000000000000000000000000000000000000000 0 \
+  --value 5000000000000000000 --rpc-url <RPC> --private-key <USER_KEY>
+
+# Create sell order for investor shares
+cast send <CONTRACT> "createInvestorShareSellOrder(uint256,uint256,uint256,address,uint256)" \
+  <EVENT_ID> 100 2000000000000000 0x0000000000000000000000000000000000000000 0 \
+  --rpc-url <RPC> --private-key <INVESTOR_KEY>
+
+# Execute trade
+cast send <CONTRACT> "executeTrade(uint256,uint256,uint256)" <BUY_ORDER_ID> <SELL_ORDER_ID> 2000000000000000 \
+  --value 200000000000000000 --rpc-url <RPC> --private-key <USER_KEY>
+
+# Query trading info
+cast call <CONTRACT> "getTradingInfo(uint256)" <EVENT_ID> --rpc-url <RPC>
+cast call <CONTRACT> "getCurrentSharePrice(uint256)" <EVENT_ID> --rpc-url <RPC>
+```
+
 ## Security Considerations
 
 ### Access Control
@@ -442,8 +639,14 @@ contract/
 │   │   ├── Attendees.sol        # Registration & attendance
 │   │   ├── Tickets.sol          # Ticket management
 │   │   ├── DomaIntegration.sol  # Domain tokenization
+│   │   ├── Trading.sol          # Trading system (domains & shares)
+│   │   ├── PriceManager.sol     # Dynamic pricing & momentum
+│   │   ├── VolumeManager.sol    # Trading volume tracking
+│   │   ├── OrderManager.sol     # Order lifecycle management
 │   │   ├── Queries.sol          # Read-only APIs
 │   │   ├── Admin.sol            # Protocol administration
+│   │   ├── Modifiers.sol        # Access control modifiers
+│   │   ├── Events.sol           # Event definitions
 │   │   └── Types.sol            # Data structures
 │   └── doma/                    # Doma integration
 │       └── interfaces/          # External contract interfaces
@@ -451,7 +654,10 @@ contract/
 │   ├── DeployDoma.s.sol         # Doma testnet deployment
 │   └── DeployAndTest.s.sol      # General deployment
 ├── test/
-│   └── event.t.sol              # Unit tests
+│   ├── event.t.sol              # Unit tests
+│   ├── mocks/                   # Mock contracts
+│   │   └── MockDomaProxy.sol    # Mock Doma proxy for testing
+│   └── *.t.sol                  # Additional test files
 └── foundry.toml                 # Build configuration
 ```
 
