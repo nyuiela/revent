@@ -52,19 +52,31 @@ abstract contract PriceManager is EventModifiers {
         
         uint256 totalValue = eventTotalValue[eventId];
         uint256 shareSupply = eventShareSupply[eventId];
-        if (totalValue == 0 || shareSupply == 0) return;
         
-        // Calculate base multiplier
-        uint256 valuePerShare = totalValue / shareSupply;
-        uint256 basePrice = eventShareBasePrice[eventId];
-        uint256 baseMultiplier = (valuePerShare * 10000) / basePrice;
+        uint256 newMultiplier;
         
-        // Apply momentum factor
-        uint256 momentumFactor = eventPriceMomentum[eventId];
-        if (momentumFactor == 0) momentumFactor = 10000;
+        if (totalValue > 0 && shareSupply > 0) {
+            // Calculate base multiplier from total value
+            uint256 valuePerShare = totalValue / shareSupply;
+            uint256 basePrice = eventShareBasePrice[eventId];
+            uint256 baseMultiplier = (valuePerShare * 10000) / basePrice;
+            
+            // Apply momentum factor
+            uint256 momentumFactor = eventPriceMomentum[eventId];
+            if (momentumFactor == 0) momentumFactor = 10000;
+            
+            newMultiplier = (baseMultiplier * momentumFactor) / 10000;
+        } else {
+            // No total value set, use momentum only
+            uint256 momentumFactor = eventPriceMomentum[eventId];
+            if (momentumFactor == 0) momentumFactor = 10000;
+            
+            newMultiplier = momentumFactor;
+        }
         
-        uint256 newMultiplier = (baseMultiplier * momentumFactor) / 10000;
-        if (newMultiplier > 1000000) newMultiplier = 1000000; // Cap at 100x
+        // Cap multiplier between 0.5x and 100x
+        if (newMultiplier < 5000) newMultiplier = 5000;
+        if (newMultiplier > 1000000) newMultiplier = 1000000;
         
         uint256 oldMultiplier = eventShareMultiplier[eventId];
         eventShareMultiplier[eventId] = newMultiplier;

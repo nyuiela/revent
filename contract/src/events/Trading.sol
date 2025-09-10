@@ -106,7 +106,7 @@ abstract contract EventTrading is ReentrancyGuard, EventModifiers, PriceManager,
         // Get current dynamic price and validate
         uint256 currentPrice = this.getCurrentSharePrice(eventId);
         require(pricePerShare >= (currentPrice * 5000) / 10000, "price too low");
-        require(pricePerShare <= (currentPrice * 50000) / 10000, "price too high");
+        require(pricePerShare <= (currentPrice * 100000) / 10000, "price too high");
 
         uint256 totalPrice = shareAmount * pricePerShare;
         require(totalPrice >= minOrderValue, "total price too low");
@@ -143,8 +143,8 @@ abstract contract EventTrading is ReentrancyGuard, EventModifiers, PriceManager,
 
         // Get current dynamic price and validate
         uint256 currentPrice = this.getCurrentSharePrice(eventId);
-        require(pricePerShare >= currentPrice, "price too low");
-        require(pricePerShare <= (currentPrice * 15000) / 10000, "price too high");
+        require(pricePerShare >= (currentPrice * 5000) / 10000, "price too low");
+        require(pricePerShare <= (currentPrice * 100000) / 10000, "price too high");
 
         uint256 totalPrice = shareAmount * pricePerShare;
         require(totalPrice >= minOrderValue, "total price too low");
@@ -300,6 +300,9 @@ abstract contract EventTrading is ReentrancyGuard, EventModifiers, PriceManager,
 
         // Update trading volume and momentum
         _updateTradingVolume(buyOrder.eventId, executionPrice, true);
+
+        // Update share price based on trading activity (momentum will be applied)
+        _updateSharePrice(buyOrder.eventId);
 
         // Handle payment
         uint256 tradingFee = (executionPrice * tradingFeeBps) / 10000;
