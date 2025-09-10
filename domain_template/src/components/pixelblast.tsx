@@ -1,8 +1,34 @@
 "use client";
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { EffectComposer, EffectPass, RenderPass, Effect } from 'postprocessing';
-import './PixelBlast.css';
+
+type PixelBlastVariant = 'square' | 'circle' | 'triangle' | 'diamond';
+
+type PixelBlastProps = {
+  variant?: PixelBlastVariant;
+  pixelSize?: number;
+  color?: string;
+  className?: string;
+  style?: React.CSSProperties;
+  antialias?: boolean;
+  patternScale?: number;
+  patternDensity?: number;
+  liquid?: boolean;
+  liquidStrength?: number;
+  liquidRadius?: number;
+  pixelSizeJitter?: number;
+  enableRipples?: boolean;
+  rippleIntensityScale?: number;
+  rippleThickness?: number;
+  rippleSpeed?: number;
+  liquidWobbleSpeed?: number;
+  autoPauseOffscreen?: boolean;
+  speed?: number;
+  transparent?: boolean;
+  edgeFade?: number;
+  noiseAmount?: number;
+};
 
 const createTouchTexture = () => {
   const size = 64;
@@ -17,8 +43,15 @@ const createTouchTexture = () => {
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
   texture.generateMipmaps = false;
-  const trail = [];
-  let last = null;
+  const trail: {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    force: number;
+    age: number;
+  }[] = [];
+  let last: { x: number; y: number } | null = null;
   const maxAge = 64;
   let radius = 0.1 * size;
   const speed = 1 / maxAge;
@@ -26,11 +59,11 @@ const createTouchTexture = () => {
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   };
-  const drawPoint = p => {
+  const drawPoint = (p: { x: number; y: number; vx: number; vy: number; force: number; age: number }) => {
     const pos = { x: p.x * size, y: (1 - p.y) * size };
     let intensity = 1;
-    const easeOutSine = t => Math.sin((t * Math.PI) / 2);
-    const easeOutQuad = t => -t * (t - 2);
+    const easeOutSine = (t: number) => Math.sin((t * Math.PI) / 2);
+    const easeOutQuad = (t: number) => -t * (t - 2);
     if (p.age < maxAge * 0.3) intensity = easeOutSine(p.age / (maxAge * 0.3));
     else intensity = easeOutQuad(1 - (p.age - maxAge * 0.3) / (maxAge * 0.7)) || 0;
     intensity *= p.force;
@@ -45,7 +78,7 @@ const createTouchTexture = () => {
     ctx.arc(pos.x - offset, pos.y - offset, radius, 0, Math.PI * 2);
     ctx.fill();
   };
-  const addTouch = norm => {
+  const addTouch = (norm: { x: number; y: number }) => {
     let force = 0;
     let vx = 0;
     let vy = 0;
@@ -80,7 +113,7 @@ const createTouchTexture = () => {
     texture,
     addTouch,
     update,
-    set radiusScale(v) {
+    set radiusScale(v: number) {
       radius = 0.1 * size * v;
     },
     get radiusScale() {
@@ -90,7 +123,7 @@ const createTouchTexture = () => {
   };
 };
 
-const createLiquidEffect = (texture, opts) => {
+const createLiquidEffect = (texture: THREE.Texture, opts?: { strength?: number; freq?: number }) => {
   const fragment = `
     uniform sampler2D uTexture;
     uniform float uStrength;
@@ -111,7 +144,7 @@ const createLiquidEffect = (texture, opts) => {
     }
     `;
   return new Effect('LiquidEffect', fragment, {
-    uniforms: new Map([
+    uniforms: new Map<string, THREE.Uniform>([
       ['uTexture', new THREE.Uniform(texture)],
       ['uStrength', new THREE.Uniform(opts?.strength ?? 0.025)],
       ['uTime', new THREE.Uniform(0)],
@@ -120,7 +153,7 @@ const createLiquidEffect = (texture, opts) => {
   });
 };
 
-const SHAPE_MAP = {
+const SHAPE_MAP: Record<PixelBlastVariant, number> = {
   square: 0,
   circle: 1,
   triangle: 2,
@@ -294,7 +327,7 @@ void main(){
 
 const MAX_CLICKS = 10;
 
-const PixelBlast = ({
+const PixelBlast: React.FC<PixelBlastProps> = ({
   variant = 'square',
   pixelSize = 3,
   color = '#B19EEF',
@@ -316,15 +349,45 @@ const PixelBlast = ({
   speed = 0.5,
   transparent = true,
   edgeFade = 0.5,
-  noiseAmount = 0,
-  children
+  noiseAmount = 0
 }) => {
-  const containerRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const visibilityRef = useRef({ visible: true });
   const speedRef = useRef(speed);
 
-  const threeRef = useRef(null);
-  const prevConfigRef = useRef(null);
+  const threeRef = useRef<{
+    renderer: THREE.WebGLRenderer;
+    scene: THREE.Scene;
+    camera: THREE.OrthographicCamera;
+    material: THREE.ShaderMaterial;
+    clock: THREE.Clock;
+    clickIx: number;
+    uniforms: {
+      uResolution: { value: THREE.Vector2 };
+      uTime: { value: number };
+      uColor: { value: THREE.Color };
+      uClickPos: { value: THREE.Vector2[] };
+      uClickTimes: { value: Float32Array };
+      uShapeType: { value: number };
+      uPixelSize: { value: number };
+      uScale: { value: number };
+      uDensity: { value: number };
+      uPixelJitter: { value: number };
+      uEnableRipples: { value: number };
+      uRippleSpeed: { value: number };
+      uRippleThickness: { value: number };
+      uRippleIntensity: { value: number };
+      uEdgeFade: { value: number };
+    };
+    resizeObserver?: ResizeObserver;
+    raf?: number;
+    quad?: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>;
+    timeOffset?: number;
+    composer?: EffectComposer;
+    touch?: ReturnType<typeof createTouchTexture>;
+    liquidEffect?: Effect;
+  } | null>(null);
+  const prevConfigRef = useRef<any>(null);
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -335,7 +398,7 @@ const PixelBlast = ({
     if (!threeRef.current) mustReinit = true;
     else if (prevConfigRef.current) {
       for (const k of needsReinitKeys)
-        if (prevConfigRef.current[k] !== cfg[k]) {
+        if (prevConfigRef.current[k] !== (cfg as any)[k]) {
           mustReinit = true;
           break;
         }
@@ -344,7 +407,7 @@ const PixelBlast = ({
       if (threeRef.current) {
         const t = threeRef.current;
         t.resizeObserver?.disconnect();
-        cancelAnimationFrame(t.raf);
+        cancelAnimationFrame(t.raf!);
         t.quad?.geometry.dispose();
         t.material.dispose();
         t.composer?.dispose();
@@ -357,7 +420,7 @@ const PixelBlast = ({
       if (!gl) return;
       const renderer = new THREE.WebGLRenderer({
         canvas,
-        context: gl,
+        context: gl as WebGL2RenderingContext,
         antialias,
         alpha: true
       });
@@ -412,7 +475,7 @@ const PixelBlast = ({
       const ro = new ResizeObserver(setSize);
       ro.observe(container);
       const randomFloat = () => {
-        if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
+        if (typeof window !== 'undefined' && (window as any).crypto?.getRandomValues) {
           const u32 = new Uint32Array(1);
           window.crypto.getRandomValues(u32);
           return u32[0] / 0xffffffff;
@@ -420,9 +483,9 @@ const PixelBlast = ({
         return Math.random();
       };
       const timeOffset = randomFloat() * 1000;
-      let composer;
-      let touch;
-      let liquidEffect;
+      let composer: EffectComposer | undefined;
+      let touch: ReturnType<typeof createTouchTexture> | undefined;
+      let liquidEffect: Effect | undefined;
       if (liquid) {
         touch = createTouchTexture();
         touch.radiusScale = liquidRadius;
@@ -446,7 +509,7 @@ const PixelBlast = ({
           'NoiseEffect',
           `uniform float uTime; uniform float uAmount; float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453);} void mainUv(inout vec2 uv){} void mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){ float n=hash(floor(uv*vec2(1920.0,1080.0))+floor(uTime*60.0)); float g=(n-0.5)*uAmount; outputColor=inputColor+vec4(vec3(g),0.0);} `,
           {
-            uniforms: new Map([
+            uniforms: new Map<string, THREE.Uniform>([
               ['uTime', new THREE.Uniform(0)],
               ['uAmount', new THREE.Uniform(noiseAmount)]
             ])
@@ -454,11 +517,11 @@ const PixelBlast = ({
         );
         const noisePass = new EffectPass(camera, noiseEffect);
         noisePass.renderToScreen = true;
-        if (composer && composer.passes.length > 0) composer.passes.forEach(p => (p.renderToScreen = false));
+        if (composer && composer.passes.length > 0) composer.passes.forEach(p => ((p as any).renderToScreen = false));
         composer.addPass(noisePass);
       }
       if (composer) composer.setSize(renderer.domElement.width, renderer.domElement.height);
-      const mapToPixels = e => {
+      const mapToPixels = (e: PointerEvent) => {
         const rect = renderer.domElement.getBoundingClientRect();
         const scaleX = renderer.domElement.width / rect.width;
         const scaleY = renderer.domElement.height / rect.height;
@@ -471,14 +534,14 @@ const PixelBlast = ({
           h: renderer.domElement.height
         };
       };
-      const onPointerDown = e => {
+      const onPointerDown = (e: PointerEvent) => {
         const { fx, fy } = mapToPixels(e);
         const ix = threeRef.current?.clickIx ?? 0;
         uniforms.uClickPos.value[ix].set(fx, fy);
         uniforms.uClickTimes.value[ix] = uniforms.uTime.value;
         if (threeRef.current) threeRef.current.clickIx = (ix + 1) % MAX_CLICKS;
       };
-      const onPointerMove = e => {
+      const onPointerMove = (e: PointerEvent) => {
         if (!touch) return;
         const { fx, fy, w, h } = mapToPixels(e);
         touch.addTouch({ x: fx / w, y: fy / h });
@@ -496,13 +559,13 @@ const PixelBlast = ({
           return;
         }
         uniforms.uTime.value = timeOffset + clock.getElapsedTime() * speedRef.current;
-        if (liquidEffect) liquidEffect.uniforms.get('uTime').value = uniforms.uTime.value;
+        if (liquidEffect) (liquidEffect as any).uniforms.get('uTime').value = uniforms.uTime.value;
         if (composer) {
           if (touch) touch.update();
           composer.passes.forEach(p => {
-            const effs = p.effects;
+            const effs = (p as any).effects;
             if (effs)
-              effs.forEach(eff => {
+              effs.forEach((eff: any) => {
                 const u = eff.uniforms?.get('uTime');
                 if (u) u.value = uniforms.uTime.value;
               });
@@ -529,7 +592,7 @@ const PixelBlast = ({
         liquidEffect
       };
     } else {
-      const t = threeRef.current;
+      const t = threeRef.current!;
       t.uniforms.uShapeType.value = SHAPE_MAP[variant] ?? 0;
       t.uniforms.uPixelSize.value = pixelSize * t.renderer.getPixelRatio();
       t.uniforms.uColor.value.set(color);
@@ -544,9 +607,9 @@ const PixelBlast = ({
       if (transparent) t.renderer.setClearAlpha(0);
       else t.renderer.setClearColor(0x000000, 1);
       if (t.liquidEffect) {
-        const uStrength = t.liquidEffect;
+        const uStrength = (t.liquidEffect as any).uniforms.get('uStrength');
         if (uStrength) uStrength.value = liquidStrength;
-        const uFreq = t.liquidEffect.uniforms.get('uFreq');
+        const uFreq = (t.liquidEffect as any).uniforms.get('uFreq');
         if (uFreq) uFreq.value = liquidWobbleSpeed;
       }
       if (t.touch) t.touch.radiusScale = liquidRadius;
@@ -557,7 +620,7 @@ const PixelBlast = ({
       if (!threeRef.current) return;
       const t = threeRef.current;
       t.resizeObserver?.disconnect();
-      cancelAnimationFrame(t.raf);
+      cancelAnimationFrame(t.raf!);
       t.quad?.geometry.dispose();
       t.material.dispose();
       t.composer?.dispose();
@@ -591,12 +654,10 @@ const PixelBlast = ({
   return (
     <div
       ref={containerRef}
-      className={`pixel-blast-container ${className ?? ''}`}
+      className={`w-full h-full relative overflow-hidden ${className ?? ''}`}
       style={style}
       aria-label="PixelBlast interactive background"
-    >
-      {children}
-    </div>
+    />
   );
 };
 

@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import ThemeToggle from '@/components/ThemeToggle';
 import { MediaItem } from '@/components/MediaGrid';
+import Image from 'next/image';
+import GalleryGrid, { GalleryItem } from '@/components/GalleryGrid';
 
 const mockMedia: MediaItem[] = [
   {
     id: '1',
-    url: '/icon.png',
+    url: '/stream.jpg',
     title: 'Image_HD_Dec 15 2:30 PM_a1b2c3',
     price: 0.5,
     accessRights: 'read',
@@ -17,7 +19,7 @@ const mockMedia: MediaItem[] = [
   },
   {
     id: '2',
-    url: '/icon.png',
+    url: '/stream.jpg',
     title: 'Video_SD_Dec 14 4:15 PM_d4e5f6',
     price: 1.2,
     accessRights: 'write',
@@ -27,7 +29,7 @@ const mockMedia: MediaItem[] = [
   },
   {
     id: '3',
-    url: '/icon.png',
+    url: '/stream.jpg',
     title: 'Image_Low_Dec 13 1:45 PM_g7h8i9',
     price: 0.3,
     accessRights: 'ownership',
@@ -41,6 +43,8 @@ export default function GalleryPage() {
   const [filter, setFilter] = useState<'all' | 'images' | 'videos'>('all');
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [showInvest, setShowInvest] = useState(false);
+  const [investAmount, setInvestAmount] = useState<string>('');
 
   const filteredMedia = mockMedia.filter(media => {
     if (filter === 'all') return true;
@@ -63,7 +67,15 @@ export default function GalleryPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Media Gallery</h1>
-        <ThemeToggle />
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowInvest(true)}
+            className="px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            Invest in Event
+          </button>
+          <ThemeToggle />
+        </div>
       </div>
 
       {/* Filters */}
@@ -100,58 +112,20 @@ export default function GalleryPage() {
         </button>
       </div>
 
-      {/* Media Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {filteredMedia.map((media) => (
-          <div
-            key={media.id}
-            className="relative bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-lg transition-all duration-200 group"
-            onClick={() => handleMediaClick(media)}
-          >
-            <div className="aspect-square overflow-hidden">
-              {media.file?.type.startsWith('video') ? (
-                <video 
-                  src={media.url} 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" 
-                />
-              ) : (
-                <img 
-                  src={media.url} 
-                  alt={media.title} 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" 
-                />
-                )}
-            </div>
-            
-            {/* Hover Overlay */}
-            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center">
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-center">
-                <div className="text-white font-semibold mb-2">{media.price} ETH</div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRequestPermission(media);
-                  }}
-                  className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-                >
-                  Request Access
-                </button>
-              </div>
-            </div>
-
-            {/* Media Type Badge */}
-            <div className="absolute top-2 left-2">
-              <span className={`px-2 py-1 text-xs rounded-full ${
-                media.file?.type.startsWith('video')
-                  ? 'bg-red-500 text-white'
-                  : 'bg-green-500 text-white'
-              }`}>
-                {media.file?.type.startsWith('video') ? 'Video' : 'Image'}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* Media Grid - extracted component for reliability */}
+      <GalleryGrid
+        items={filteredMedia.map<GalleryItem>((m) => ({
+          id: m.id,
+          url: m.url || '/stream.jpg',
+          title: m.title,
+          price: m.price,
+          isVideo: Boolean(m.file?.type.startsWith('video')),
+        }))}
+        onClickItem={(item) => {
+          const media = filteredMedia.find((m) => m.id === item.id);
+          if (media) handleMediaClick(media);
+        }}
+      />
 
       {/* Preview Modal */}
       {showPreview && selectedMedia && (
@@ -169,18 +143,21 @@ export default function GalleryPage() {
             </button>
             {/* Media Preview */}
             <div className="flex-1 p-6 flex flex-col">
-              <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden mb-4">
+              <div className="relative flex-1 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden mb-4">
                 {selectedMedia.file?.type.startsWith('video') ? (
                   <video 
-                    src={selectedMedia.url} 
+                    src={selectedMedia.url || '/stream.jpg'} 
                     controls 
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <img 
-                    src={selectedMedia.url} 
-                    alt={selectedMedia.title} 
-                    className="w-full h-full object-contain"
+                  <Image 
+                    src={selectedMedia.url || '/stream.jpg'}
+                    alt={`${selectedMedia.title}`}
+                    fill
+                    sizes="90vw"
+                    className="object-contain"
+                    priority
                   />
                 )}
               </div>
@@ -216,7 +193,7 @@ export default function GalleryPage() {
                     <input
                       type="number"
                       step="0.01"
-                      placeholder={selectedMedia.price.toString()}
+                      placeholder={`${selectedMedia.price}`}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-600 dark:text-white"
                     />
                   </div>
@@ -248,6 +225,45 @@ export default function GalleryPage() {
                   Close
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invest Modal */}
+      {showInvest && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md p-6 border border-gray-200 dark:border-gray-700 shadow-2xl relative">
+            <button
+              onClick={() => setShowInvest(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
+              aria-label="Close invest"
+            >
+              ✕
+            </button>
+            <h2 className="text-xl font-semibold mb-2">Invest in Event</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">Support this event by investing a chosen amount.</p>
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount (ETH)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.001"
+                value={investAmount}
+                onChange={(e) => setInvestAmount(e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="0.05"
+              />
+              <button
+                onClick={() => {
+                  // integrate onchain/payment here
+                  setShowInvest(false);
+                  setInvestAmount('');
+                }}
+                className="w-full mt-2 px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Invest
+              </button>
             </div>
           </div>
         </div>

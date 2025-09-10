@@ -5,8 +5,10 @@ import { graphqlClient } from "@/lib/graphqlClient";
 import { gql } from "graphql-request";
 import MediaGrid, { MediaItem } from "@/components/MediaGrid";
 import ThemeToggle from "@/components/ThemeToggle";
+import BridgeModal from "@/components/BridgeModal";
 import { useState } from "react";
 import Image from "next/image";
+import PixelBlastBackground from "@/components/PixelBlastBackground";
 // import ethAccra from "../../../public/illustration.svg"
 
 type Nameserver = { ldhName: string };
@@ -124,6 +126,7 @@ export default function DashboardPage() {
   const [chatMessages, setChatMessages] = useState<Array<{ id: string; role: "user" | "system"; text: string }>>([
     { id: "m1", role: "system", text: "Welcome to your event dashboard. Discuss, negotiate, and coordinate here." },
   ]);
+  const [isBridgeModalOpen, setIsBridgeModalOpen] = useState(false);
   const { data, isLoading, error } = useQuery({
     queryKey: ["domain-data"],
     queryFn: async () => {
@@ -158,6 +161,9 @@ export default function DashboardPage() {
             <a href="/gallery" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               Gallery
             </a>
+            <a href="/dashboard/revenue" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              Revenue
+            </a>
           </nav>
           <ThemeToggle />
         </div>
@@ -168,24 +174,40 @@ export default function DashboardPage() {
 
       </section>
 
+      {/* Bridge Domain */}
+      <section className="mb-10 mt-4">
+        <button
+          onClick={() => setIsBridgeModalOpen(true)}
+          className="px-3 py-2 rounded-md border border-gray-200 hover:bg-black/20 hover:text-white"
+        >
+          Bridge Domain
+        </button>
+      </section>
+
+      {/* <PixelBlastBackground 
+            className="fixed inset-0 w-full h-full -mb-[720px]"
+            style={{ height: '100vh' }}
+          /> */}
 
       {/* Stats */}
-      <section className="mb-4">
+      <section className="mb-4 mt-8">
         <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
           <div className="bg-transparent border border-gray-200 rounded-xl p-3">
-            <div className="text-xs text-gray-500">Media Items</div>
+            <div className="text-lg text-gray-500">Media Items</div>
             <div className="text-2xl font-bold">{mediaItems.length}</div>
           </div>
           <div className="bg-transparent border border-gray-200 rounded-xl p-3">
-            <div className="text-xs text-gray-500">Participants</div>
+            <div className="text-lg text-gray-500">Participants</div>
             <div className="text-2xl font-bold">0</div>
           </div>
           <div className="bg-transparent border border-gray-200 rounded-xl p-3">
-            <div className="text-xs text-gray-500">Token Types</div>
+            <div className="text-lg text-gray-500">Token Types</div>
             <div className="text-2xl font-bold">{data?.names.items.reduce((acc, n) => acc + (n.tokens?.length ?? 0), 0) ?? 0}</div>
           </div>
         </div>
       </section>
+
+      <BridgeModal isOpen={isBridgeModalOpen} onClose={() => setIsBridgeModalOpen(false)} />
       {isLoading && (
         <div className="flex items-center justify-center p-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>

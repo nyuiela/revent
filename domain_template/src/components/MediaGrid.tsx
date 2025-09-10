@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import MediaCard from "./MediaCard";
+import Image from "next/image";
 
 export type MediaItem = {
   id: string;
@@ -176,9 +177,11 @@ export default function MediaGrid({
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" 
                   />
                 ) : (
-                  <img 
+                  <Image 
                     src={m.url} 
                     alt={m.title} 
+                    width={100}
+                    height={100}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" 
                   />
                 )}
