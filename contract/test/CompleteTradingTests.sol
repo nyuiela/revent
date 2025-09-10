@@ -99,7 +99,7 @@ contract CompleteTradingTests is Test {
         
         // 5. Execute trade
         vm.startPrank(trader1);
-        streamEvents.executeTrade(buyOrders[0], sellOrders[0], SHARE_PRICE);
+        streamEvents.executeTrade{value: SHARE_AMOUNT * SHARE_PRICE}(buyOrders[0], sellOrders[0], SHARE_PRICE);
         vm.stopPrank();
         
         // 6. Verify trade execution
