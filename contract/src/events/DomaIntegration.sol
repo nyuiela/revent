@@ -62,8 +62,21 @@ abstract contract EventDomaIntegration is EventManagement {
     // Investors deposit ETH to participate in revenue sharing for an event
     function investInEvent(uint256 eventId) external payable eventExists(eventId) {
         require(msg.value > 0, "no value");
+        
+        // Track if this is a new investor
+        bool isNewInvestor = investorShares[eventId][_msgSender()] == 0;
+        
         totalInvested[eventId] += msg.value;
         investorShares[eventId][_msgSender()] += msg.value;
+        
+        // Add to investor list if new investor
+        if (isNewInvestor) {
+            eventInvestors[eventId].push(_msgSender());
+            isEventInvestor[eventId][_msgSender()] = true;
+        }
+        
+        // Update total investor shares
+        totalInvestorShares[eventId] += msg.value;
     }
 
     // Registration with revenue pooling: platform fee paid out, investor pool accrues a portion
@@ -95,6 +108,16 @@ abstract contract EventDomaIntegration is EventManagement {
         uint256 toCreator = net - toInvestors;
         revenueAccrued[eventId] += toInvestors;
         payable(eventData.creator).transfer(toCreator);
+        
+        // Update event total value for dynamic pricing (revenue + domain value)
+        uint256 currentTotalValue = eventTotalValue[eventId] + toInvestors;
+        eventTotalValue[eventId] = currentTotalValue;
+        
+        // Trigger share price update if dynamic pricing is initialized
+        if (eventShareBasePrice[eventId] > 0) {
+            // Update share price based on new total value
+            _updateSharePriceInternal(eventId);
+        }
 
         emit EventEvents.AttendeeRegistered(eventId, sender, confirmationCode, msg.value);
     }
@@ -123,6 +146,47 @@ abstract contract EventDomaIntegration is EventManagement {
         address to = IOwnershipToken(ownershipToken).ownerOf(tokenId);
         (bool ok, ) = payable(to).call{value: msg.value}("");
         require(ok, "tip failed");
+    }
+
+    /**
+     * @dev Internal function to update share price based on event value
+     * This is a simplified version of the Trading contract's _updateSharePrice
+     */
+    function _updateSharePriceInternal(uint256 eventId) internal {
+        if (eventShareBasePrice[eventId] == 0) return; // Not initialized
+        
+        uint256 totalValue = eventTotalValue[eventId];
+        uint256 shareSupply = eventShareSupply[eventId];
+        
+        if (totalValue == 0 || shareSupply == 0) return;
+        
+        // Calculate new multiplier based on value per share
+        uint256 valuePerShare = totalValue / shareSupply;
+        uint256 basePrice = eventShareBasePrice[eventId];
+        
+        // New multiplier = value per share / base price
+        uint256 newMultiplier = (valuePerShare * 10000) / basePrice;
+        
+        // Cap multiplier to prevent extreme values (max 100x)
+        if (newMultiplier > 1000000) {
+            newMultiplier = 1000000; // 100x max
+        }
+        
+        uint256 oldMultiplier = eventShareMultiplier[eventId];
+        eventShareMultiplier[eventId] = newMultiplier;
+        lastPriceUpdate[eventId] = block.timestamp;
+        
+        if (oldMultiplier != newMultiplier) {
+            uint256 oldPrice = (eventShareBasePrice[eventId] * oldMultiplier) / 10000;
+            uint256 newPrice = (eventShareBasePrice[eventId] * newMultiplier) / 10000;
+            
+            emit EventEvents.InvestorSharePriceUpdated(
+                eventId,
+                oldPrice,
+                newPrice,
+                address(0)
+            );
+        }
     }
 }
 
