@@ -74,6 +74,7 @@ const CreateEventForm = () => {
   const [domainAvailable, setDomainAvailable] = useState<boolean | null>(null);
   const [checkingDomain, setCheckingDomain] = useState(false);
   const sendNotification = useNotification();
+  const [ipfsHash, setIpfsHash] = useState<string | null>(null);
 
   const handleSuccess = useCallback(async (response: TransactionResponse) => {
     const transactionHash = response.transactionReceipts[0].transactionHash;
@@ -473,6 +474,7 @@ const CreateEventForm = () => {
         throw new Error("Failed to upload event metadata to IPFS");
       }
       const { uri } = await res.json();
+      setIpfsHash(uri);
 
       // After IPFS, call registerEvent with computed times and IPFS hash
       const startIso = formData.startDateTime || (formData.date && formData.time ? `${formData.date}T${formData.time}` : "");
@@ -2175,7 +2177,7 @@ const CreateEventForm = () => {
                       </div>
                     </div>
                   )}
-                  <VerticalLinearStepper />
+                  <VerticalLinearStepper domainName={domainName} formData={formData} ipfsHash={ipfsHash || ""} />
                 </div>
               </div>
 
