@@ -632,10 +632,10 @@ const CreateEventForm = () => {
   console.log('error: ', error);
   console.log('isLoading: ', isLoading);
   return (
-    <div className="min-h-screen text-[var(--app-foreground)] bg-background relative z-[20] pt-14 pb-28">
-      <div className="max-w-5xl mx-auto p-6 md:p-10">
+    <div className="min-h-screen text-foreground bg-background relative z-[20] pt-4 pb-20 sm:pt-8 sm:pb-24">
+      <div className="max-w-4xl mx-auto px-4 py-6 sm:px-6 sm:py-8 md:px-8 md:py-10">
         {/* Progress Steps */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           {/* Desktop Steps */}
           <div className="hidden md:block">
             <div className="flex items-center justify-between">
@@ -643,15 +643,15 @@ const CreateEventForm = () => {
                 <div key={step.id} className="flex items-center">
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all ${currentStep >= step.id
-                      ? "bg-[var(--app-accent)] text-white"
-                      : "bg-transparent border border-[var(--app-card-border)] text-[var(--app-foreground-muted)]"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-transparent border border-border text-muted-foreground"
                       }`}
                   >
                     <Icon name={step.icon as "home" | "share" | "users" | "calendar" | "star" | "plus" | "check"} size="sm" />
                   </div>
                   {index < steps.length - 1 && (
                     <div
-                      className={`w-16 h-0.5 mx-4 transition-all ${currentStep > step.id ? "bg-[var(--app-accent)]" : "bg-[var(--app-card-border)]"
+                      className={`w-16 h-0.5 mx-4 transition-all ${currentStep > step.id ? "bg-primary" : "bg-border"
                         }`}
                     />
                   )}
@@ -664,8 +664,8 @@ const CreateEventForm = () => {
                 <span
                   key={step.id}
                   className={`text-xs transition-colors ${currentStep >= step.id
-                    ? "text-[var(--app-accent)] font-medium"
-                    : "text-[var(--app-foreground-muted)]"
+                    ? "text-primary font-medium"
+                    : "text-muted-foreground"
                     }`}
                 >
                   {step.title}
@@ -676,12 +676,11 @@ const CreateEventForm = () => {
 
           {/* Mobile Steps */}
           <div className="md:hidden">
-
             <div className="text-center">
-              <span className="text-sm font-medium text-[var(--app-accent)]">
+              <span className="text-sm font-medium text-primary">
                 Step {currentStep} of {steps.length}
               </span>
-              <p className="text-xs text-[var(--app-foreground-muted)] mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {steps[currentStep - 1]?.title}
               </p>
             </div>
@@ -689,17 +688,17 @@ const CreateEventForm = () => {
         </div>
 
         {/* Form Content */}
-        <div className="bg-transparent border-none border-[var(--app-card-border)] rounded-2xl p-6 md:p-10">
+        <div className="bg-card rounded-2xl p-4 sm:p-6 md:p-8 lg:p-10">
           {currentStep === 1 && (
-            <div className="space-y-6">
-              <h2 className="text-3xl font-semibold text-center mb-10 tracking-tight">Basic Event Information</h2>
+            <div className="space-y-4 sm:space-y-6">
+              <h2 className="text-2xl sm:text-3xl font-semibold text-center mb-6 sm:mb-8 tracking-tight">Basic Event Information</h2>
 
               {/* Auto-fill Mock Data Button */}
-              <div className="mb-6 p-4 bg-foreground border border-blue-200 rounded-lg">
-                <div className="flex items-center justify-between">
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-muted border border-border rounded-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-medium text-blue-800">Quick Start</h3>
-                    <p className="text-xs text-blue-600">
+                    <h3 className="text-sm font-medium text-foreground">Quick Start</h3>
+                    <p className="text-xs text-muted-foreground">
                       Fill the form with realistic mock data for testing
                     </p>
                   </div>
@@ -707,7 +706,7 @@ const CreateEventForm = () => {
                     <button
                       type="button"
                       onClick={autoFillMockData}
-                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                      className="px-4 py-2 bg-primary text-primary-foreground text-sm rounded-lg hover:bg-primary/90 transition-colors"
                     >
                       {isAutoFilled ? "✓ Auto-filled" : "Auto-fill"}
                     </button>
@@ -745,7 +744,7 @@ const CreateEventForm = () => {
                           setPreparedTicketContracts(null);
                           setVerificationStatus('');
                         }}
-                        className="px-4 py-2 bg-gray-500 text-white text-sm rounded-lg hover:bg-gray-600 transition-colors"
+                        className="px-4 py-2 bg-muted text-muted-foreground text-sm rounded-lg hover:bg-muted/80 transition-colors"
                       >
                         Clear Form
                       </button>
@@ -766,14 +765,14 @@ const CreateEventForm = () => {
 
               {/* Event Title */}
               <div className="space-y-2">
-                <label className="text-base font-medium text-[var(--app-foreground)]">
+                <label className="text-sm sm:text-base font-medium text-foreground">
                   Event Title *
                 </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
-                  className="w-full px-4 py-3.5 bg-transparent border border-[var(--app-card-border)] rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                  className="w-full px-3 py-3 sm:px-4 sm:py-3.5 bg-background/50 border border-input rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
                   placeholder="Enter event title"
                   required
                 />
@@ -781,14 +780,14 @@ const CreateEventForm = () => {
 
               {/* Event Description */}
               <div className="space-y-2">
-                <label className="text-base font-medium text-[var(--app-foreground)]">
+                <label className="text-sm sm:text-base font-medium text-foreground">
                   Description *
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   rows={4}
-                  className="w-full px-4 py-3.5 bg-transparent border border-[var(--app-card-border)] rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors resize-none"
+                  className="w-full px-3 py-3 sm:px-4 sm:py-3.5 bg-background/50 border border-input rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors resize-none"
                   placeholder="Describe your event..."
                   required
                 />
@@ -796,13 +795,13 @@ const CreateEventForm = () => {
 
               {/* Category */}
               <div className="space-y-2">
-                <label className="text-base font-medium text-[var(--app-foreground)]">
+                <label className="text-base font-medium text-foreground">
                   Category *
                 </label>
                 <select
                   value={formData.category}
                   onChange={(e) => handleInputChange('category', e.target.value)}
-                  className="w-full px-4 py-3.5 bg-transparent border border-[var(--app-card-border)] rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                  className="w-full px-3 py-3 sm:px-4 sm:py-3.5 bg-background/50 border border-input rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors"
                   required
                 >
                   <option value="">Select a category</option>
@@ -820,7 +819,7 @@ const CreateEventForm = () => {
 
               {/* Event Image */}
               <div className="space-y-2">
-                <label className="text-base font-medium text-[var(--app-foreground)]">
+                <label className="text-base font-medium text-foreground">
                   Event Image
                 </label>
 
@@ -860,7 +859,7 @@ const CreateEventForm = () => {
                   {/* File Preview */}
                   {previewUrl && (
                     <div className="relative">
-                      <div className="relative w-full h-52 rounded-xl overflow-hidden border border-[var(--app-card-border)]">
+                      <div className="relative w-full h-52 rounded-xl overflow-hidden border border-border">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={previewUrl}
@@ -869,12 +868,12 @@ const CreateEventForm = () => {
                         />
                         <button
                           onClick={removeUploadedFile}
-                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                          className="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90 transition-colors"
                         >
                           <X className="w-4 h-4" />
                         </button>
                       </div>
-                      <p className="text-xs text-[var(--app-foreground-muted)] mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         {uploadedFile?.name} ({(uploadedFile?.size ? (uploadedFile.size / 1024 / 1024).toFixed(2) : '0')} MB)
                       </p>
                     </div>
@@ -890,7 +889,7 @@ const CreateEventForm = () => {
                   {/* Current Image URL */}
                   {formData.image && (
                     <div className="space-y-2">
-                      <label className="text-xs text-[var(--app-foreground-muted)]">
+                      <label className="text-xs text-muted-foreground">
                         Current Image URL:
                       </label>
                       <div className="flex gap-3">
@@ -898,7 +897,7 @@ const CreateEventForm = () => {
                           type="text"
                           value={formData.image}
                           onChange={(e) => handleInputChange('image', e.target.value)}
-                          className="flex-1 px-4 py-3.5 bg-transparent border border-[var(--app-card-border)] rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                          className="flex-1 px-3 py-3 sm:px-4 sm:py-3.5 bg-background/50 border border-input rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors text-sm"
                           placeholder="https://example.com/image.jpg"
                         />
                         <Button
@@ -918,26 +917,26 @@ const CreateEventForm = () => {
               {/* Start and End DateTime */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-[var(--app-foreground)]">
+                  <label className="text-sm font-medium text-foreground">
                     Start Date & Time *
                   </label>
                   <input
                     type="datetime-local"
                     value={formData.startDateTime}
                     onChange={(e) => handleInputChange('startDateTime', e.target.value)}
-                    className="w-full px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                    className="w-full px-3 py-3 sm:px-4 sm:py-3 bg-background/50 border border-input rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-[var(--app-foreground)]">
+                  <label className="text-sm font-medium text-foreground">
                     End Date & Time *
                   </label>
                   <input
                     type="datetime-local"
                     value={formData.endDateTime}
                     onChange={(e) => handleInputChange('endDateTime', e.target.value)}
-                    className="w-full px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                    className="w-full px-3 py-3 sm:px-4 sm:py-3 bg-background/50 border border-input rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors"
                     required
                   />
                 </div>
@@ -945,14 +944,14 @@ const CreateEventForm = () => {
 
               {/* Location */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[var(--app-foreground)]">
+                <label className="text-sm font-medium text-foreground">
                   Location *
                 </label>
                 <input
                   type="text"
                   value={formData.location}
                   onChange={(e) => handleInputChange('location', e.target.value)}
-                  className="w-full px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                  className="w-full px-3 py-3 sm:px-4 sm:py-3 bg-background border border-input rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
                   placeholder="Enter event location"
                   required
                 />
@@ -960,7 +959,7 @@ const CreateEventForm = () => {
 
               {/* Max Participants */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[var(--app-foreground)]">
+                <label className="text-sm font-medium text-foreground">
                   Maximum Participants
                 </label>
                 <input
@@ -968,16 +967,16 @@ const CreateEventForm = () => {
                   value={formData.maxParticipants}
                   onChange={(e) => handleInputChange('maxParticipants', parseInt(e.target.value))}
                   min="1"
-                  className="w-full px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                  className="w-full px-3 py-3 sm:px-4 sm:py-3 bg-background border border-input rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors"
                 />
               </div>
             </div>
           )}
 
           {currentStep === 3 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-center mb-8">Event Hosts</h2>
-              <p className="text-center text-[var(--app-foreground-muted)] mb-6">
+            <div className="space-y-4 sm:space-y-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-center mb-6 sm:mb-8">Event Hosts</h2>
+              <p className="text-center text-muted-foreground mb-4 sm:mb-6">
                 Add usernames of people who will be hosting this event
               </p>
 
@@ -986,14 +985,14 @@ const CreateEventForm = () => {
                 <div className="space-y-3">
                   <h3 className="text-lg font-medium">Current Hosts</h3>
                   {formData.hosts.map((host, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-transparent border border-[var(--app-card-border)] rounded-lg">
+                    <div key={index} className="flex items-center justify-between p-4 bg-transparent border border-border rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-[var(--app-accent)] rounded-full flex items-center justify-center">
-                          <Icon name="users" size="sm" className="text-white" />
+                        <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                          <Icon name="users" size="sm" className="text-primary-foreground" />
                         </div>
                         <div>
                           <h4 className="font-medium">@{host.name}</h4>
-                          <p className="text-sm text-[var(--app-foreground-muted)]">{host.role}</p>
+                          <p className="text-sm text-muted-foreground">{host.role}</p>
                         </div>
                       </div>
                       <button
@@ -1001,7 +1000,7 @@ const CreateEventForm = () => {
                           const newHosts = formData.hosts.filter((_, i) => i !== index);
                           setFormData(prev => ({ ...prev, hosts: newHosts }));
                         }}
-                        className="p-2 text-[var(--app-foreground-muted)] hover:text-red-500 transition-colors"
+                        className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
                       >
                         <Icon name="x" size="sm" />
                       </button>
@@ -1011,12 +1010,12 @@ const CreateEventForm = () => {
               )}
 
               {/* Add Host Form */}
-              <div className="space-y-4 p-4 bg-transparent border border-[var(--app-card-border)] rounded-lg border-none">
-                <h3 className="text-lg font-medium">Add New Host</h3>
+              <div className="space-y-4 p-3 sm:p-4 bg-muted border border-border rounded-lg">
+                <h3 className="text-base sm:text-lg font-medium">Add New Host</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-[var(--app-foreground)]">
+                    <label className="text-sm font-medium text-foreground">
                       Username *
                     </label>
                     <input
@@ -1030,12 +1029,12 @@ const CreateEventForm = () => {
                           tempHost: { ...prev.tempHost!, name: username }
                         }));
                       }}
-                      className="w-full px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                      className="w-full px-3 py-3 sm:px-4 sm:py-3 bg-background/50 border border-input rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-[var(--app-foreground)]">
+                    <label className="text-sm font-medium text-foreground">
                       Role
                     </label>
                     <input
@@ -1048,7 +1047,7 @@ const CreateEventForm = () => {
                           tempHost: { ...prev.tempHost!, role: e.target.value }
                         }));
                       }}
-                      className="w-full px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                      className="w-full px-4 py-3 bg-background/50 border border-input rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -1072,30 +1071,20 @@ const CreateEventForm = () => {
                       }));
                     }
                   }}
-                  className="w-full py-3"
+                  className="w-full py-3 bg-primary text-primary-foreground"
                   icon={<Icon name="plus" size="sm" />}
                 >
                   Add Host
                 </Button>
               </div>
 
-              {/* Host Tips */}
-              <div className="p-4 bg-transparent border border-[var(--app-card-border)] rounded-lg">
-                <h4 className="font-medium mb-2">💡 Tips for adding hosts:</h4>
-                <ul className="text-sm text-[var(--app-foreground-muted)] space-y-1">
-                  <li>• Use usernames without the @ symbol</li>
-                  <li>• Add a role to clarify their involvement</li>
-                  <li>• You can add multiple hosts for different roles</li>
-                  <li>• Hosts will be displayed on the event page</li>
-                </ul>
-              </div>
             </div>
           )}
 
           {currentStep === 4 && (
             <div className="space-y-2">
               <h2 className="text-2xl font-bold text-center mb-0">Event Agenda</h2>
-              <p className="text-center text-[var(--app-foreground-muted)] mb-8">
+              <p className="text-center text-muted-foreground mb-8">
                 Plan the schedule and sessions for your event
               </p>
 
@@ -1104,7 +1093,7 @@ const CreateEventForm = () => {
                 <div className="space-y-3">
                   <h3 className="text-lg font-medium">Current Agenda</h3>
                   {formData.agenda.map((item, index) => (
-                    <div key={index} className="p-4 bg-transparent border border-[var(--app-card-border)] rounded-lg">
+                    <div key={index} className="p-4 bg-transparent border border-border rounded-lg">
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="font-medium text-lg">{item.title}</h4>
                         <button
@@ -1112,13 +1101,13 @@ const CreateEventForm = () => {
                             const newAgenda = formData.agenda.filter((_, i) => i !== index);
                             setFormData(prev => ({ ...prev, agenda: newAgenda }));
                           }}
-                          className="p-2 text-[var(--app-foreground-muted)] hover:text-red-500 transition-colors"
+                          className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
                         >
                           <Icon name="x" size="sm" />
                         </button>
                       </div>
-                      <p className="text-sm text-[var(--app-foreground-muted)] mb-3">{item.description}</p>
-                      <div className="flex items-center gap-4 text-xs text-[var(--app-foreground-muted)]">
+                      <p className="text-sm text-muted-foreground mb-3">{item.description}</p>
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Icon name="calendar" size="sm" />
                           {item.startTime} - {item.endTime}
@@ -1136,12 +1125,12 @@ const CreateEventForm = () => {
               )}
 
               {/* Add Agenda Item Form */}
-              <div className="space-y-4 p-4 px-0 bg-transparent border border-[var(--app-card-border)] rounded-lg border-none">
+              <div className="space-y-4 p-4 px-0 bg-transparent border border-border rounded-lg border-none">
                 <h3 className="text-lg font-medium">Add New Agenda Item</h3>
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-[var(--app-foreground)]">
+                    <label className="text-sm font-medium text-foreground">
                       Session Title *
                     </label>
                     <input
@@ -1154,12 +1143,12 @@ const CreateEventForm = () => {
                           tempAgenda: { ...prev.tempAgenda!, title: e.target.value }
                         }));
                       }}
-                      className="w-full px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                      className="w-full px-4 py-3 bg-background/50 border border-input rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-[var(--app-foreground)]">
+                    <label className="text-sm font-medium text-foreground">
                       Description
                     </label>
                     <textarea
@@ -1172,13 +1161,13 @@ const CreateEventForm = () => {
                         }));
                       }}
                       rows={3}
-                      className="w-full px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors resize-none"
+                      className="w-full px-4 py-3 bg-background/50 border border-input rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors resize-none"
                     />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[var(--app-foreground)]">
+                      <label className="text-sm font-medium text-foreground">
                         Start Time *
                       </label>
                       <input
@@ -1191,13 +1180,13 @@ const CreateEventForm = () => {
                           }));
 
                         }}
-                        className="w-[80%] px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors "
+                        className="w-[80%] px-4 py-3 bg-background/50 border border-input rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors "
                         required
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[var(--app-foreground)]">
+                      <label className="text-sm font-medium text-foreground">
                         End Time *
                       </label>
                       <input
@@ -1209,14 +1198,14 @@ const CreateEventForm = () => {
                             tempAgenda: { ...prev.tempAgenda!, endTime: e.target.value }
                           }));
                         }}
-                        className="w-[80%] px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                        className="w-[80%] px-4 py-3 bg-background/50 border border-input rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors"
                         required
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-[var(--app-foreground)]">
+                    <label className="text-sm font-medium text-foreground">
                       Speakers (optional)
                     </label>
                     <input
@@ -1230,7 +1219,7 @@ const CreateEventForm = () => {
                           tempAgenda: { ...prev.tempAgenda!, speakers }
                         }));
                       }}
-                      className="w-full px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                      className="w-full px-4 py-3 bg-background/50 border border-input rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -1254,43 +1243,32 @@ const CreateEventForm = () => {
                       }));
                     }
                   }}
-                  className="w-full py-3"
+                  className="w-full py-3 bg-primary text-primary-foreground"
                   icon={<Icon name="plus" size="sm" />}
                 >
                   Add Agenda Item
                 </Button>
               </div>
 
-              {/* Agenda Tips */}
-              <div className="p-4 bg-transparent border border-[var(--app-card-border)] rounded-lg">
-                <h4 className="font-medium mb-2">💡 Tips for creating your agenda:</h4>
-                <ul className="text-sm text-[var(--app-foreground-muted)] space-y-1">
-                  <li>• Start with opening remarks and welcome</li>
-                  <li>• Include breaks for networking and refreshments</li>
-                  <li>• Plan for Q&A sessions after presentations</li>
-                  <li>• End with closing remarks and next steps</li>
-                  <li>• Consider time zones if it&apos;s a virtual event</li>
-                </ul>
-              </div>
             </div>
           )}
 
           {currentStep === 5 && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-center mb-8">Event Tickets</h2>
-              <p className="text-center text-[var(--app-foreground-muted)] mb-6">
+              <p className="text-center text-muted-foreground mb-6">
                 Configure ticketing and pricing options for your event
               </p>
 
               {/* Ticket Availability Toggle */}
-              <div className="flex items-center justify-between p-4 bg-transparent border border-[var(--app-card-border)] rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-transparent border border-border rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[var(--app-accent)] rounded-full flex items-center justify-center">
-                    <Icon name="plus" size="sm" className="text-white" />
+                  <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                    <Icon name="plus" size="sm" className="text-primary-foreground" />
                   </div>
                   <div>
                     <h3 className="font-medium">Tickets Available</h3>
-                    <p className="text-sm text-[var(--app-foreground-muted)]">Sell tickets for this event</p>
+                    <p className="text-sm text-muted-foreground">Sell tickets for this event</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -1305,7 +1283,7 @@ const CreateEventForm = () => {
                     }}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-[var(--app-card-border)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--app-accent)]"></div>
+                  <div className="w-11 h-6 bg-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-primary-foreground after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-primary-foreground after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                 </label>
               </div>
 
@@ -1314,10 +1292,10 @@ const CreateEventForm = () => {
                 <div className="space-y-3">
                   <h3 className="text-lg font-medium">Current Ticket Types</h3>
                   {formData.tickets.types.map((ticket, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-transparent border border-[var(--app-card-border)] rounded-lg">
+                    <div key={index} className="flex items-center justify-between p-4 bg-transparent border border-border rounded-lg">
                       <div>
                         <h4 className="font-medium">{ticket.type}</h4>
-                        <p className="text-sm text-[var(--app-foreground-muted)]">
+                        <p className="text-sm text-muted-foreground">
                           ${ticket.price} {ticket.currency} • {ticket.quantity} available
                         </p>
                       </div>
@@ -1329,7 +1307,7 @@ const CreateEventForm = () => {
                             tickets: { ...prev.tickets, types: newTickets }
                           }));
                         }}
-                        className="p-2 text-[var(--app-foreground-muted)] hover:text-red-500 transition-colors"
+                        className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
                       >
                         <Icon name="x" size="sm" />
                       </button>
@@ -1340,12 +1318,12 @@ const CreateEventForm = () => {
 
               {/* Add Ticket Type Form */}
               {formData.tickets.available && (
-                <div className="space-y-4 p-4 bg-transparent border border-[var(--app-card-border)] rounded-lg border-none">
+                <div className="space-y-4 p-0 bg-transparent border border-border rounded-lg border-none">
                   <h3 className="text-lg font-medium">Add New Ticket Type</h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[var(--app-foreground)]">
+                      <label className="text-sm font-medium text-foreground">
                         Ticket Type *
                       </label>
                       <input
@@ -1358,12 +1336,12 @@ const CreateEventForm = () => {
                             tempTicket: { ...prev.tempTicket!, type: e.target.value }
                           }));
                         }}
-                        className="w-full px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                        className="w-full px-4 py-3 bg-background/50 border border-input rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[var(--app-foreground)]">
+                      <label className="text-sm font-medium text-foreground">
                         Price *
                       </label>
                       <input
@@ -1378,7 +1356,7 @@ const CreateEventForm = () => {
                         }}
                         min="0"
                         step="0.01"
-                        className="w-full px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                        className="w-full px-4 py-3 bg-background/50 border border-input rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors"
                         required
                       />
                     </div>
@@ -1386,7 +1364,7 @@ const CreateEventForm = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[var(--app-foreground)]">
+                      <label className="text-sm font-medium text-foreground">
                         Currency
                       </label>
                       <select
@@ -1397,7 +1375,7 @@ const CreateEventForm = () => {
                             tempTicket: { ...prev.tempTicket!, currency: e.target.value }
                           }));
                         }}
-                        className="w-full px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                        className="w-full px-4 py-3 bg-background/50 border border-input rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors"
                       >
                         <option value="USD">USD ($)</option>
                         <option value="EUR">EUR (€)</option>
@@ -1407,7 +1385,7 @@ const CreateEventForm = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[var(--app-foreground)]">
+                      <label className="text-sm font-medium text-foreground">
                         Quantity Available *
                       </label>
                       <input
@@ -1421,7 +1399,7 @@ const CreateEventForm = () => {
                           }));
                         }}
                         min="1"
-                        className="w-full px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                        className="w-full px-4 py-3 bg-background/50 border border-input rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors"
                         required
                       />
                     </div>
@@ -1449,7 +1427,7 @@ const CreateEventForm = () => {
                         }));
                       }
                     }}
-                    className="w-full py-3"
+                    className="w-full py-3 bg-primary text-primary-foreground"
                     icon={<Icon name="plus" size="sm" />}
                   >
                     Add Ticket Type
@@ -1457,123 +1435,122 @@ const CreateEventForm = () => {
                 </div>
               )}
 
-              {/* Ticket Tips */}
-              <div className="p-4 bg-transparent border border-[var(--app-card-border)] rounded-lg">
-                <h4 className="font-medium mb-2">💡 Tips for ticket pricing:</h4>
-                <ul className="text-sm text-[var(--app-foreground-muted)] space-y-1">
-                  <li>• Offer early bird discounts to encourage early registration</li>
-                  <li>• Create VIP tiers with exclusive benefits</li>
-                  <li>• Consider free tickets for speakers and sponsors</li>
-                  <li>• Set realistic quantities based on venue capacity</li>
-                  <li>• Price competitively within your market</li>
-                </ul>
-              </div>
             </div>
           )}
 
           {currentStep === 6 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-center mb-8">Review & Create Event</h2>
+              <div className="text-center">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-2">Review & Create Event</h2>
+                <p className="text-muted-foreground">Review your event details before creating</p>
+              </div>
 
               {/* Event Summary */}
-              <div className="space-y-6 p-6 bg-transparent border border-[var(--app-card-border)] rounded-lg">
-                <h3 className="text-xl font-semibold text-center mb-6">Event Summary</h3>
+              <div className="space-y-6 p-4 sm:p-6 bg-card rounded-xl">
+                <div className="text-center">
+                  <h3 className="text-lg sm:text-xl font-semibold mb-2">Event Summary</h3>
+                  <div className="w-12 h-1 bg-primary mx-auto rounded-full"></div>
+                </div>
 
                 {/* Basic Information */}
                 <div className="space-y-4">
-                  <h4 className="text-lg font-medium border-b border-[var(--app-card-border)] pb-2">Basic Information</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-[var(--app-foreground-muted)]">Title:</span>
-                      <p className="font-medium text-base">{formData.title || "Not set"}</p>
+                  <h4 className="text-base sm:text-lg font-semibold text-foreground border-b border-border pb-2">Basic Information</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Title</span>
+                      <p className="text-sm font-medium text-foreground">{formData.title || "Not set"}</p>
                     </div>
-                    <div>
-                      <span className="text-[var(--app-foreground-muted)]">Category:</span>
-                      <p className="font-medium text-base">{formData.category || "Not set"}</p>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Category</span>
+                      <p className="text-sm font-medium text-foreground">{formData.category || "Not set"}</p>
                     </div>
-                    <div>
-                      <span className="text-[var(--app-foreground-muted)]">Start:</span>
-                      <p className="font-medium text-base">{formData.startDateTime || "Not set"}</p>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Start Date & Time</span>
+                      <p className="text-sm font-medium text-foreground">{formData.startDateTime || "Not set"}</p>
                     </div>
-                    <div>
-                      <span className="text-[var(--app-foreground-muted)]">End:</span>
-                      <p className="font-medium text-base">{formData.endDateTime || "Not set"}</p>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">End Date & Time</span>
+                      <p className="text-sm font-medium text-foreground">{formData.endDateTime || "Not set"}</p>
                     </div>
-                    <div>
-                      <span className="text-[var(--app-foreground-muted)]">Location:</span>
-                      <p className="font-medium text-base">{formData.location || "Not set"}</p>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Location</span>
+                      <p className="text-sm font-medium text-foreground">{formData.location || "Not set"}</p>
                     </div>
-                    <div>
-                      <span className="text-[var(--app-foreground-muted)]">Max Participants:</span>
-                      <p className="font-medium text-base">{formData.maxParticipants}</p>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Max Participants</span>
+                      <p className="text-sm font-medium text-foreground">{formData.maxParticipants}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Description */}
-                <div className="pt-4 border-t border-[var(--app-card-border)]">
-                  <h4 className="text-lg font-medium mb-3">Description</h4>
-                  <p className="text-sm bg-transparent border border-[var(--app-card-border)] rounded-lg p-3">
-                    {formData.description || "No description provided"}
-                  </p>
+                <div className="pt-4 border-t border-border">
+                  <h4 className="text-base sm:text-lg font-semibold text-foreground mb-3">Description</h4>
+                  <div className="bg-muted/50 border border-border rounded-lg p-3">
+                    <p className="text-sm text-foreground leading-relaxed">
+                      {formData.description || "No description provided"}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Event Image */}
                 {formData.image && (
-                  <div className="pt-4 border-t border-[var(--app-card-border)]">
-                    <h4 className="text-lg font-medium mb-3">Event Image</h4>
-                    <div className="flex items-center gap-3">
-                      <div className="w-20 h-20 bg-transparent border border-[var(--app-card-border)] rounded-lg flex items-center justify-center">
-                        <Icon name="camera" size="lg" className="text-[var(--app-foreground-muted)]" />
+                  <div className="pt-4 border-t border-border">
+                    <h4 className="text-base sm:text-lg font-semibold text-foreground mb-3">Event Image</h4>
+                    <div className="flex items-center gap-3 p-3 bg-muted/50 border border-border rounded-lg">
+                      <div className="w-12 h-12 bg-background border border-border rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Icon name="camera" size="sm" className="text-muted-foreground" />
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-[var(--app-foreground-muted)] break-all">{formData.image}</p>
-                        <p className="text-xs text-[var(--app-foreground-muted)] mt-1">Image URL</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-foreground font-medium truncate">Event Image</p>
+                        <p className="text-xs text-muted-foreground truncate">{formData.image}</p>
                       </div>
                     </div>
                   </div>
                 )}
 
                 {/* Hosts */}
-                <div className="pt-4 border-t border-[var(--app-card-border)]">
-                  <h4 className="text-lg font-medium mb-3">Event Hosts</h4>
+                <div className="pt-4 border-t border-border">
+                  <h4 className="text-base sm:text-lg font-semibold text-foreground mb-3">Event Hosts</h4>
                   {formData.hosts.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {formData.hosts.map((host, index) => (
-                        <div key={index} className="flex items-center gap-3 p-3 bg-transparent border border-[var(--app-card-border)] rounded-lg">
-                          <div className="w-10 h-10 bg-[var(--app-accent)] rounded-full flex items-center justify-center">
-                            <Icon name="users" size="sm" className="text-white" />
+                        <div key={index} className="flex items-center gap-3 p-3 bg-muted/50 border border-border rounded-lg">
+                          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                            <Icon name="users" size="sm" className="text-primary-foreground" />
                           </div>
-                          <div>
-                            <p className="font-medium text-sm">@{host.name}</p>
-                            <p className="text-xs text-[var(--app-foreground-muted)]">{host.role}</p>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">@{host.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{host.role}</p>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-[var(--app-foreground-muted)] italic">No hosts added</p>
+                    <div className="text-left py-0">
+                      <p className="text-sm text-muted-foreground">No hosts added</p>
+                    </div>
                   )}
                 </div>
 
                 {/* Agenda */}
-                <div className="pt-4 border-t border-[var(--app-card-border)]">
-                  <h4 className="text-lg font-medium mb-3">Event Agenda</h4>
+                <div className="pt-4 border-t border-border">
+                  <h4 className="text-base sm:text-lg font-semibold text-foreground mb-3">Event Agenda</h4>
                   {formData.agenda.length > 0 ? (
                     <div className="space-y-3">
                       {formData.agenda.map((item, index) => (
-                        <div key={index} className="p-4 bg-transparent border border-[var(--app-card-border)] rounded-lg">
+                        <div key={index} className="p-4 bg-muted/50 border border-border rounded-lg">
                           <div className="flex items-start justify-between mb-2">
-                            <h5 className="font-medium text-base">{item.title}</h5>
-                            <span className="text-sm text-[var(--app-accent)] font-medium">
+                            <h5 className="text-sm font-semibold text-foreground">{item.title}</h5>
+                            <span className="text-xs text-primary font-medium bg-primary/10 px-2 py-1 rounded-full">
                               {item.startTime} - {item.endTime}
                             </span>
                           </div>
                           {item.description && (
-                            <p className="text-sm text-[var(--app-foreground-muted)] mb-3">{item.description}</p>
+                            <p className="text-sm text-muted-foreground mb-3 leading-relaxed">{item.description}</p>
                           )}
                           {item.speakers && item.speakers.length > 0 && (
-                            <div className="flex items-center gap-2 text-xs text-[var(--app-foreground-muted)]">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <Icon name="users" size="sm" />
                               <span>Speakers: {item.speakers.join(', ')}</span>
                             </div>
@@ -1582,468 +1559,65 @@ const CreateEventForm = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-[var(--app-foreground-muted)] italic">No agenda items added</p>
+                    <div className="text-left py-0">
+                      <p className="text-sm text-muted-foreground">No agenda items added</p>
+                    </div>
                   )}
                 </div>
 
                 {/* Tickets */}
-                <div className="pt-4 border-t border-[var(--app-card-border)]">
-                  <h4 className="text-lg font-medium mb-3">Event Tickets</h4>
+                <div className="pt-4 border-t border-border">
+                  <h4 className="text-base sm:text-lg font-semibold text-foreground mb-3">Event Tickets</h4>
                   {formData.tickets.available ? (
                     formData.tickets.types.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {formData.tickets.types.map((ticket, index) => (
-                          <div key={index} className="p-4 bg-transparent border border-[var(--app-card-border)] rounded-lg">
+                          <div key={index} className="p-4 bg-muted/50 border border-border rounded-lg">
                             <div className="flex items-center justify-between mb-2">
-                              <h5 className="font-medium text-base">{ticket.type}</h5>
-                              <span className="text-sm text-[var(--app-accent)] font-medium">
+                              <h5 className="text-sm font-semibold text-foreground">{ticket.type}</h5>
+                              <span className="text-sm text-primary font-semibold bg-primary/10 px-2 py-1 rounded-full">
                                 {ticket.currency} {ticket.price}
                               </span>
                             </div>
-                            <p className="text-sm text-[var(--app-foreground-muted)]">
+                            <p className="text-xs text-muted-foreground">
                               {ticket.quantity} tickets available
                             </p>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-[var(--app-foreground-muted)] italic">Tickets enabled but no types added</p>
+                      <div className="text-center py-6">
+                        <p className="text-sm text-muted-foreground">Tickets enabled but no types added</p>
+                      </div>
                     )
                   ) : (
-                    <p className="text-sm text-[var(--app-foreground-muted)] italic">No tickets for this event</p>
+                    <div className="text-center py-6">
+                      <p className="text-sm text-muted-foreground">No tickets for this event</p>
+                    </div>
                   )}
                 </div>
               </div>
 
-              {/* Mode Toggle */}
-              <div className="mb-4 p-3 bg-[var(--app-card-bg)] border border-[var(--app-card-border)] rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-medium text-[var(--app-foreground)]">Transaction Mode</h4>
-                    <p className="text-xs text-[var(--app-foreground-muted)]">
-                      {useSimpleMode
-                        ? "Simple mode: Create event only (tickets can be added later)"
-                        : "Advanced mode: Create event + add tickets in sequence"
-                      }
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setUseSimpleMode(!useSimpleMode)}
-                    className="px-3 py-1 text-xs bg-[var(--app-accent)] text-white rounded hover:bg-[var(--app-accent-hover)] transition-colors"
-                  >
-                    {useSimpleMode ? "Advanced" : "Simple"}
-                  </button>
-                </div>
+              {/* Create Event Button */}
+              <div className="flex justify-center">
+                <Button
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="px-8 py-3 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors w-full"
+                >
+                  {isSubmitting ? "Creating Event..." : "Create Event"}
+                </Button>
               </div>
 
-              {/* Simple Event Creation Transaction */}
-              {isConnected && canUseTransaction && useSimpleMode && preparedContracts ? (
-                <Transaction
-                  chainId={chainId}
-                  calls={(preparedContracts || []) as never}
-                  onSuccess={handleSuccess}
-                  onStatus={async (lifecycle) => {
-                    console.log('Simple transaction lifecycle:', lifecycle.statusName);
 
-                    if (lifecycle.statusName === 'transactionPending' || lifecycle.statusName === 'buildingTransaction') {
-                      setIsSubmitting(true);
-                    } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
-                      if (lifecycle.statusName === 'success') {
-                        console.log('Transaction successful, starting verification...');
 
-                        // Prepare expected event data for verification
-                        const expectedEventData = {
-                          title: formData.title,
-                          creator: address, // Use the connected wallet address
-                          startTime: Math.floor(new Date(formData.startDateTime).getTime() / 1000).toString(),
-                          endTime: Math.floor(new Date(formData.endDateTime).getTime() / 1000).toString(),
-                        };
-
-                        // Verify event creation using The Graph Protocol
-                        const verification = await verifyEventCreation(expectedEventData);
-
-                        if (verification.success) {
-                          console.log('Event verified successfully:', verification.eventId);
-                          setCreatedEventId(verification.eventId);
-                          setTransactionStep('domain');
-                          setIsSubmitting(false);
-                        } else {
-                          console.error('Event verification failed:', verification.error);
-                          setIsSubmitting(false);
-                        }
-                      } else {
-                        console.log('Simple transaction failed or error');
-                        setIsSubmitting(false);
-                      }
-                    }
-                  }}
-                >
-                  <TransactionButton text={isSubmitting ? "Creating Event..." : "Create Event"} />
-                  <TransactionSponsor />
-                  <TransactionStatus>
-                    <TransactionStatusLabel />
-                    <TransactionStatusAction />
-                  </TransactionStatus>
-                </Transaction>
-              ) : null}
-
-              {/* Simple Domain Minting Transaction */}
-              {isConnected && canUseTransaction && useSimpleMode && createdEventId ? (
-                <div className="space-y-3">
-                  <Transaction
-                    chainId={1}
-                    calls={(preparedDomainContracts || []) as never}
-                    onSuccess={handleSuccess}
-                    onStatus={async (lifecycle) => {
-                      console.log('Simple domain transaction lifecycle:', lifecycle.statusName);
-
-                      if (lifecycle.statusName === 'transactionPending' || lifecycle.statusName === 'buildingTransaction') {
-                        setIsSubmitting(true);
-                      } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
-                        if (lifecycle.statusName === 'success') {
-                          console.log('Domain minted successfully');
-                          setTransactionStep('complete');
-                          setIsSubmitting(false);
-                          if (transactionTimeout) {
-                            clearTimeout(transactionTimeout);
-                            setTransactionTimeout(null);
-                          }
-                          router.push(`/e/${createdEventId}`);
-                        } else {
-                          console.log('Domain transaction failed or error');
-                          setIsSubmitting(false);
-                        }
-                      }
-                    }}
-                  >
-                    <TransactionButton text={isSubmitting ? "Minting Domain..." : `Mint ${domainName}`} />
-                    <TransactionSponsor />
-                    <TransactionStatus>
-                      <TransactionStatusLabel />
-                      <TransactionStatusAction />
-                    </TransactionStatus>
-                  </Transaction>
-
-                  {/* Skip Domain Button for Simple Mode */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      console.log('Skipping domain minting');
-                      setTransactionStep('complete');
-                      setIsSubmitting(false);
-                      if (transactionTimeout) {
-                        clearTimeout(transactionTimeout);
-                        setTransactionTimeout(null);
-                      }
-                      router.push(`/e/${createdEventId}`);
-                    }}
-                    className="w-full px-4 py-2 text-sm text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] underline"
-                  >
-                    Skip Domain (Complete Event Creation)
-                  </button>
-                </div>
-              ) : null}
-
-              {/* Advanced Event Creation Transaction */}
-              {isConnected && canUseTransaction && !useSimpleMode && transactionStep === 'event' && preparedContracts ? (
-                <Transaction
-                  chainId={chainId}
-                  calls={(preparedContracts || []) as never}
-                  onStatus={async (lifecycle) => {
-                    console.log('Event transaction lifecycle:', lifecycle.statusName);
-
-                    if (lifecycle.statusName === 'transactionPending' || lifecycle.statusName === 'buildingTransaction') {
-                      setIsSubmitting(true);
-                    } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
-                      if (lifecycle.statusName === 'success') {
-                        console.log('Transaction successful, starting verification...');
-
-                        // Prepare expected event data for verification
-                        const expectedEventData = {
-                          title: formData.title,
-                          creator: address, // Use the connected wallet address
-                          startTime: Math.floor(new Date(formData.startDateTime).getTime() / 1000).toString(),
-                          endTime: Math.floor(new Date(formData.endDateTime).getTime() / 1000).toString(),
-                        };
-
-                        // Verify event creation using The Graph Protocol
-                        const verification = await verifyEventCreation(expectedEventData);
-
-                        if (verification.success) {
-                          console.log('Event verified successfully:', verification.eventId);
-                          setCreatedEventId(verification.eventId);
-
-                          // Check if we need to add tickets
-                          if (formData.tickets.available && formData.tickets.types.length > 0) {
-                            console.log('Preparing ticket contracts...');
-                            try {
-                              const ticketContracts = await handleTicketCreation(verification.eventId);
-                              setPreparedTicketContracts(ticketContracts);
-                              console.log('Moving to ticket creation step');
-                              setTransactionStep('tickets');
-                              setIsSubmitting(false); // Reset for next transaction
-                            } catch (error) {
-                              console.error('Error preparing ticket contracts:', error);
-                              setIsSubmitting(false);
-                            }
-                          } else {
-                            // No tickets to add, move to domain minting
-                            console.log('No tickets to add, moving to domain minting');
-                            setTransactionStep('domain');
-                            setIsSubmitting(false);
-                          }
-                        } else {
-                          console.error('Event verification failed:', verification.error);
-                          setIsSubmitting(false);
-                        }
-                      } else {
-                        // Transaction failed or error
-                        console.log('Event transaction failed or error');
-                        setIsSubmitting(false);
-                      }
-                    }
-                  }}
-                >
-                  <TransactionButton text={isSubmitting ? "Creating Event..." : "Create Event"} />
-                  <TransactionSponsor />
-                  <TransactionStatus>
-                    <TransactionStatusLabel />
-                    <TransactionStatusAction />
-                  </TransactionStatus>
-                </Transaction>
-              ) : null}
-
-              {/* Advanced Ticket Creation Transaction */}
-              {address && isConnected && canUseTransaction && !useSimpleMode && transactionStep === 'tickets' && createdEventId && preparedTicketContracts ? (
-                <div className="space-y-3">
-                  <Transaction
-                    chainId={chainId}
-                    onSuccess={handleSuccess}
-                    calls={(preparedTicketContracts || []) as never}
-                    onStatus={async (lifecycle) => {
-                      console.log('Ticket transaction lifecycle:', lifecycle.statusName);
-
-                      if (lifecycle.statusName === 'transactionPending' || lifecycle.statusName === 'buildingTransaction') {
-                        setIsSubmitting(true);
-                      } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
-                        if (lifecycle.statusName === 'success') {
-                          // Tickets added successfully, move to domain minting
-                          console.log('Tickets added successfully, moving to domain minting');
-                          setTransactionStep('domain');
-                          setIsSubmitting(false);
-                        } else {
-                          // Transaction failed or error
-                          console.log('Ticket transaction failed or error: ', lifecycle.statusData);
-                          setIsSubmitting(false);
-                        }
-                      }
-                    }}
-                  >
-                    <TransactionButton text={isSubmitting ? "Adding Tickets..." : "Add Tickets"} />
-                    <TransactionSponsor />
-                    <TransactionStatus>
-                      <TransactionStatusLabel />
-                      <TransactionStatusAction />
-                    </TransactionStatus>
-                  </Transaction>
-
-                  {/* Skip Tickets Button */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      console.log('Skipping ticket creation');
-                      setTransactionStep('complete');
-                      setIsSubmitting(false);
-                      if (transactionTimeout) {
-                        clearTimeout(transactionTimeout);
-                        setTransactionTimeout(null);
-                      }
-                      router.push(`/e/${createdEventId}`);
-                    }}
-                    className="w-full px-4 py-2 text-sm text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] underline"
-                  >
-                    Skip Tickets (Complete Event Creation)
-                  </button>
-                </div>
-              ) : null}
-
-              {/* Domain Minting Transaction */}
-              {address && isConnected && canUseTransaction && !useSimpleMode && transactionStep === 'domain' && createdEventId && preparedDomainContracts ? (
-                <div className="space-y-3">
-                  <Transaction
-                    chainId={chainId}
-                    onSuccess={handleSuccess}
-                    calls={(preparedDomainContracts || []) as never}
-                    onStatus={async (lifecycle) => {
-                      console.log('Domain transaction lifecycle:', lifecycle.statusName);
-
-                      if (lifecycle.statusName === 'transactionPending' || lifecycle.statusName === 'buildingTransaction') {
-                        setIsSubmitting(true);
-                      } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
-                        if (lifecycle.statusName === 'success') {
-                          // Domain minted successfully
-                          console.log('Domain minted successfully');
-                          setTransactionStep('complete');
-                          setIsSubmitting(false);
-                          if (transactionTimeout) {
-                            clearTimeout(transactionTimeout);
-                            setTransactionTimeout(null);
-                          }
-                          router.push(`/e/${createdEventId}`);
-                        } else {
-                          // Transaction failed or error
-                          console.log('Domain transaction failed or error: ', lifecycle.statusData);
-                          setIsSubmitting(false);
-                        }
-                      }
-                    }}
-                  >
-                    <TransactionButton text={isSubmitting ? "Minting Domain..." : `Mint ${domainName}`} />
-                    <TransactionSponsor />
-                    <TransactionStatus>
-                      <TransactionStatusLabel />
-                      <TransactionStatusAction />
-                    </TransactionStatus>
-                  </Transaction>
-
-                  {/* Skip Domain Button */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      console.log('Skipping domain minting');
-                      setTransactionStep('complete');
-                      setIsSubmitting(false);
-                      if (transactionTimeout) {
-                        clearTimeout(transactionTimeout);
-                        setTransactionTimeout(null);
-                      }
-                      router.push(`/e/${createdEventId}`);
-                    }}
-                    className="w-full px-4 py-2 text-sm text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] underline"
-                  >
-                    Skip Domain (Complete Event Creation)
-                  </button>
-                </div>
-              ) : null}
-
-              {/* Connect Wallet */}
-              {!isConnected ? (
-                <div className="mt-6 p-4 bg-[var(--app-card-bg)] border border-[var(--app-card-border)] rounded-lg">
-                  <div className="text-center">
-                    <h4 className="text-sm font-medium text-[var(--app-foreground)] mb-2">
-                      Connect Your Wallet
-                    </h4>
-                    <p className="text-xs text-[var(--app-foreground-muted)] mb-4">
-                      Connect your wallet to create events on the blockchain.
-                    </p>
-                    <ConnectWallet />
-                  </div>
-                </div>
-              ) : null}
-
-              {/* Prepare Contract Calls Button */}
-              {isConnected && !preparedContracts && (
-                <div className="mt-6 p-4 bg-[var(--app-card-bg)] border border-[var(--app-card-border)] rounded-lg">
-                  <div className="text-center">
-                    <h4 className="text-sm font-medium text-[var(--app-foreground)] mb-2">
-                      Step 1: Prepare Event Data
-                    </h4>
-                    <p className="text-xs text-[var(--app-foreground-muted)] mb-4">
-                      Upload your image to IPFS and prepare the contract calls for event creation.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={prepareContractCalls}
-                      disabled={isPreparing}
-                      className="w-full px-4 py-2 bg-[var(--app-accent)] text-white rounded-lg hover:bg-[var(--app-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {isPreparing ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Preparing...
-                        </div>
-                      ) : (
-                        "Prepare Contract Calls"
-                      )}
-                    </button>
-                    {verificationStatus && (
-                      <div className="mt-2 text-xs text-[var(--app-foreground-muted)]">
-                        {verificationStatus}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Prepared Contracts Status */}
-              {isConnected && preparedContracts && (
-                <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <div className="text-sm text-green-800">
-                        Contract calls prepared successfully! Ready to create event.
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPreparedContracts(null);
-                        setVerificationStatus('');
-                      }}
-                      className="text-xs text-green-600 hover:text-green-800 underline"
-                    >
-                      Reset
-                    </button>
-                  </div>
-                  <div className="mt-2 text-xs text-green-600">
-                    {preparedContracts.length} contract call(s) ready
-                  </div>
-                </div>
-              )}
-
-              {/* Transaction Progress Indicator */}
-              {isSubmitting && (
-                <div className="mt-4 p-4 bg-[var(--app-card-bg)] border border-[var(--app-card-border)] rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-[var(--app-accent)] rounded-full animate-pulse"></div>
-                    <div className="text-sm text-[var(--app-foreground)]">
-                      {transactionStep === 'event' && "Creating your event on the blockchain..."}
-                      {transactionStep === 'tickets' && "Adding tickets to your event..."}
-                      {transactionStep === 'domain' && "Minting domain name for your event..."}
-                      {transactionStep === 'complete' && "Event created successfully!"}
-                    </div>
-                  </div>
-                  {verificationStatus && (
-                    <div className="mt-2 text-xs text-[var(--app-foreground-muted)]">
-                      {verificationStatus}
-                    </div>
-                  )}
-                  {createdEventId && (
-                    <div className="mt-2 text-xs text-[var(--app-foreground-muted)]">
-                      Event ID: {createdEventId}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <p className="mt-2 text-center text-xs text-[var(--app-foreground-muted)]">
-                <button
-                  type="button"
-                  onClick={resetTransactionState}
-                  className="underline hover:text-[var(--app-foreground)]"
-                >
-                  Cancel
-                </button>
-              </p>
             </div>
           )}
 
           {currentStep === 7 && (
             <div className="">
               <h2 className="text-2xl font-bold text-center mb-0">Mint Domain Name</h2>
-              <p className="text-center text-[var(--app-foreground-muted)] mb-6">
+              <p className="text-center text-muted-foreground mb-6">
                 Create a decentralized domain name for your event using the nyuiela.eth ecosystem
               </p>
 
@@ -2053,7 +1627,7 @@ const CreateEventForm = () => {
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-[var(--app-foreground)]">
+                    <label className="text-sm font-medium text-foreground">
                       Domain Name *
                     </label>
                     <input
@@ -2064,9 +1638,9 @@ const CreateEventForm = () => {
                         setDomainName(e.target.value);
                         setDomainAvailable(null);
                       }}
-                      className="w-full px-4 py-3 bg-transparent border border-[var(--app-card-border)] rounded-lg text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors"
+                      className="w-full px-3 py-3 sm:px-4 sm:py-3 bg-background/50 border border-input rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
                     />
-                    <p className="text-xs text-[var(--app-foreground-muted)]">Enter full domain including ending (e.g., .io, .core)</p>
+                    <p className="text-xs text-muted-foreground">Enter full domain including ending (e.g., .io, .core)</p>
                   </div>
 
                   {/* Domain Availability Check */}
@@ -2076,7 +1650,7 @@ const CreateEventForm = () => {
                         type="button"
                         onClick={() => checkDomainAvailability(domainName)}
                         disabled={checkingDomain || !domainName}
-                        className="px-4 py-2 bg-[var(--app-accent)] text-white rounded-lg hover:bg-[var(--app-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         {checkingDomain ? (
                           <div className="flex items-center gap-2">
@@ -2112,116 +1686,44 @@ const CreateEventForm = () => {
                     </div>
                   )}
 
-                  {/* Mint Domain Button */}
-                  {domainAvailable && domainName && (
-                    <div className="space-y-3">
-                      <button
-                        type="button"
-                        onClick={() => prepareDomainMinting(createdEventId || '')}
-                        disabled={isPreparing || !createdEventId}
-                        className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {isPreparing ? (
-                          <div className="flex items-center justify-center gap-2">
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Preparing Domain Minting...
-                          </div>
-                        ) : (
-                          `Mint ${domainName}`
-                        )}
-                      </button>
-
-                      {verificationStatus && (
-                        <div className="text-xs text-[var(--app-foreground-muted)] text-center">
-                          {verificationStatus}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Domain Benefits */}
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 className="font-medium text-blue-800 mb-2">🌐 Domain Benefits</h4>
-                    <ul className="text-sm text-blue-700 space-y-1">
-                      <li>• Easy-to-remember URL for your event (e.g., abc.nyuiela.eth)</li>
-                      <li>• Decentralized and censorship-resistant</li>
-                      <li>• Points directly to your event&apos;s IPFS metadata</li>
-                      <li>• Works with any IPFS gateway</li>
-                      <li>• You own the domain permanently</li>
-                      <li>• Part of the nyuiela.eth ecosystem</li>
-                    </ul>
+                  {/* Skip Domain Option */}
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        console.log('Skipping domain minting');
+                        router.push('/e');
+                      }}
+                      className="text-sm text-muted-foreground hover:text-foreground underline"
+                    >
+                      Skip Domain Minting
+                    </button>
                   </div>
-
-                  {/* Prepared Domain Status */}
-                  {preparedDomainContracts && (
-                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <div className="text-sm text-green-800">
-                            Domain contracts prepared! Ready to mint {domainName}.
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPreparedDomainContracts(null);
-                            setVerificationStatus('');
-                          }}
-                          className="text-xs text-green-600 hover:text-green-800 underline"
-                        >
-                          Reset
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  <VerticalLinearStepper />
                 </div>
-              </div>
-
-              {/* Skip Domain Option */}
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    console.log('Skipping domain minting');
-                    setTransactionStep('complete');
-                    if (transactionTimeout) {
-                      clearTimeout(transactionTimeout);
-                      setTransactionTimeout(null);
-                    }
-                    router.push(`/e/${createdEventId}`);
-                  }}
-                  className="text-sm text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] underline"
-                >
-                  Skip Domain Minting
-                </button>
               </div>
             </div>
           )}
-
         </div>
-
       </div>
 
       {/* Static Navigation Buttons at Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[var(--app-background)] border-t border-[var(--app-card-border)] p-4 z-50">
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-3 sm:p-4 z-50">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <Button
             onClick={handlePrevStep}
             disabled={currentStep === 1}
             variant="outline"
-            className="px-4 py-3 border-none bg-transparent hover:bg-black/10"
+            className="px-3 py-2 sm:px-4 sm:py-3 border-none bg-transparent hover:bg-muted"
           >
-            <ChevronLeftIcon className="w-5 h-5" />
+            <ChevronLeftIcon className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
 
           {currentStep < steps.length ? (
             <Button
               onClick={handleNextStep}
-              className="px-4 py-3 border-none bg-transparent text-foreground hover:bg-black/10"
+              className="px-3 py-2 sm:px-4 sm:py-3 border-none bg-transparent text-foreground hover:bg-muted"
             >
-              <ChevronRightIcon className="w-5 h-5" />
+              <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
           ) : null}
         </div>

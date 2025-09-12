@@ -84,8 +84,8 @@ const EventsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen text-[var(--events-foreground)] bg-black/80 relative z-[20] pt-10">
-        <div className="flex items-center justify-center h-64">
+      <div className="h-screen text-foreground bg-background relative z-[20] pt-10">
+        <div className="flex items-center justify-center h-full">
           <div className="flex items-center gap-2">
             <Loader2 className="w-5 h-5 animate-spin" />
             <span>Loading events...</span>
@@ -98,13 +98,13 @@ const EventsPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen text-[var(--events-foreground)] bg-black/80 relative z-[20] pt-10">
+      <div className="min-h-screen text-foreground bg-background relative z-[20] pt-10">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <p className="text-red-500 mb-2">{error}</p>
+            <p className="text-destructive mb-2">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-[var(--events-accent)] text-white rounded-lg hover:bg-[var(--events-accent-hover)] transition-colors"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
             >
               Retry
             </button>
@@ -116,13 +116,13 @@ const EventsPage = () => {
   }
 
   return (
-    <div className="min-h-screen text-[var(--events-foreground)] bg-black/80 relative z-[20] pt-10">
+    <div className="min-h-screen text-foreground bg-background relative z-[20] pt-10">
       {/* Header */}
       <div className="top-0 z-40 bg-transparent border-none">
         <div className="flex items-center justify-between p-4">
           <div>
-            <h1 className="text-xl font-bold text-[var(--events-foreground)]">Events</h1>
-            <p className="text-sm text-[var(--events-foreground-muted)]">
+            <h1 className="text-xl font-bold text-foreground">Events</h1>
+            <p className="text-sm text-muted-foreground">
               {events.length} event{events.length !== 1 ? 's' : ''} found
             </p>
           </div>
@@ -130,14 +130,14 @@ const EventsPage = () => {
             <button
               onClick={fetchEvents}
               disabled={loading}
-              className="px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50 rounded-lg transition-colors flex items-center gap-2"
+              className="px-3 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50 rounded-lg transition-colors flex items-center gap-2"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </button>
             <Link
               href="/e/create"
-              className="px-4 py-2 text-sm font-medium text-white bg-[var(--events-accent)] hover:bg-[var(--events-accent-hover)] rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-colors"
             >
               Create Event
             </Link>
@@ -152,7 +152,7 @@ const EventsPage = () => {
             <p className="text-[var(--events-foreground-muted)] mb-4">No events found</p>
             <Link
               href="/e/create"
-              className="px-4 py-2 text-sm font-medium text-white bg-[var(--events-accent)] hover:bg-[var(--events-accent-hover)] rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-colors"
             >
               Create the first event
             </Link>
@@ -162,7 +162,7 @@ const EventsPage = () => {
             <Link
               key={event.id}
               href={`/e/${event.id}`}
-              className="block border-b-[1px] border-[var(--events-card-border)] rounded-xl p-4 bg-[var(--events-card-bg)] hover:bg-white/20 transition-colors"
+              className="block border-b border-border rounded-xl p-4 bg-card/50 hover:bg-card transition-colors"
             >
               <div className="flex gap-4">
                 {/* Event Image */}
@@ -174,7 +174,7 @@ const EventsPage = () => {
                     className="w-full h-full object-cover"
                   />
                   {event.isLive && (
-                    <div className="absolute top-1 left-1 bg-red-500 text-white text-xs px-1 py-0.5 rounded">
+                    <div className="absolute top-1 left-1 bg-destructive text-destructive-foreground text-xs px-1 py-0.5 rounded">
                       LIVE
                     </div>
                   )}
@@ -184,16 +184,16 @@ const EventsPage = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="text-lg font-semibold truncate">{event.title}</h3>
-                    <span className="px-2 py-1 bg-[var(--events-accent)] text-white text-xs rounded-full ml-2 flex-shrink-0">
+                    <span className="px-2 py-1 bg-primary text-primary-foreground text-xs rounded-full ml-2 flex-shrink-0">
                       {event.category || 'Event'}
                     </span>
                   </div>
 
-                  <p className="text-[12px] text-[var(--events-foreground-muted)] mb-3 line-clamp-2 text-ellipsis">
+                  <p className="text-[12px] text-muted-foreground mb-3 line-clamp-2 text-ellipsis">
                     {event.description || 'No description available'}
                   </p>
 
-                  <div className="flex items-end gap-4 text-xs text-[var(--events-foreground-muted)]">
+                  <div className="flex items-end gap-4 text-xs text-muted-foreground">
                     {event.startTime && (
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
