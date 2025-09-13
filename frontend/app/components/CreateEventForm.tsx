@@ -74,7 +74,7 @@ const CreateEventForm = () => {
   const [domainAvailable, setDomainAvailable] = useState<boolean | null>(null);
   const [checkingDomain, setCheckingDomain] = useState(false);
   const sendNotification = useNotification();
-  const [ipfsHash, setIpfsHash] = useState<string | null>(null);
+  const [, setIpfsHash] = useState<string | null>(null);
 
   const handleSuccess = useCallback(async (response: TransactionResponse) => {
     const transactionHash = response.transactionReceipts[0].transactionHash;
