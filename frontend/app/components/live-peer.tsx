@@ -176,17 +176,17 @@ export default function StreamPublisher({
                   });
 
                   if (response.ok) {
-                    console.log(`✅ Success with URL: ${url} and content type: ${contentType}`);
+                    console.log(`Success with URL: ${url} and content type: ${contentType}`);
                     successfulConfig = { url, contentType };
                     break;
                   } else {
-                    console.log(`❌ Failed with ${url} and ${contentType}: ${response.status} ${response.statusText}`);
+                    console.log(`Failed with ${url} and ${contentType}: ${response.status} ${response.statusText}`);
                     const errorText = await response.text();
                     console.log(`Error details: ${errorText}`);
 
                     // Check if it's the "unsupported media" error and we can try a different peer config
                     if (errorText.includes('unsupported media') && currentConfigIndex < peerConfigs.length - 1) {
-                      console.log(`🔄 Trying different peer configuration...`);
+                      console.log(`Trying different peer configuration...`);
                       currentConfigIndex++;
 
                       // Destroy current peer and create new one with different config
@@ -204,7 +204,7 @@ export default function StreamPublisher({
                     lastError = new Error(`Server responded with ${response.status}: ${response.statusText}. Details: ${errorText}`);
                   }
                 } catch (err) {
-                  console.log(`❌ Network error with ${url} and ${contentType}:`, err);
+                  console.log(`Network error with ${url} and ${contentType}:`, err);
                   lastError = err instanceof Error ? err : new Error('Network error');
                 }
               }
@@ -234,7 +234,7 @@ export default function StreamPublisher({
         });
 
         peerInstance.on("connect", () => {
-          console.log("✅ Connected to streaming server!");
+          console.log("Connected to streaming server!");
           setIsStreaming(true);
           setStreamStatus('connected');
           setIsLoading(false);

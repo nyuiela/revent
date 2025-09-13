@@ -50,7 +50,7 @@ export async function GET(
     }
 
     const event = events[0];
-    console.log(`Found event:`, event);
+    // console.log(`Found event:`, event);
 
     return NextResponse.json({
       success: true,

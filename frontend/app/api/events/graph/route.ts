@@ -122,7 +122,7 @@ export async function GET() {
     const graphData = await client.request(query) as { eventCreateds?: GraphEvent[] };
     const graphEvents: GraphEvent[] = graphData.eventCreateds || [];
 
-    console.log(`Fetched ${graphEvents.length} events from The Graph Protocol:`, graphEvents);
+    // console.log(`Fetched ${graphEvents.length} events from The Graph Protocol:`, graphEvents);
 
     // Process events and fetch IPFS metadata
     const processedEvents = await Promise.all(

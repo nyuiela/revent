@@ -1,10 +1,9 @@
 import React from 'react'
-import Prism from '../components/prisma'
 
 const layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', zIndex: 1 }}>
-      <Prism
+    <div style={{ width: '100%', height: '100%', position: 'relative', zIndex: 1 }} className='bg-black'>
+      {/* <Prism
         animationType="hover"
         timeScale={0.1}
         height={3.5}
@@ -14,9 +13,17 @@ const layout = ({ children }: { children: React.ReactNode }) => {
         colorFrequency={1}
         noise={0.5}
         glow={1}
-      >
-        {children}
-      </Prism>
+      > */}
+
+      {/* <Aurora
+        colorStops={["#3A29FF", "#FF94B4", "#FF3232"]}
+        blend={0}
+        amplitude={1.0}
+        speed={0.2}
+      > */}
+      {children}
+      {/* </Aurora> */}
+      {/* </Prism> */}
     </div >
   )
 }

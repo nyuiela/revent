@@ -4,9 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { graphqlClient } from "@/lib/graphqlClient";
 import { gql } from "graphql-request";
 import MediaGrid, { MediaItem } from "@/components/MediaGrid";
+import ThemeToggle from "@/components/ThemeToggle";
+import BridgeModal from "@/components/BridgeModal";
 import { useState } from "react";
 import Image from "next/image";
-import ethAccra from "../../../public/illustration.svg"
+import PixelBlastBackground from "@/components/PixelBlastBackground";
+// import ethAccra from "../../../public/illustration.svg"
 
 type Nameserver = { ldhName: string };
 type Chain = { name: string };
@@ -123,39 +126,112 @@ export default function DashboardPage() {
   const [chatMessages, setChatMessages] = useState<Array<{ id: string; role: "user" | "system"; text: string }>>([
     { id: "m1", role: "system", text: "Welcome to your event dashboard. Discuss, negotiate, and coordinate here." },
   ]);
+  const [isBridgeModalOpen, setIsBridgeModalOpen] = useState(false);
   const { data, isLoading, error } = useQuery({
     queryKey: ["domain-data"],
-    queryFn: () => graphqlClient.request<QueryResponse>(namesQuery),
+    queryFn: async () => {
+      console.log('Fetching domain data...');
+      try {
+        const result = await graphqlClient.request<QueryResponse>(namesQuery);
+        console.log('Domain data fetched successfully:', result);
+        return result;
+      } catch (err) {
+        console.error('GraphQL query failed:', err);
+        // Return empty data structure as fallback
+        return { names: { items: [] } } as QueryResponse;
+      }
+    },
+    retry: 2,
+    retryDelay: 2000,
+    staleTime: 60000, // 1 minute
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
   });
 
   return (
-    <div className="p-6 bg-transparent">
+    <div className="min-h-screen p-6 bg-transparent overflow-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
+      {/* Header with Theme Toggle */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Domain Dashboard</h1>
+        <div className="flex items-center space-x-4">
+          <nav className="flex space-x-4">
+            <a href="/permissions" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              Permissions
+            </a>
+            <a href="/gallery" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              Gallery
+            </a>
+            <a href="/dashboard/revenue" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              Revenue
+            </a>
+          </nav>
+          <ThemeToggle />
+        </div>
+      </div>
       {/* Hero */}
       <section className="bg-amber-300 border border-gray-200 rounded-xl mb-4 h-[45vh]">
-        <Image src={ethAccra} alt='hero' className="w-full h-full object-cover" />
+        <Image src="/illustration.svg" alt='hero' className="w-full h-full object-cover" width={192} height={192} unoptimized />
 
       </section>
 
+      {/* Bridge Domain */}
+      <section className="mb-10 mt-4">
+        <button
+          onClick={() => setIsBridgeModalOpen(true)}
+          className="px-3 py-2 rounded-md border border-gray-200 hover:bg-black/20 hover:text-white"
+        >
+          Bridge Domain
+        </button>
+      </section>
+
+      {/* <PixelBlastBackground 
+            className="fixed inset-0 w-full h-full -mb-[720px]"
+            style={{ height: '100vh' }}
+          /> */}
 
       {/* Stats */}
-      <section className="mb-4">
+      <section className="mb-4 mt-8">
         <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
           <div className="bg-transparent border border-gray-200 rounded-xl p-3">
-            <div className="text-xs text-gray-500">Media Items</div>
+            <div className="text-lg text-gray-500">Media Items</div>
             <div className="text-2xl font-bold">{mediaItems.length}</div>
           </div>
           <div className="bg-transparent border border-gray-200 rounded-xl p-3">
-            <div className="text-xs text-gray-500">Participants</div>
+            <div className="text-lg text-gray-500">Participants</div>
             <div className="text-2xl font-bold">0</div>
           </div>
           <div className="bg-transparent border border-gray-200 rounded-xl p-3">
-            <div className="text-xs text-gray-500">Token Types</div>
+            <div className="text-lg text-gray-500">Token Types</div>
             <div className="text-2xl font-bold">{data?.names.items.reduce((acc, n) => acc + (n.tokens?.length ?? 0), 0) ?? 0}</div>
           </div>
         </div>
       </section>
-      {isLoading && <p className="text-gray-600">Loading…</p>}
-      {error && <p className="text-red-600">Failed to load.</p>}
+
+      <BridgeModal isOpen={isBridgeModalOpen} onClose={() => setIsBridgeModalOpen(false)} />
+      {isLoading && (
+        <div className="flex items-center justify-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <span className="ml-2 text-gray-600">Loading domain data...</span>
+        </div>
+      )}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <p className="text-red-600">Failed to load domain data: {error.message}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+      
+      {/* Show message when no data is available */}
+      {!isLoading && !error && data && data.names.items.length === 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <p className="text-blue-600">No domain data available. This is normal if you haven't created any domains yet.</p>
+        </div>
+      )}
       {/* {data && (
         <div className="grid gap-4">
           {data.names.items.map((item) => (
@@ -217,9 +293,11 @@ export default function DashboardPage() {
           items={mediaItems}
           setItemsExternal={setMediaItems}
           onUploadFiles={async () => {
+            console.log('Upload files clicked');
             // future IPFS upload integration
           }}
-          onRequestDownload={async () => {
+          onRequestDownload={async (item) => {
+            console.log('Download requested for:', item);
             // future permission trading flow
           }}
         />
@@ -237,8 +315,8 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold m-0">Event Chat</h2>
           <div className="flex gap-2">
-            <button className="px-2.5 py-1.5 border border-gray-200 rounded-md">Permission Trade</button>
-            <button className="px-2.5 py-1.5 border border-gray-200 rounded-md">Buy</button>
+            <button className="px-2.5 py-1.5 border cursor-pointer hover:bg-gray-100 hover:text-gray-900 border-gray-200 rounded-md">Permission Trade</button>
+            <button className="px-2.5 py-1.5 border cursor-pointer hover:bg-gray-100 hover:text-gray-900 border-gray-200 rounded-md">Buy</button>
           </div>
         </div>
         <div className="bg-transparent border border-gray-200 rounded-lg h-50 overflow-auto p-2 mb-2">
@@ -265,7 +343,7 @@ export default function DashboardPage() {
             placeholder="Type message…"
             className="flex-1 px-2.5 py-2 border border-gray-200 rounded-md"
           />
-          <button type="submit" className="px-3 py-2 border-gray-200 rounded-md">Send</button>
+          <button type="submit" className="px-3 py-2 border cursor-pointer hover:bg-gray-100 hover:text-gray-900 border-gray-200 rounded-md">Send</button>
         </form>
       </section>
 

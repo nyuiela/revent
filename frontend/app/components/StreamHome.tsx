@@ -1,11 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import Link from "next/link";
 import StreamHeader from "./StreamHeader";
 import EventsMap, { type LiveEvent, type EventsMapRef } from "./EventsMap";
 import EventSearch from "./EventSearch";
 import { Camera, ChevronUp, Monitor, Plus, Eye } from "lucide-react";
+import OwnerDisplay from "../../components/OwnerDisplay";
+import ViewCount from "../../components/ViewCount";
+import { useEvents } from "../../hooks/useEvents";
+import { useViewCounts } from "../../hooks/useViewCounts";
 // import { useViewProfile } from "@coinbase/onchainkit/minikit";
 // Removed unused Graph Protocol imports - now handled by API route
 type Mode = "map" | "camera" | "screen";
@@ -13,40 +17,20 @@ type Mode = "map" | "camera" | "screen";
 export default function StreamHome() {
   const [mode] = useState<Mode>("map");
   const [activeFilter, setActiveFilter] = useState<string>("all");
-  const [events, setEvents] = useState<LiveEvent[]>([]);
   const [showDiscover, setShowDiscover] = useState(true);
   const [searchBarVisible, setSearchBarVisible] = useState(true);
   const [selectedEventTitle, setSelectedEventTitle] = useState<string>("");
   const mapRef = useRef<EventsMapRef>(null);
   // const viewProfile = useViewProfile();
 
-  const filters = ["all", "eat", "café", "bar"]; // exact labels per screenshot
+  // Use React Query for events data
+  const { data: events = [], isLoading: eventsLoading } = useEvents();
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        // Use the new Graph Protocol API endpoint
-        const res = await fetch("/api/events/graph");
-        const json = await res.json();
-        if (!cancelled) {
-          setEvents(json.events || []);
-          console.log(`Loaded ${json.events?.length || 0} events from Graph Protocol`);
-        }
-      } catch (error) {
-        console.error("Error loading events from Graph Protocol:", error);
-        // Fallback to empty array on error
-        if (!cancelled) setEvents([]);
-      }
-    }
-    load();
-    // Refresh every 30 seconds to get new events
-    const t = setInterval(load, 30000);
-    return () => {
-      cancelled = true;
-      clearInterval(t);
-    };
-  }, []);
+  // Get view counts for all events (memoized to prevent unnecessary re-renders)
+  const eventIds = useMemo(() => events.map(event => event.id), [events]);
+  const { data: viewCounts = {}, isLoading: viewsLoading } = useViewCounts(eventIds);
+
+  const filters = ["all", "eat", "café", "bar"]; // exact labels per screenshot
 
   // Use real events from Graph Protocol for discover section
   // Take the first 4 events and add viewer count simulation
@@ -60,13 +44,13 @@ export default function StreamHome() {
     id: event.id,
     title: event.title.toLowerCase(),
     image: event.avatarUrl,
-    author: `@${event.username}`,
+    author: event.creator || '', // Store creator address for OwnerDisplay
   }));
 
   // Use real event creators for curators section
   const curators = events.slice(6, 10).map(event => ({
     id: event.id,
-    name: event.username,
+    name: event.creator || '', // Store creator address for OwnerDisplay
     viewers: Math.floor(Math.random() * 100) + 20,
     avatarUrl: event.avatarUrl,
   }));
@@ -86,6 +70,23 @@ export default function StreamHome() {
   const handleMapDrag = (isDragging: boolean) => {
     setSearchBarVisible(!isDragging);
   };
+
+  // Show loading state while data is being fetched
+  if (eventsLoading) {
+    return (
+      <div className="space-y-5 w-full">
+        <StreamHeader />
+        <div className="relative rounded-3xl overflow-hidden border border-[var(--app-card-border)] bg-[var(--app-card-bg)] h-[30rem] w-full shadow-none">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--app-accent)]"></div>
+              <p className="text-[var(--app-foreground-muted)] text-sm">Loading events...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5 animate-fade-in w-full bg-red-00">
@@ -199,16 +200,27 @@ export default function StreamHome() {
                     </div>
                   )}
 
-                  {/* Viewer count */}
+                  {/* View count (replaced viewer count) */}
                   <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full z-10 flex items-center gap-1">
                     <Eye className="w-3 h-3" />
-                    {event.viewers}
+                    <ViewCount
+                      count={viewCounts[event.id] || 0}
+                      isLoading={viewsLoading}
+                      size="sm"
+                      showIcon={false}
+                    />
                   </div>
 
                   {/* Text content */}
                   <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
                     <div className="font-medium text-sm truncate text-white drop-shadow-sm">{event.title}</div>
-                    <div className="text-xs text-white/80 drop-shadow-sm" >@{event.username}</div>
+                    <div className="text-xs text-white/80 drop-shadow-sm">
+                      <OwnerDisplay
+                        address={event.creator || ''}
+                        className="text-white/80"
+                        showIcon={false}
+                      />
+                    </div>
                   </div>
                 </Link>
               ))}
@@ -232,7 +244,13 @@ export default function StreamHome() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={c.image} alt={c.title} className="w-full h-full object-cover" />
                 <div className="absolute bottom-2 left-2 right-2 text-white">
-                  <div className="text-xs opacity-90">{c.author}</div>
+                  <div className="text-xs opacity-90">
+                    <OwnerDisplay
+                      address={c.author}
+                      className="text-white/90"
+                      showIcon={false}
+                    />
+                  </div>
                   <div className="text-base font-semibold leading-tight">{c.title}</div>
                 </div>
               </div>
@@ -251,7 +269,13 @@ export default function StreamHome() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={u.avatarUrl} alt={u.name} className="w-full h-full object-cover" />
               </div>
-              <div className="text-xs mt-1">{u.name}</div>
+              <div className="text-xs mt-1">
+                <OwnerDisplay
+                  address={u.name}
+                  className="text-foreground"
+                  showIcon={false}
+                />
+              </div>
               <div className="text-[10px] text-[var(--app-foreground-muted)] flex items-center gap-1">
                 <Eye className="w-3 h-3" />
                 {u.viewers}

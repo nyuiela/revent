@@ -10,13 +10,11 @@ import {
   Moon,
   Monitor,
   User,
-  LogOut,
-  Wallet
+  LogOut
 } from "lucide-react";
-import { ConnectWallet, WalletDropdown, WalletDropdownDisconnect, WalletModal } from "@coinbase/onchainkit/wallet";
+import { WalletModal } from "@coinbase/onchainkit/wallet";
 import { useTheme } from "next-themes";
 import { useAccount, useDisconnect } from "wagmi";
-import { EthBalance, Address, Avatar, Identity, Name } from "@coinbase/onchainkit/identity";
 
 type Platform = {
   id: string;
@@ -111,16 +109,17 @@ export default function StreamHeader() {
             <>
               {/* <WalletModal isOpen={showModal} onClose={() => setShowModal(false)} /> */}
               {/* <NetworkSwitcher /> */}
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--app-card-bg)] border border-[var(--app-card-border)] text-sm">
-                <button
-                  onClick={() => setShowModalConnect(true)}
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--app-card-bg)] border border-[var(--app-card-border)] text-sm cursor-pointer hover:bg-[var(--app-gray)] transition-colors"
+                onClick={() => setShowModalConnect(true)}
+              >
+                {/* <button
                   className="ml-1 p-1 hover:bg-[var(--app-gray)] rounded transition-colors text-xs font-medium"
                   title="Connect wallet"
-                >
-                  Connect Wallet
-                </button>
+                > */}
+                Connect Wallet
+                {/* </button> */}
               </div>
-              <Wallet className="z-10">
+              {/* <Wallet className="z-10">
                 <ConnectWallet className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--app-card-bg)] border border-[var(--app-card-border)] text-sm cursor-pointer hover:bg-[var(--app-gray)] transition-colors *:text-foreground" />
                 <WalletDropdown>
                   <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
@@ -131,51 +130,53 @@ export default function StreamHeader() {
                   </Identity>
                   <WalletDropdownDisconnect />
                 </WalletDropdown>
-                <WalletModal isOpen={showModalConnect} onClose={() => { setShowModalConnect(false) }} />
-              </Wallet>
+              </Wallet> */}
 
+              <WalletModal isOpen={showModalConnect} onClose={() => { setShowModalConnect(false) }} className="bg-black shadow-lg" />
             </>
           )}
         </div>
 
         {/* Center section with theme toggle and streaming platforms */}
-        <div className="flex items-center gap-2">
-          {/* Theme toggle button */}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="flex items-center gap-2 rounded-full border border-[var(--app-card-border)] bg-[var(--app-card-bg)] px-3 py-1.5 hover:bg-[var(--app-gray)] transition-colors"
-            title={`Current theme: ${getThemeLabel()}. Click to cycle through themes.`}
-          >
-            {getThemeIcon()}
-            <span className="text-xs text-[var(--app-foreground)]">{getThemeLabel()}</span>
-          </button>
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="flex items-center gap-2 rounded-full border border-[var(--app-card-border)] bg-[var(--app-card-bg)] px-3 py-1.5 hover:bg-[var(--app-gray)] transition-colors"
+          title={`Current theme: ${getThemeLabel()}. Click to cycle through themes.`}
+        >
+          {getThemeIcon()}
+          <span className="text-xs text-[var(--app-foreground)]">{getThemeLabel()}</span>
+        </button>
+        {process.env.NEXT_PUBLIC_ENV === "development" && (
+          <div className="flex items-center gap-2">
+            {/* Theme toggle button */}
 
-          {/* Streaming platforms + live status pill */}
-          <button
-            type="button"
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 rounded-full border border-[var(--app-card-border)] bg-[var(--app-card-bg)] px-3 py-1.5 hover:bg-[var(--app-gray)] transition-colors"
-          >
-            <div className="flex -space-x-1">
-              {platforms.slice(0, 3).map((p) => (
-                <span
-                  key={p.id}
-                  className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs ring-1 ring-white ${p.connected ? "opacity-100" : "opacity-40"}`}
-                  title={`${p.name}${p.live ? " • live" : p.connected ? " • connected" : " • connect"}`}
-                >
-                  {p.icon}
+            {/* Streaming platforms + live status pill */}
+            <button
+              type="button"
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-2 rounded-full border border-[var(--app-card-border)] bg-[var(--app-card-bg)] px-3 py-1.5 hover:bg-[var(--app-gray)] transition-colors"
+            >
+              <div className="flex -space-x-1">
+                {platforms.slice(0, 3).map((p) => (
+                  <span
+                    key={p.id}
+                    className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs ring-1 ring-white ${p.connected ? "opacity-100" : "opacity-40"}`}
+                    title={`${p.name}${p.live ? " • live" : p.connected ? " • connected" : " • connect"}`}
+                  >
+                    {p.icon}
+                  </span>
+                ))}
+              </div>
+              <div className="flex items-center gap-1">
+                <Eye className="w-3 h-3" />
+                <span className={`text-xs ${isAnyLive ? "text-red-500" : "text-[var(--app-foreground-muted)]"}`}>
+                  {isAnyLive ? "LIVE" : "offline"}
                 </span>
-              ))}
-            </div>
-            <div className="flex items-center gap-1">
-              <Eye className="w-3 h-3" />
-              <span className={`text-xs ${isAnyLive ? "text-red-500" : "text-[var(--app-foreground-muted)]"}`}>
-                {isAnyLive ? "LIVE" : "offline"}
-              </span>
-            </div>
-          </button>
-        </div>
+              </div>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Modal */}

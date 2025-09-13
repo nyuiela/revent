@@ -1,30 +1,13 @@
 "use client"
-import React, { useState, useEffect } from 'react'
+import React, { useMemo } from 'react'
 import Link from 'next/link'
 import { MapPin, Users, Calendar, Loader2, RefreshCw } from "lucide-react"
 import Footer from '../components/footer'
+import OwnerDisplay from '../../components/OwnerDisplay'
+import ViewCount from '../../components/ViewCount'
+import { useEvents } from '../../hooks/useEvents'
+import { useViewCounts } from '../../hooks/useViewCounts'
 
-// Type definition for events from Graph Protocol
-interface GraphEvent {
-  id: string;
-  title: string;
-  username: string;
-  lat: number;
-  lng: number;
-  isLive: boolean;
-  avatarUrl: string;
-  platforms?: string[];
-  creator?: string;
-  startTime?: string;
-  endTime?: string;
-  maxAttendees?: string;
-  registrationFee?: string;
-  blockTimestamp?: string;
-  description?: string;
-  category?: string;
-  locationName?: string;
-  viewers?: number;
-}
 
 // Function to format timestamp to readable date
 function formatTimestamp(timestamp: string): string {
@@ -54,38 +37,19 @@ function getTimeRange(startTime: string, endTime: string): string {
 }
 
 const EventsPage = () => {
-  const [events, setEvents] = useState<GraphEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Use React Query for events data
+  const { data: events = [], isLoading: loading, error: eventsError, refetch } = useEvents();
 
-  const fetchEvents = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch('/api/events/graph');
-      const data = await response.json();
+  // Get view counts for all events (memoized to prevent unnecessary re-renders)
+  const eventIds = useMemo(() => events.map(event => event.id), [events]);
+  const { data: viewCounts = {}, isLoading: viewsLoading } = useViewCounts(eventIds);
 
-      if (data.events && Array.isArray(data.events)) {
-        setEvents(data.events);
-      } else {
-        setError('No events found');
-      }
-    } catch (err) {
-      console.error('Error fetching events:', err);
-      setError('Failed to load events');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchEvents();
-  }, []);
+  const error = eventsError ? (eventsError instanceof Error ? eventsError.message : 'Failed to fetch events') : null;
 
   if (loading) {
     return (
-      <div className="min-h-screen text-[var(--events-foreground)] bg-black/80 relative z-[20] pt-10">
-        <div className="flex items-center justify-center h-64">
+      <div className="h-screen text-[var(--events-foreground)] bg-black/80 relative z-[20] pt-10">
+        <div className="flex items-center justify-center h-full">
           <div className="flex items-center gap-2">
             <Loader2 className="w-5 h-5 animate-spin" />
             <span>Loading events...</span>
@@ -116,7 +80,7 @@ const EventsPage = () => {
   }
 
   return (
-    <div className="min-h-screen text-[var(--events-foreground)] bg-black/80 relative z-[20] pt-10">
+    <div className="min-h-screen text-[var(--events-foreground)] bg-eventsBackground relative z-[20] pt-10">
       {/* Header */}
       <div className="top-0 z-40 bg-transparent border-none">
         <div className="flex items-center justify-between p-4">
@@ -128,7 +92,7 @@ const EventsPage = () => {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={fetchEvents}
+              onClick={() => refetch()}
               disabled={loading}
               className="px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50 rounded-lg transition-colors flex items-center gap-2"
             >
@@ -162,7 +126,7 @@ const EventsPage = () => {
             <Link
               key={event.id}
               href={`/e/${event.id}`}
-              className="block border-b-[1px] border-[var(--events-card-border)] rounded-xl p-4 bg-[var(--events-card-bg)] hover:bg-white/20 transition-colors"
+              className="block border-b-[1px] border-[var(--events-card-border)] rounded-xl p-4 bg-white/5 hover:bg-white/20 transition-colors"
             >
               <div className="flex gap-4">
                 {/* Event Image */}
@@ -209,14 +173,23 @@ const EventsPage = () => {
                     {event.maxAttendees && (
                       <div className="flex items-center gap-1">
                         <Users className="w-3 h-3" />
-                        {event.viewers || 0}/{event.maxAttendees}
+                        <ViewCount
+                          count={viewCounts[event.id] || 0}
+                          isLoading={viewsLoading}
+                          size="sm"
+                          showIcon={false}
+                        />/{event.maxAttendees}
                       </div>
                     )}
                   </div>
 
                   {/* Creator info */}
-                  <div className="mt-2 text-xs text-[var(--events-foreground-muted)]">
-                    by @{event.username}
+                  <div className="mt-2">
+                    <OwnerDisplay
+                      address={event.creator || ''}
+                      className="text-[var(--events-foreground-muted)]"
+                      showIcon={true}
+                    />
                   </div>
                 </div>
               </div>
