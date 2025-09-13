@@ -1,10 +1,8 @@
 import React from 'react'
-import Prism from '../components/prisma'
-import Aurora from '../../components/Aurora';
 
 const layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', zIndex: 1 }} className='bg-background'>
+    <div style={{ width: '100%', height: '100%', position: 'relative', zIndex: 1 }} className='bg-black'>
       {/* <Prism
         animationType="hover"
         timeScale={0.1}

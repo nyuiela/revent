@@ -11,13 +11,16 @@ body {
 }
 
 html {
-  background-color: hsl(var(--background));
+  background-color: #000;
 }
 
 @layer base {
   :root {
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
+    --events-foreground: 0 0% 100%;
+    --events-foreground-muted: 0 0% 96.1%;
+    --events-background: 242, 94%, 7%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;

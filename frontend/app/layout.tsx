@@ -10,6 +10,7 @@ import { headers, url } from "@/context/queryProvider";
 import { eventsCreatedQuery } from "@/context/queryProvider";
 import 'ethereum-identity-kit/css'
 import { Plus_Jakarta_Sans } from 'next/font/google'
+import DataPrefetcher from "../components/DataPrefetcher"
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -80,7 +81,11 @@ export default async function RootLayout({
     <html lang="en" className={plusJakarta.variable}>
       <body className="bg-background">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={true}>
-          <Providers>{children}</Providers>
+          <Providers>
+            <DataPrefetcher>
+              {children}
+            </DataPrefetcher>
+          </Providers>
         </ThemeProvider>
       </body>
     </html>

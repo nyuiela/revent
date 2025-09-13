@@ -10,13 +10,11 @@ import {
   Moon,
   Monitor,
   User,
-  LogOut,
-  Wallet
+  LogOut
 } from "lucide-react";
-import { ConnectWallet, WalletDropdown, WalletDropdownDisconnect, WalletModal } from "@coinbase/onchainkit/wallet";
+import { WalletModal } from "@coinbase/onchainkit/wallet";
 import { useTheme } from "next-themes";
 import { useAccount, useDisconnect } from "wagmi";
-import { EthBalance, Address, Avatar, Identity, Name } from "@coinbase/onchainkit/identity";
 
 type Platform = {
   id: string;
@@ -140,18 +138,18 @@ export default function StreamHeader() {
         </div>
 
         {/* Center section with theme toggle and streaming platforms */}
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="flex items-center gap-2 rounded-full border border-[var(--app-card-border)] bg-[var(--app-card-bg)] px-3 py-1.5 hover:bg-[var(--app-gray)] transition-colors"
+          title={`Current theme: ${getThemeLabel()}. Click to cycle through themes.`}
+        >
+          {getThemeIcon()}
+          <span className="text-xs text-[var(--app-foreground)]">{getThemeLabel()}</span>
+        </button>
         {process.env.NEXT_PUBLIC_ENV === "development" && (
           <div className="flex items-center gap-2">
             {/* Theme toggle button */}
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="flex items-center gap-2 rounded-full border border-[var(--app-card-border)] bg-[var(--app-card-bg)] px-3 py-1.5 hover:bg-[var(--app-gray)] transition-colors"
-              title={`Current theme: ${getThemeLabel()}. Click to cycle through themes.`}
-            >
-              {getThemeIcon()}
-              <span className="text-xs text-[var(--app-foreground)]">{getThemeLabel()}</span>
-            </button>
 
             {/* Streaming platforms + live status pill */}
             <button

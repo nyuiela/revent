@@ -15,6 +15,9 @@ import type { Abi } from "viem";
 import Image from "next/image";
 import config from "@/lib/wagmi";
 import ParticipantsGrid from "./ParticipantsGrid";
+import EventViewTracker from "../../components/EventViewTracker";
+import ViewCount from "../../components/ViewCount";
+import { useEventViews } from "../../hooks/useEventViews";
 
 
 type EventParticipant = {
@@ -145,6 +148,7 @@ type Props = {
 
 export default function EventPage({ eventId, ipfsHash, idType, graphEventData }: Props) {
   const [isScrolling, setIsScrolling] = useState(false);
+  const { viewCount, isLoading: viewCountLoading } = useEventViews(eventId || '');
   const [lastScrollY, setLastScrollY] = useState(0);
   const [ticketMode] = useState<"none" | "single" | "multiple">("single");
   const [selectedTicketIndex, setSelectedTicketIndex] = useState(0);
@@ -639,7 +643,9 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
 
 
   return (
-    <div className="min-h-screen text-[var(--events-foreground)] bg-black/80 relative z-[20]">
+    <div className="min-h-screen text-[var(--events-foreground)] bg-[#020122] relative z-[20]">
+      {/* Track view when page loads */}
+      {eventId && <EventViewTracker eventId={eventId} />}
       {/* <StreamPublisher /> */}
       {/* Header */}
       {/* <div className="sticky top-0 z-40 bg-[var(--app-background)] border-b border-[var(--app-card-border)]">
@@ -704,6 +710,12 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
               <MapPin className="w-4 h-4" />
               {event.location}
             </div>
+            <ViewCount
+              count={viewCount}
+              isLoading={viewCountLoading}
+              size="md"
+              className="text-white/80"
+            />
           </div>
         </div>
       </div>

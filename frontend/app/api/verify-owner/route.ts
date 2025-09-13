@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ valid: false }, { status: 200 });
   }
 
-  let payload: any = null;
+  let payload: Record<string, unknown> | null = null;
   try {
     payload = JSON.parse(payloadBuf.toString('utf8'));
   } catch {
@@ -50,18 +50,18 @@ export async function GET(req: NextRequest) {
   }
 
   // Check expiration if provided
-  if (payload.exp && Date.now() / 1000 > Number(payload.exp)) {
+  if (payload?.exp && Date.now() / 1000 > Number(payload.exp)) {
     return NextResponse.json({ valid: false, reason: 'expired' }, { status: 200 });
   }
 
   // Only allow owners/admins
-  const role = payload.role;
+  const role = payload?.role;
   if (role !== 'owner' && role !== 'admin') {
     return NextResponse.json({ valid: false }, { status: 200 });
   }
 
-  const eventId = String(payload.eventId || 'evt_unknown');
-  const userId = String(payload.userId || 'user_unknown');
+  const eventId = String(payload?.eventId || 'evt_unknown');
+  const userId = String(payload?.userId || 'user_unknown');
 
   return NextResponse.json(
     { valid: true, role, eventId, userId },
