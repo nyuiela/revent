@@ -1925,7 +1925,7 @@ const CreateEventForm = () => {
                 <div className="mt-6 p-4 bg-app-card-bg border border-border rounded-lg">
                   <div className="text-center">
                     <h4 className="text-sm font-medium text-foreground mb-2">
-                      Step 1: Prepare Event Data
+                      Upload Event Data
                     </h4>
                     <p className="text-xs text-muted-foreground mb-4">
                       Upload your image to IPFS and prepare the contract calls for event creation.
@@ -1939,10 +1939,10 @@ const CreateEventForm = () => {
                       {isPreparing ? (
                         <div className="flex items-center justify-center gap-2">
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          Preparing...
+                          Uploading...
                         </div>
                       ) : (
-                        "Prepare Contract Calls"
+                        "Upload Contract Data"
                       )}
                     </button>
                     {verificationStatus && (
@@ -1955,6 +1955,7 @@ const CreateEventForm = () => {
               )}
 
               {/* Prepared Contracts Status */}
+              {/*               
               {isConnected && preparedContracts && (
                 <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
                   <div className="flex items-center justify-between">
@@ -1979,7 +1980,7 @@ const CreateEventForm = () => {
                     {preparedContracts.length} contract call(s) ready
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* Transaction Progress Indicator */}
               {isSubmitting && (

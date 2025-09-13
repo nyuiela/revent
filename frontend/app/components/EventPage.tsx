@@ -17,114 +17,9 @@ import ParticipantsGrid from "./ParticipantsGrid";
 import EventViewTracker from "../../components/EventViewTracker";
 import ViewCount from "../../components/ViewCount";
 import { useEventViews } from "../../hooks/useEventViews";
+import { EventDetails } from "@/utils/types";
+import RegistrationSuccessCard from "./RegistrationSuccessCard";
 
-
-type EventParticipant = {
-  id: string;
-  name: string;
-  avatar: string;
-  bio?: string;
-  role: "streamer" | "viewer" | "organizer";
-  contribution: number;
-  isLive?: boolean;
-  platform?: string;
-  tokenName?: string;
-  tokenTicker?: string;
-  tokenContract?: string;
-  marketCap?: number;
-  volume?: number;
-  earnings?: number;
-  volume24h?: number;
-  earnings24h?: number;
-  social?: {
-    discord?: string;
-    twitter?: string;
-    website?: string;
-    twitch?: string;
-    youtube?: string;
-    facebook?: string;
-    instagram?: string;
-    tiktok?: string;
-    telegram?: string;
-  },
-};
-
-type EventMedia = {
-  id: string;
-  type: "image" | "video";
-  url: string;
-  thumbnail?: string;
-  title: string;
-  uploadedBy: string;
-  uploadedAt: string;
-  likes: number;
-};
-
-type EventReward = {
-  id: string;
-  name: string;
-  description: string;
-  value: number;
-  currency: string;
-  totalPool: number;
-  distributed: number;
-  icon: string;
-};
-
-type EventAgenda = {
-  id: string;
-  title: string;
-  description: string;
-  startTime: string;
-  endTime: string;
-  speakers?: string[];
-};
-
-type EventDetails = {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  time: string;
-  location: string;
-  coordinates: { lat: number; lng: number };
-  image: string;
-  category: string;
-  maxParticipants: number;
-  currentParticipants: number;
-  isLive: boolean;
-  platforms: string[];
-  totalRewards: number;
-  participants: EventParticipant[];
-  media: EventMedia[];
-  rewards: EventReward[];
-  agenda: EventAgenda[];
-  hosts?: {
-    name: string;
-    avatar: string;
-    role: string;
-    bio?: string;
-    social?: {
-      twitter?: string;
-      linkedin?: string;
-      website?: string;
-    };
-  }[];
-  sponsors?: {
-    name: string;
-    logo: string;
-    link: string;
-  }[],
-  tickets?: {
-    available: boolean;
-    types: { type: string; price: number; currency: string; perks?: string[] }[];
-  },
-  socialLinks?: {
-    twitter?: string;
-    discord?: string;
-    website?: string;
-  };
-};
 
 type Props = {
   eventId?: string;
@@ -156,6 +51,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
   const [ipfsLoading, setIpfsLoading] = useState<boolean>(false);
   const [ipfsError, setIpfsError] = useState<string | null>(null);
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [showRegistrationSuccess, setShowRegistrationSuccess] = useState(false);
   const { address } = useAccount();
   const chainId = useChainId();
   const [isRegistering, setIsRegistering] = useState(false);
@@ -876,7 +772,12 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
                       args: [BigInt(numericEventId || 1)],
                     },
                   ]}
-                  onStatus={(s) => setIsRegistering(s.statusName === "transactionPending" || s.statusName === "buildingTransaction")}
+                  onStatus={(s) => {
+                    setIsRegistering(s.statusName === "transactionPending" || s.statusName === "buildingTransaction");
+                    if (s.statusName === "success") {
+                      setShowRegistrationSuccess(true);
+                    }
+                  }}
                 >
                   <TransactionButton text={isRegistering ? "Registering..." : "Register for Event"} />
                   <TransactionStatus>
@@ -1060,7 +961,12 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
                           args: [BigInt(1)], // change to the event id
                         },
                       ]}
-                      onStatus={(s) => setIsRegistering(s.statusName === "transactionPending" || s.statusName === "buildingTransaction")}
+                      onStatus={(s) => {
+                        setIsRegistering(s.statusName === "transactionPending" || s.statusName === "buildingTransaction");
+                        if (s.statusName === "success") {
+                          setShowRegistrationSuccess(true);
+                        }
+                      }}
                     >
                       <TransactionButton text={isRegistering ? (ticketMode === "none" ? "RSVP..." : "Processing...") : registerCta} className="bg-transparent hover:bg-transparent text-foreground dark:text-foreground p-0 underline text-sm font-medium cursor-pointer" />
                       <TransactionStatus>
@@ -1089,6 +995,18 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
         onClose={() => setShowWalletModal(false)}
         className="bg-black shadow-lg"
       />
+
+      {/* Registration Success Card */}
+      {showRegistrationSuccess && (
+        <RegistrationSuccessCard
+          event={event}
+          ticketType={selectedTicket?.type}
+          quantity={effectiveQty}
+          totalPrice={totalPrice}
+          currency={selectedTicket?.currency || "USD"}
+          onClose={() => setShowRegistrationSuccess(false)}
+        />
+      )}
     </div >
   );
 }
