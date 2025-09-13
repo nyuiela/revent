@@ -3,7 +3,7 @@ import "@coinbase/onchainkit/styles.css";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider } from "../components/ThemeProvider";
 import { QueryClient } from "@tanstack/react-query";
 import { request } from "graphql-request";
 import { headers, url } from "@/context/queryProvider";
@@ -15,7 +15,9 @@ import DataPrefetcher from "../components/DataPrefetcher"
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-plus-jakarta',
-  display: 'swap'
+  display: 'swap',
+  weight: ['200', '300', '400', '500', '600', '700', '800'],
+  style: ['normal', 'italic']
 })
 
 export const viewport: Viewport = {
@@ -80,7 +82,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={plusJakarta.variable}>
       <body className="bg-background">
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={true}>
+        <ThemeProvider>
           <Providers>
             <DataPrefetcher>
               {children}

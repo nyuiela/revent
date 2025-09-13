@@ -493,7 +493,7 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
     <div className="relative h-full w-full">
       {/* Hover tooltip */}
       {hoveredEvent && (
-        <div className="absolute top-4 left-4 z-20 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3 max-w-xs">
+        <div className="absolute top-4 left-4 z-20 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-border p-3 max-w-xs">
           <div className="flex items-center gap-3 mb-2">
             <Image
               width={32}

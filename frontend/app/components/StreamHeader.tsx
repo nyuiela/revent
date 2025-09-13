@@ -6,15 +6,12 @@ import {
   X,
   Youtube,
   Twitch,
-  Sun,
-  Moon,
-  Monitor,
   User,
   LogOut
 } from "lucide-react";
 import { WalletModal } from "@coinbase/onchainkit/wallet";
-import { useTheme } from "next-themes";
 import { useAccount, useDisconnect } from "wagmi";
+import { ThemeSwitcher } from "../../components/ThemeSwitcher";
 
 type Platform = {
   id: string;
@@ -27,7 +24,6 @@ type Platform = {
 export default function StreamHeader() {
   const [showModal, setShowModal] = useState(false);
   const [showModalConnect, setShowModalConnect] = useState(false);
-  const { theme, setTheme } = useTheme();
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const [platforms, setPlatforms] = useState<Platform[]>([
@@ -63,27 +59,6 @@ export default function StreamHeader() {
 
   const isAnyLive = platforms.some((p) => p.live);
 
-  const toggleTheme = () => {
-    if (theme === 'light') {
-      setTheme('dark');
-    } else if (theme === 'dark') {
-      setTheme('system');
-    } else {
-      setTheme('light');
-    }
-  };
-
-  const getThemeIcon = () => {
-    if (theme === 'light') return <Sun className="w-4 h-4" />;
-    if (theme === 'dark') return <Moon className="w-4 h-4" />;
-    return <Monitor className="w-4 h-4" />;
-  };
-
-  const getThemeLabel = () => {
-    if (theme === 'light') return 'Light';
-    if (theme === 'dark') return 'Dark';
-    return 'System';
-  };
 
   return (
     <>
@@ -92,35 +67,35 @@ export default function StreamHeader() {
         <div className="flex items-center gap-2">
 
           {isConnected && address ? (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--app-card-bg)] border border-[var(--app-card-border)] text-sm">
-              <User className="w-4 h-4 text-[var(--app-accent)]" />
-              <span className="text-[var(--app-foreground)]">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-app-card-bg border border-app-card-border text-sm">
+              <User className="w-4 h-4 text-primary" />
+              <span className="text-app-foreground">
                 {address.slice(0, 6)}...{address.slice(-4)}
               </span>
               <button
                 onClick={() => disconnect()}
-                className="ml-1 p-1 hover:bg-[var(--app-gray)] rounded transition-colors"
+                className="ml-1 p-1 hover:bg-app-gray rounded transition-colors"
                 title="Disconnect wallet"
               >
-                <LogOut className="w-3 h-3 text-[var(--app-foreground-muted)]" />
+                <LogOut className="w-3 h-3 text-app-foreground-muted" />
               </button>
             </div>
           ) : (
             <>
               {/* <WalletModal isOpen={showModal} onClose={() => setShowModal(false)} /> */}
               {/* <NetworkSwitcher /> */}
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--app-card-bg)] border border-[var(--app-card-border)] text-sm cursor-pointer hover:bg-[var(--app-gray)] transition-colors"
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-app-card-bg border border-app-card-border text-sm cursor-pointer hover:bg-app-gray transition-colors"
                 onClick={() => setShowModalConnect(true)}
               >
                 {/* <button
-                  className="ml-1 p-1 hover:bg-[var(--app-gray)] rounded transition-colors text-xs font-medium"
+                  className="ml-1 p-1 hover:bg-app-gray rounded transition-colors text-xs font-medium"
                   title="Connect wallet"
                 > */}
                 Connect Wallet
                 {/* </button> */}
               </div>
               {/* <Wallet className="z-10">
-                <ConnectWallet className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--app-card-bg)] border border-[var(--app-card-border)] text-sm cursor-pointer hover:bg-[var(--app-gray)] transition-colors *:text-foreground" />
+                <ConnectWallet className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-app-card-bg border border-app-card-border text-sm cursor-pointer hover:bg-app-gray transition-colors *:text-foreground" />
                 <WalletDropdown>
                   <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
                     <Avatar />
@@ -137,16 +112,8 @@ export default function StreamHeader() {
           )}
         </div>
 
-        {/* Center section with theme toggle and streaming platforms */}
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="flex items-center gap-2 rounded-full border border-[var(--app-card-border)] bg-[var(--app-card-bg)] px-3 py-1.5 hover:bg-[var(--app-gray)] transition-colors"
-          title={`Current theme: ${getThemeLabel()}. Click to cycle through themes.`}
-        >
-          {getThemeIcon()}
-          <span className="text-xs text-[var(--app-foreground)]">{getThemeLabel()}</span>
-        </button>
+        {/* Center section with theme switcher and streaming platforms */}
+        <ThemeSwitcher />
         {process.env.NEXT_PUBLIC_ENV === "development" && (
           <div className="flex items-center gap-2">
             {/* Theme toggle button */}
@@ -155,7 +122,7 @@ export default function StreamHeader() {
             <button
               type="button"
               onClick={() => setShowModal(true)}
-              className="flex items-center gap-2 rounded-full border border-[var(--app-card-border)] bg-[var(--app-card-bg)] px-3 py-1.5 hover:bg-[var(--app-gray)] transition-colors"
+              className="flex items-center gap-2 rounded-full border border-app-card-border bg-app-card-bg px-3 py-1.5 hover:bg-app-gray transition-colors"
             >
               <div className="flex -space-x-1">
                 {platforms.slice(0, 3).map((p) => (
@@ -170,7 +137,7 @@ export default function StreamHeader() {
               </div>
               <div className="flex items-center gap-1">
                 <Eye className="w-3 h-3" />
-                <span className={`text-xs ${isAnyLive ? "text-red-500" : "text-[var(--app-foreground-muted)]"}`}>
+                <span className={`text-xs ${isAnyLive ? "text-red-500" : "text-app-foreground-muted"}`}>
                   {isAnyLive ? "LIVE" : "offline"}
                 </span>
               </div>

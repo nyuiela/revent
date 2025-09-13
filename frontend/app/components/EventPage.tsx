@@ -3,13 +3,12 @@
 import {
   Calendar,
   MapPin,
-  Users,
   Clock,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAccount, useChainId, useReadContract } from "wagmi";
 import { Transaction, TransactionButton, TransactionStatus, TransactionStatusAction, TransactionStatusLabel } from "@coinbase/onchainkit/transaction";
-import { ConnectWallet } from "@coinbase/onchainkit/wallet";
+import { WalletModal } from "@coinbase/onchainkit/wallet";
 import { eventAbi, eventAddress } from "@/lib/contract";
 import type { Abi } from "viem";
 import Image from "next/image";
@@ -156,6 +155,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
   const [ipfsData, setIpfsData] = useState<Record<string, unknown> | null>(null);
   const [ipfsLoading, setIpfsLoading] = useState<boolean>(false);
   const [ipfsError, setIpfsError] = useState<string | null>(null);
+  const [showWalletModal, setShowWalletModal] = useState(false);
   const { address } = useAccount();
   const chainId = useChainId();
   const [isRegistering, setIsRegistering] = useState(false);
@@ -643,7 +643,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
 
 
   return (
-    <div className="min-h-screen text-[var(--events-foreground)] bg-[#020122] relative z-[20]">
+    <div className="min-h-screen text-[var(--events-foreground)] bg-background relative z-[20]">
       {/* Track view when page loads */}
       {eventId && <EventViewTracker eventId={eventId} />}
       {/* <StreamPublisher /> */}
@@ -721,11 +721,11 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
       </div>
 
       {/* Content */}
-      <div className="p-0 max-w-7xl mx-auto space-y-0 pt-6 mt-4 bg-red-transparent">
+      <div className="p-6 max-w-7xl mx-auto space-y-12">
         {/* <EventManagement eventId={eventId || "1"} defaultIpfsHash={ipfsHash || "bafkreia2uchzmzosieaj6tyim4qzq5xvxhlyapq2gzacen2tffknfeco6u"} /> */}
 
         {/* Tickets Section */}
-        <div className="border border-[var(--events-card-border)] rounded-xl p-6 py-0 border-none bg-transparent">
+        <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
           <h2 className="text-xl font-semibold mb-4">Tickets</h2>
 
           {/* Mode selector */}
@@ -758,9 +758,9 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
                       type="button"
                       key={t.type}
                       onClick={() => setSelectedTicketIndex(idx)}
-                      className={`text-left p-4 rounded-2xl border transition-colors bg-black/50 ${selectedTicketIndex === idx
-                        ? "border-[var(--events-accent)] bg-[var(--events-accent)]/10"
-                        : "border-[var(--events-card-border)] bg-transparent hover:border-[var(--events-accent)]/50"}`}
+                      className={`text-left p-4 rounded-2xl border transition-colors bg-white/80 dark:bg-transparent ${selectedTicketIndex === idx
+                        ? "border-primary bg-primary/10"
+                        : "border-gray-300 dark:border-[var(--events-card-border)] bg-transparent hover:border-primary/50"}`}
                     >
                       <div className="flex items-center justify-between">
                         <div>
@@ -830,7 +830,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
 
         {/* Live Streamers */}
         {/* {liveStreamers.length > 0 && (
-          <div className="border border-[var(--events-card-border)] rounded-xl p-6 border-none bg-transparent">
+          <div className="border border-[var(--events-card-border)] rounded-xl p-4 sm:p-6 border-none bg-transparent">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               Live Now
             </h2>
@@ -852,11 +852,11 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
         )} */}
 
         {/* Overview Content - All Sections Combined */}
-        <div className="space-y-2">
+        <div className="space-y-4 sm:space-y-6">
           {/* Description */}
-          <div className="border border-[var(--events-card-border)] rounded-xl p-6 border-none bg-transparent">
-            <h2 className="text-xl font-semibold mb-4">About This Event</h2>
-            <p className="text-[var(--events-foreground-muted)] leading-relaxed">
+          <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
+            <h2 className="text-xl font-semibold mb-2">About This Event</h2>
+            <p className="text-[var(--events-foreground-muted)] leading-relaxed text-sm">
               {event.description}
             </p>
           </div>
@@ -891,7 +891,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
           </div> */}
 
           {/* Agenda Section */}
-          <div className="border border-[var(--events-card-border)] rounded-xl p-6 border-none bg-transparent">
+          <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
             <h2 className="text-xl font-semibold mb-4">Agenda</h2>
             <div className="text-[var(--events-foreground-muted)] leading-relaxed">
               {event.agenda.map((agenda) => (
@@ -906,7 +906,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
 
           {/* Hosts Section */}
           {event.hosts && event.hosts.length > 0 && (
-            <div className="border border-[var(--events-card-border)] rounded-xl p-6 border-none bg-transparent">
+            <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
               <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 Hosts
               </h2>
@@ -975,7 +975,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
           )}
 
           {/* Location Section */}
-          <div className="border border-[var(--events-card-border)] rounded-xl p-6 border-none bg-transparent">
+          <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               Location
             </h2>
@@ -990,7 +990,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
               </div>
 
               {/* Map Placeholder */}
-              <div className="bg-transparent border border-[var(--events-card-border)] rounded-lg p-4 text-center">
+              <div className="bg-transparent border border-border rounded-lg p-4 text-center">
                 <div className="w-full h-32 bg-transparent border-none border-[var(--events-card-border)] rounded-lg flex items-center justify-center">
                   <div className="text-center">
                     <MapPin className="w-8 h-8 text-[var(--events-foreground-muted)] mx-auto mb-2" />
@@ -1005,9 +1005,8 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
           {/* <EventCam setActiveTab={() => { }} /> */}
 
           {/* Participants Section */}
-          <div className="border border-[var(--events-card-border)] rounded-xl p-6 border-none bg-transparent">
+          <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <Users className="w-5 h-5" />
               All Participants ({Array.isArray(attendeesData) ? attendeesData.length : 0})
             </h2>
             <ParticipantsGrid
@@ -1030,9 +1029,9 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
           className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out bg-black/40 border-none ${isScrolling ? 'translate-y-full' : 'translate-y-0'
             }`}
         >
-          <div className="bg-transparent backdrop-blur-sm border-t border-[var(--events-card-border)] p-4">
+          <div className="bg-white/80 dark:bg-transparent backdrop-blur-sm border-t border-[var(--events-card-border)] p-4 border-none min-h-[6rem]">
             <div className="max-w-7xl mx-auto">
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="text-sm font-medium text-[var(--events-foreground)]">
                     {event.title}
@@ -1041,7 +1040,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
                     {event.date} • {event.time}
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-col">
                   <div className="text-right">
                     <div className="text-xs text-[var(--events-foreground-muted)]">{ticketMode === "none" ? "RSVP" : (selectedTicket ? selectedTicket.type : "Ticket")}{ticketMode === "multiple" && selectedTicket ? ` × ${effectiveQty}` : ""}</div>
                     <div className="text-base font-semibold">{ticketMode === "none" ? "Free" : (selectedTicket ? `${selectedTicket.currency === "USD" ? "$" : ""}${totalPrice.toLocaleString()}` : "—")}</div>
@@ -1063,14 +1062,19 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
                       ]}
                       onStatus={(s) => setIsRegistering(s.statusName === "transactionPending" || s.statusName === "buildingTransaction")}
                     >
-                      <TransactionButton text={isRegistering ? (ticketMode === "none" ? "RSVP..." : "Processing...") : registerCta} />
+                      <TransactionButton text={isRegistering ? (ticketMode === "none" ? "RSVP..." : "Processing...") : registerCta} className="bg-transparent hover:bg-transparent text-foreground dark:text-foreground p-0 underline text-sm font-medium cursor-pointer" />
                       <TransactionStatus>
                         <TransactionStatusLabel />
                         <TransactionStatusAction />
                       </TransactionStatus>
                     </Transaction>
                   ) : (
-                    <ConnectWallet />
+                    <button
+                      onClick={() => setShowWalletModal(true)}
+                      className="bg-transparent hover:bg-transparent text-foreground dark:text-foreground p-0 underline text-sm font-medium cursor-pointer"
+                    >
+                      Connect
+                    </button>
                   )}
                 </div>
               </div>
@@ -1079,7 +1083,12 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
         </div>)
       }
 
-
+      {/* Wallet Modal */}
+      <WalletModal
+        isOpen={showWalletModal}
+        onClose={() => setShowWalletModal(false)}
+        className="bg-black shadow-lg"
+      />
     </div >
   );
 }

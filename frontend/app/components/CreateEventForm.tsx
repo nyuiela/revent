@@ -8,7 +8,7 @@ import { useAccount } from "wagmi";
 import { eventAbi, eventAddress } from "@/lib/contract";
 import { Transaction, TransactionButton, TransactionResponse, TransactionSponsor, TransactionStatus, TransactionStatusAction, TransactionStatusLabel } from "@coinbase/onchainkit/transaction";
 import { useNotification } from "@coinbase/onchainkit/minikit";
-import { ConnectWallet } from "@coinbase/onchainkit/wallet";
+import { WalletModal } from "@coinbase/onchainkit/wallet";
 import { useRouter } from 'next/navigation';
 import { EventFormData } from "@/utils/types";
 // import VerticalLinearStepper from "./register-stepper";
@@ -23,6 +23,7 @@ const CreateEventForm = () => {
   const chainId = 84532;
   const router = useRouter()
   const canUseTransaction = Boolean(address && chainId && eventAddress)
+  const [showWalletModal, setShowWalletModal] = useState(false)
   const [formData, setFormData] = useState<EventFormData>({
     title: "",
     description: "",
@@ -1286,7 +1287,7 @@ const CreateEventForm = () => {
                     }}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-[var(--app-card-border)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  <div className="w-11 h-6 bg-app-card-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                 </label>
               </div>
 
@@ -1587,7 +1588,7 @@ const CreateEventForm = () => {
 
               {/* Mode Toggle */}
               {process.env.NEXT_PUBLIC_ENV !== "development" && (
-                <div className="mb-4 p-3 bg-[var(--app-card-bg)] border border-border rounded-lg">
+                <div className="mb-4 p-3 bg-app-card-bg border border-border rounded-lg">
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="text-sm font-medium text-foreground">Transaction Mode</h4>
@@ -1601,7 +1602,7 @@ const CreateEventForm = () => {
                     <button
                       type="button"
                       onClick={() => setUseSimpleMode(!useSimpleMode)}
-                      className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-[var(--app-accent-hover)] transition-colors"
+                      className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-primary-hover transition-colors"
                     >
                       {useSimpleMode ? "Advanced" : "Simple"}
                     </button>
@@ -1901,7 +1902,7 @@ const CreateEventForm = () => {
 
               {/* Connect Wallet */}
               {!isConnected ? (
-                <div className="mt-6 p-4 bg-[var(--app-card-bg)] border border-border rounded-lg">
+                <div className="mt-6 p-4 bg-app-card-bg border border-border rounded-lg">
                   <div className="text-center">
                     <h4 className="text-sm font-medium text-foreground mb-2">
                       Connect Your Wallet
@@ -1909,14 +1910,19 @@ const CreateEventForm = () => {
                     <p className="text-xs text-muted-foreground mb-4">
                       Connect your wallet to create events on the blockchain.
                     </p>
-                    <ConnectWallet />
+                    <button
+                      onClick={() => setShowWalletModal(true)}
+                      className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                    >
+                      Connect Wallet
+                    </button>
                   </div>
                 </div>
               ) : null}
 
               {/* Prepare Contract Calls Button */}
               {isConnected && !preparedContracts && (
-                <div className="mt-6 p-4 bg-[var(--app-card-bg)] border border-border rounded-lg">
+                <div className="mt-6 p-4 bg-app-card-bg border border-border rounded-lg">
                   <div className="text-center">
                     <h4 className="text-sm font-medium text-foreground mb-2">
                       Step 1: Prepare Event Data
@@ -1928,7 +1934,7 @@ const CreateEventForm = () => {
                       type="button"
                       onClick={prepareContractCalls}
                       disabled={isPreparing}
-                      className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--app-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {isPreparing ? (
                         <div className="flex items-center justify-center gap-2">
@@ -1977,7 +1983,7 @@ const CreateEventForm = () => {
 
               {/* Transaction Progress Indicator */}
               {isSubmitting && (
-                <div className="mt-4 p-4 bg-[var(--app-card-bg)] border border-border rounded-lg">
+                <div className="mt-4 p-4 bg-app-card-bg border border-border rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
                     <div className="text-sm text-foreground">
@@ -2020,7 +2026,7 @@ const CreateEventForm = () => {
               </p>
 
               {/* Domain Input */}
-              <div className="space-y-4 p-6 bg-background">
+              <div className="space-y-4 bg-background">
                 <h3 className="text-lg font-medium">Choose Your Domain</h3>
 
                 <div className="space-y-4">
@@ -2048,7 +2054,7 @@ const CreateEventForm = () => {
                         type="button"
                         onClick={() => checkDomainAvailability(domainName)}
                         disabled={checkingDomain || !domainName}
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-[var(--app-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         {checkingDomain ? (
                           <div className="flex items-center gap-2">
@@ -2113,7 +2119,7 @@ const CreateEventForm = () => {
 
                   {/* Domain Benefits */}
                   <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 className="font-medium text-blue-800 mb-2">🌐 Domain Benefits</h4>
+                    <h4 className="font-medium text-blue-800 mb-2">Domain Benefits</h4>
                     <ul className="text-sm text-blue-700 space-y-1">
                       <li>• Easy-to-remember URL for your event (e.g., abc.nyuiela.eth)</li>
                       <li>• Decentralized and censorship-resistant</li>
@@ -2177,7 +2183,7 @@ const CreateEventForm = () => {
       </div>
 
       {/* Static Navigation Buttons at Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[var(--app-background)] border-t border-border p-4 z-50">
+      <div className="fixed bottom-0 left-0 right-0 bg-app-background border-t border-border p-4 z-50">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <Button
             onClick={handlePrevStep}
@@ -2198,6 +2204,13 @@ const CreateEventForm = () => {
           ) : null}
         </div>
       </div>
+
+      {/* Wallet Modal */}
+      <WalletModal
+        isOpen={showWalletModal}
+        onClose={() => setShowWalletModal(false)}
+        className="bg-black shadow-lg"
+      />
     </div>
   );
 };

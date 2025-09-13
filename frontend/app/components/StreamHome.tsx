@@ -93,7 +93,7 @@ export default function StreamHome() {
       <StreamHeader />
 
       {/* Main viewport card */}
-      <div className="relative rounded-3xl overflow-hidden border border-[var(--app-card-border)] bg-[var(--app-card-bg)] bg-red-00 h-[30rem] w-full shadow-none">
+      <div className="relative rounded-3xl overflow-hidden border border-gray-200 bg-app-card-bg dark:border-gray-700 h-[30rem] w-full shadow-none">
         {/* Mode preview background */}
         <div className="relative h-full">
           {mode === "map" && (
@@ -176,13 +176,13 @@ export default function StreamHome() {
       {
         showDiscover && (
           <section className="space-y-3 px-4">
-            <h3 className="text-sm font-medium">discover events</h3>
+            <h3 className="text-sm font-medium">Discover events</h3>
             <div className="grid grid-cols-2 gap-3">
               {discoverEvents.map((event) => (
                 <Link
                   key={event.id}
                   href={`/e/${event.id}`}
-                  className="rounded-2xl overflow-hidden border border-[var(--app-card-border)] bg-[var(--app-card-bg)] cursor-pointer hover:shadow-lg transition-shadow shadow-none relative h-32 block"
+                  className="rounded-2xl overflow-hidden border border-border bg-card-bg cursor-pointer hover:shadow-lg transition-shadow shadow-none relative h-32 block"
                 >
                   {/* Background image covering the whole card */}
                   <div className="absolute inset-0">
@@ -238,7 +238,7 @@ export default function StreamHome() {
             <Link
               key={c.id}
               href={`/e/${c.id}`}
-              className="min-w-[72%] rounded-2xl overflow-hidden border border-[var(--app-card-border)] bg-[var(--app-card-bg)] shadow block"
+              className="min-w-[72%] rounded-2xl overflow-hidden border border-border   bg-card-bg shadow block"
             >
               <div className="relative h-32">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

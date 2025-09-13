@@ -1,6 +1,5 @@
 "use client";
 
-import { ProfileCard } from "ethereum-identity-kit";
 import { useState, useEffect } from "react";
 import { getName } from "@coinbase/onchainkit/identity";
 
@@ -60,7 +59,16 @@ export default function ParticipantsGrid({ addresses, maxItems = 4 }: Participan
     <div className="grid grid-cols-2 gap-3">
       {ensNames.map((nameOrAddress, index) => (
         <div key={index} className="transform origin-center">
-          <ProfileCard addressOrName={nameOrAddress} className="scale-[0.85] rounded-xl" />
+          {/* <ProfileCard addressOrName={nameOrAddress} className="scale-[0.85] rounded-xl" /> */}
+          <div className="bg-white/80 dark:bg-transparent backdrop-blur-sm border-t border-[var(--events-card-border)] p-4 border-none">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <h3 className="text-lg font-medium mb-2">{nameOrAddress}</h3>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       ))}
     </div>
