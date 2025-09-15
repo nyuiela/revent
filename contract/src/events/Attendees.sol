@@ -69,6 +69,7 @@ abstract contract EventAttendees is ReentrancyGuard, EventManagement {
 		emit EventEvents.AttendeeConfirmed(eventId, attendeeAddress, confirmationCode);
 	}
 
+
 	function markAttended(uint256 eventId, address attendeeAddress) external eventExists(eventId) onlyEventCreator(eventId) {
 		EventTypes.AttendeeData storage attendee = attendees[eventId][attendeeAddress];
 		require(attendee.attendeeAddress != address(0), "Attendee not found");

@@ -32,7 +32,7 @@ contract DeployStreamEventsCustom is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         // Deploy the StreamEvents contract
-        streamEvents = new StreamEvents();
+        streamEvents = new StreamEvents("https://api.streamevents.io/token");
         
         // Update configuration after deployment
         streamEvents.updatePlatformFee(customPlatformFee);

@@ -26,7 +26,7 @@ abstract contract EventStorage {
     mapping(uint256 => mapping(address => uint256)) public purchasedTicketCounts; // eventId => buyer => count
 
     uint256 public platformFee = 250; // basis points
-    uint256 public minRegistrationFee = 0.001 ether;
+    uint256 public minRegistrationFee = 0.000 ether;
     uint256 public maxRegistrationFee = 1 ether;
     address public feeRecipient;
 

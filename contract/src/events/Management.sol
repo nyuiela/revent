@@ -6,10 +6,11 @@ import "./Modifiers.sol";
 import "./Events.sol";
 import "./Types.sol";
 import "./InternalUtils.sol";
-import "../doma/interfaces/IDomaProxy.sol";
-import "../doma/interfaces/IOwnershipToken.sol";
+// import "../doma/interfaces/IDomaProxy.sol";
+// import "../doma/interfaces/IOwnershipToken.sol";
+import "./EventToken.sol";
 
-abstract contract EventManagement is EventModifiers, EventInternalUtils {
+abstract contract EventManagement is EventModifiers, EventInternalUtils, EventToken {
     using Counters for Counters.Counter;
     using EventTypes for EventTypes.EventData;
 
@@ -18,6 +19,7 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils {
     event DomaClaimed(uint256 indexed eventId, uint256 tokenId);
     event DomaBridged(uint256 indexed eventId, string targetChainId, string targetOwnerAddress);
 
+    // constructor(string memory uri) EventToken(uri) {}
     function _afterEventCreated(uint256 eventId) internal virtual {}
 
     function _linkDomaRequested(uint256 eventId) internal {
@@ -42,7 +44,8 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils {
         uint256 startTime,
         uint256 endTime,
         uint256 maxAttendees,
-        uint256 registrationFee
+        uint256 registrationFee,
+        bytes memory data
     ) external validRegistrationFee(registrationFee) returns (uint256) {
         require(bytes(ipfsHash).length > 0, "IPFS hash cannot be empty");
         require(startTime > block.timestamp, "Start time must be in the future");
@@ -67,8 +70,9 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils {
             createdAt: block.timestamp,
             updatedAt: block.timestamp
         });
-
+        uint256 totalSupply = abi.decode(data, (uint256));
         creatorEvents[_msgSender()].push(eventId);
+        mint(_msgSender(), eventId, totalSupply, bytes(ipfsHash));
 
         emit EventEvents.EventCreated(
             eventId,
@@ -83,13 +87,15 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils {
         return eventId;
     }
 
+
     function updateEvent(
         uint256 eventId,
         string memory ipfsHash,
         uint256 startTime,
         uint256 endTime,
         uint256 maxAttendees,
-        uint256 registrationFee
+        uint256 registrationFee,
+        bytes memory data
     ) external eventExists(eventId) onlyEventCreator(eventId) validRegistrationFee(registrationFee) {
         require(bytes(ipfsHash).length > 0, "IPFS hash cannot be empty");
         require(startTime > block.timestamp, "Start time must be in the future");
@@ -103,6 +109,7 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils {
         eventData.maxAttendees = maxAttendees;
         eventData.registrationFee = registrationFee;
         eventData.updatedAt = block.timestamp;
+
 
         emit EventEvents.EventUpdated(
             eventId,

@@ -36,7 +36,7 @@ contract DeployDoma is Script {
 		vm.startBroadcast(pk);
 		
 		// Deploy the main contract
-		streamEvents = new StreamEvents();
+		streamEvents =  new StreamEvents("https://api.streamevents.io/token");
 		
 		// Configure Doma integration
 		streamEvents.setDomaConfig(domaProxy, ownershipToken, forwarder, registrarIanaId, domaChainId);
@@ -50,9 +50,9 @@ contract DeployDoma is Script {
 		streamEvents.updateRegistrationFeeLimits(0.001 ether, 1 ether);
 		
 		// Set trading configuration
-		streamEvents.setTradingFee(100); // 1% trading fee
-		streamEvents.setOrderValueLimits(0.001 ether, 100 ether); // Min 0.001 ETH, Max 100 ETH
-		streamEvents.setOrderExpirationTime(7 days); // Orders expire in 7 days
+		// streamEvents.setTradingFee(100); // 1% trading fee
+		// streamEvents.setOrderValueLimits(0.001 ether, 100 ether); // Min 0.001 ETH, Max 100 ETH
+		// streamEvents.setOrderExpirationTime(7 days); // Orders expire in 7 days
 		
 		vm.stopBroadcast();
 

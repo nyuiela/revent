@@ -23,7 +23,7 @@ abstract contract EventDomaIntegration is EventManagement {
         require(domaProxy != address(0), "doma proxy not set");
         require(voucher.ownerAddress == _msgSender(), "voucher owner != sender");
 
-        uint256 eventId = this.createEvent(ipfsHash, startTime, endTime, maxAttendees, registrationFee);
+        uint256 eventId = this.createEvent(ipfsHash, startTime, endTime, maxAttendees, registrationFee, bytes(abi.encode(100)));
 
         IDomaProxy(domaProxy).requestTokenization{value: msg.value}(voucher, registrarSignature);
         _linkDomaRequested(eventId);

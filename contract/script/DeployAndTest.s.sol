@@ -24,7 +24,7 @@ contract DeployAndTest is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         // Deploy the StreamEvents contract
-        streamEvents = new StreamEvents();
+        streamEvents = new StreamEvents("https://api.streamevents.io/token");
         
         vm.stopBroadcast();
 
@@ -64,7 +64,8 @@ contract DeployAndTest is Script {
             startTime,
             endTime,
             maxAttendees,
-            registrationFee
+            registrationFee,
+            bytes(abi.encode(100))
         );
         
         vm.stopBroadcast();
