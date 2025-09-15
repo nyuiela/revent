@@ -19,7 +19,7 @@ import "./events/EventToken.sol";
  */
 contract StreamEvents is EventAttendees, EventQueries, EventAdmin, EventTickets, ERC2771Context {
 	// Trusted forwarder is owner-configurable via setDomaConfig; we initialize with zero and rely on setter.
-	constructor(string memory uri) Ownable(msg.sender) ERC2771Context(address(0)) EventToken(uri) {
+	constructor(string memory uri) Ownable(msg.sender) ERC2771Context(address(0)) {
 		_transferOwnership(msg.sender);
 		feeRecipient = msg.sender;
 	}
@@ -74,13 +74,15 @@ contract StreamEvents is EventAttendees, EventQueries, EventAdmin, EventTickets,
 		IERC721(ownershipToken).setApprovalForAll(operator, approved);
 	}
 
-	// Expose supported currency addresses for integrations (Orderbook SDK / clients)
-	function getUSDC() external view returns (address) { return marketplaceUSDC; }
-	function getWETH() external view returns (address) { return marketplaceWETH; }
-
 	// Expose protocol fee details for order construction on the client side
 	function getProtocolFee() external view returns (address receiver, uint256 feeBps) {
 		return (marketplaceProtocolFeeReceiver, marketplaceProtocolFeeBps);
 	}
+
+  function setProtocolFee(address receiver, uint256 feeBps) external onlyOwner {
+    require(feeBps <= 1000, "fee too high");
+    marketplaceProtocolFeeReceiver = receiver;
+    marketplaceProtocolFeeBps = feeBps;
+  }
 
 }

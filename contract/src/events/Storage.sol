@@ -19,6 +19,7 @@ abstract contract EventStorage {
     mapping(uint256 => address[]) public eventAttendees;
     mapping(uint256 => mapping(address => EventTypes.AttendeeData)) public attendees;
     mapping(string => bool) public usedConfirmationCodes;
+    mapping(uint256 => bytes32) public eventConfirmationHashes; // eventId => confirmation code hash
 
     // Tickets
     mapping(uint256 => uint256[]) public eventTickets; // eventId => ticketIds

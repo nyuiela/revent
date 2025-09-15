@@ -10,34 +10,11 @@ import "./InternalUtils.sol";
 // import "../doma/interfaces/IOwnershipToken.sol";
 import "./EventToken.sol";
 
-abstract contract EventManagement is EventModifiers, EventInternalUtils, EventToken {
+abstract contract EventManagement is EventModifiers, EventInternalUtils {
     using Counters for Counters.Counter;
     using EventTypes for EventTypes.EventData;
-
-    event DomaConfigUpdated(address domaProxy, address ownershipToken, address trustedForwarder, uint256 registrarIanaId, string domaChainId);
-    event DomaRequested(uint256 indexed eventId);
-    event DomaClaimed(uint256 indexed eventId, uint256 tokenId);
-    event DomaBridged(uint256 indexed eventId, string targetChainId, string targetOwnerAddress);
-
-    // constructor(string memory uri) EventToken(uri) {}
+    
     function _afterEventCreated(uint256 eventId) internal virtual {}
-
-    function _linkDomaRequested(uint256 eventId) internal {
-        eventToDomaStatus[eventId] = 1; // Requested
-        emit DomaRequested(eventId);
-    }
-
-    function linkDomaMinted(uint256 eventId, uint256 tokenId) internal {
-        // callable by off-chain agent or registrar role in a fuller design
-        eventToDomaTokenId[eventId] = tokenId;
-        eventToDomaStatus[eventId] = 2; // Minted
-    }
-
-    function linkDomaClaimed(uint256 eventId) internal{
-        require(eventToDomaTokenId[eventId] != 0, "no token");
-        eventToDomaStatus[eventId] = 3; // Claimed
-        emit DomaClaimed(eventId, eventToDomaTokenId[eventId]);
-    }
 
     function createEvent(
         string memory ipfsHash,
@@ -72,7 +49,8 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils, EventTo
         });
         uint256 totalSupply = abi.decode(data, (uint256));
         creatorEvents[_msgSender()].push(eventId);
-        mint(_msgSender(), eventId, totalSupply, bytes(ipfsHash));
+        // mint(_msgSender(), eventId, totalSupply, bytes(ipfsHash));
+        publishEvent(eventId);
 
         emit EventEvents.EventCreated(
             eventId,
@@ -122,7 +100,7 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils, EventTo
         );
     }
 
-    function publishEvent(uint256 eventId) external eventExists(eventId) onlyEventCreator(eventId) {
+    function publishEvent(uint256 eventId) internal eventExists(eventId) onlyEventCreator(eventId) {
         EventTypes.EventData storage eventData = events[eventId];
         require(eventData.status == EventTypes.EventStatus.DRAFT, "Event must be in DRAFT status to publish");
 
@@ -133,7 +111,7 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils, EventTo
         emit EventEvents.EventStatusChanged(eventId, oldStatus, EventTypes.EventStatus.PUBLISHED);
     }
 
-    function startLiveEvent(uint256 eventId) public eventExists(eventId) 
+    function _startLiveEvent(uint256 eventId) internal eventExists(eventId) 
     // onlyEventCreator(eventId) 
     {
         EventTypes.EventData storage eventData = events[eventId];
@@ -146,6 +124,10 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils, EventTo
         eventData.updatedAt = block.timestamp;
 
         emit EventEvents.EventStatusChanged(eventId, oldStatus, EventTypes.EventStatus.LIVE);
+    }
+
+    function startLiveEvent(uint256 eventId) external onlyEventCreator(eventId) {
+        _startLiveEvent(eventId);
     }
 
     function endEvent(uint256 eventId) external eventExists(eventId) onlyEventCreator(eventId) {
@@ -171,6 +153,18 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils, EventTo
         eventData.updatedAt = block.timestamp;
 
         emit EventEvents.EventStatusChanged(eventId, oldStatus, EventTypes.EventStatus.CANCELLED);
+    }
+
+    function setMinRegistrationFee(uint256 minRegistrationFee) external  {
+        require(minRegistrationFee < maxRegistrationFee, "Min fee must be less than max fee");
+        minRegistrationFee = minRegistrationFee;
+        emit EventEvents.RegistrationFeeLimitsUpdated(minRegistrationFee, maxRegistrationFee);
+    }
+
+    function setMaxRegistrationFee(uint256 maxRegistrationFee) external {
+        require(minRegistrationFee < maxRegistrationFee, "Min fee must be less than max fee");
+        maxRegistrationFee = maxRegistrationFee;
+        emit EventEvents.RegistrationFeeLimitsUpdated(minRegistrationFee, maxRegistrationFee);
     }
 }
 

@@ -72,12 +72,8 @@ contract DeployAndTest is Script {
         
         console.log("   Event created with ID:", eventId);
         
-        // Test 2: Publish the event
-        console.log("   Testing event publishing...");
-        vm.startBroadcast(deployerPrivateKey);
-        streamEvents.publishEvent(eventId);
-        vm.stopBroadcast();
-        console.log("  Event published successfully");
+        // Test 2: Event is automatically published when created
+        console.log("   Event automatically published during creation");
         
         // Test 3: Add a ticket
         console.log("   Testing ticket creation...");
