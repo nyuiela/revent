@@ -261,7 +261,7 @@ export default function StreamHome() {
 
       {/* Curators for you */}
       <section className="space-y-3 px-4">
-        <h3 className="text-sm font-medium">Live Streams for you</h3>
+        <h3 className="text-sm font-medium">Active Participants for you</h3>
         <div className="flex gap-4 overflow-x-auto no-scrollbar pb-1">
           {curators.map((u) => (
             <div key={u.id} className="flex flex-col items-center min-w-[72px]">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getName } from "@coinbase/onchainkit/identity";
+import { ProfileList } from "ethereum-identity-kit";
 
 type ParticipantsGridProps = {
   addresses: string[];
@@ -11,6 +12,15 @@ type ParticipantsGridProps = {
 export default function ParticipantsGrid({ addresses, maxItems = 4 }: ParticipantsGridProps) {
   const [ensNames, setEnsNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // const profile = {
+  //   address: '0x5d3Ea15f2bB7a53955AF7B55E20Aa9166975aF44' as `0x${string}`,
+  //   tags: ['revent', 'base'],
+  // }
+  const profiles = addresses.map((address) => ({
+    address: address as `0x${string}`,
+    tags: ['revent', 'base'],
+  }));
 
   useEffect(() => {
     async function fetchEnsNames() {
@@ -56,19 +66,18 @@ export default function ParticipantsGrid({ addresses, maxItems = 4 }: Participan
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="flex flex-col gap-3">
       {ensNames.map((nameOrAddress, index) => (
         <div key={index} className="transform origin-center">
-          {/* <ProfileCard addressOrName={nameOrAddress} className="scale-[0.85] rounded-xl" /> */}
-          <div className="bg-white/80 dark:bg-transparent backdrop-blur-sm border-t border-[var(--events-card-border)] p-4 border-none">
-            <div className="max-w-7xl mx-auto">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-medium mb-2">{nameOrAddress}</h3>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* <ProfileCard addressOrName={nameOrAddress} className="" /> */}
+          <ProfileList
+            profiles={profiles}
+            showTags={true}
+            showHeaderImage={true}
+            // showProfileTooltip={true}
+            onProfileClick={(profile) => console.log('Clicked:', profile)}
+          // className="cursor-pointer"
+          />
         </div>
       ))}
     </div>
