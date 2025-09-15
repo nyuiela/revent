@@ -1020,11 +1020,11 @@ const CreateEventForm = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="space-y-2 sm:space-y-3">
                     <label className="text-sm font-medium text-foreground">
-                      Username *
+                      Address *
                     </label>
                     <input
                       type="text"
-                      placeholder="@username"
+                      placeholder="0x..."
                       value={formData.tempHost?.name || ""}
                       onChange={(e) => {
                         const username = e.target.value.replace('@', '');
