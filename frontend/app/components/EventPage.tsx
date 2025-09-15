@@ -622,41 +622,26 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
 
         {/* Tickets Section */}
         <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
-          <h2 className="text-xl font-semibold mb-4">Tickets</h2>
+          <h2 className="text-xl font-semibold mb-4">Register</h2>
+          {isRegistered !== undefined && isRegistered && (
+            <div className="border border-[var(--events-card-border)] border-none bg-transparent mb-2">You are already registered for this event</div>
+          )}
 
-          {/* Mode selector */}
-          {/* <div className="inline-flex items-center bg-black/70 text-white rounded-full p-1 mb-4">
-              {(["none", "single", "multiple"] as const).map((mode) => (
-                <button
-                  key={mode}
-                  onClick={() => {
-                    setTicketMode(mode);
-                    if (mode === "none") {
-                      setTicketQuantity(0);
-                    } else if (mode === "single") {
-                      setTicketQuantity(1);
-                    }
-                  }}
-                  className={`px-3 py-1.5 text-xs rounded-full transition-all ${ticketMode === mode ? "bg-white text-black" : "text-white"}`}
-                >
-                  {mode}
-                </button>
-              ))}
-            </div> */}
+
 
           {ticketMode !== "none" && (
             <>
               {/* Ticket types */}
               {ticketTypes.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-1 mb-0 bg-gray-300 p-4 px-[0.2rem] pb-1 rounded-xl">
                   {ticketTypes.map((t, idx) => (
                     <button
                       type="button"
                       key={t.type}
                       onClick={() => setSelectedTicketIndex(idx)}
-                      className={`text-left p-4 rounded-2xl border transition-colors bg-white/80 dark:bg-transparent ${selectedTicketIndex === idx
-                        ? "border-primary bg-primary/10"
-                        : "border-gray-300 dark:border-[var(--events-card-border)] bg-transparent hover:border-primary/50"}`}
+                      className={`text-left p-4 rounded-2xl transition-colors bg-white/80 dark:bg-transparent border-none ${selectedTicketIndex === idx
+                        ? "bg-[#edf6f9] dark:border-[var(--events-card-border)] bg-transparent "
+                        : "dark:border-[var(--events-card-border)] bg-transparent "}`}
                     >
                       <div className="flex items-center justify-between">
                         <div>
@@ -675,7 +660,38 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
                   ))}
                 </div>
               ) : (
-                <div className="text-sm text-[var(--events-foreground-muted)]">Tickets not available</div>
+                <div className="border border-[var(--events-card-border)] border-none bg-transparent mb-2">
+                  <div className="flex items-center gap-1 mb-0 bg-gray-300 p-4 px-[0.2rem] rounded-xl pb-0">
+                    {canTransact ? (
+                      <Transaction
+                        chainId={chainId}
+                        contracts={[
+                          {
+                            abi: eventAbi.abi as Abi,
+                            address: eventAddress as `0x${string}`,
+                            functionName: "registerForEvent",
+                            args: [BigInt(numericEventId || 1)],
+                          },
+                        ]}
+                        onStatus={(s) => {
+                          setIsRegistering(s.statusName === "transactionPending" || s.statusName === "buildingTransaction");
+                          if (s.statusName === "success") {
+                            setShowRegistrationSuccess(true);
+                          }
+                        }}
+                      >
+                        <TransactionButton text={isRegistering ? "Registering..." : "Register for Event"} className="mb-0 p-2 font-medium rounded-xl" />x
+                        <TransactionStatus>
+                          <TransactionStatusLabel />
+                          <TransactionStatusAction />
+                        </TransactionStatus>
+                      </Transaction>
+                    ) : (
+                      <></>
+                    )}
+                  </div>
+                </div>
+                // < div cla ssName="text-sm text-[var(--events-foreground-muted)]">Tickets not available</div>
               )}
 
               {/* Quantity selector for multiple */}
@@ -757,39 +773,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
             </p>
           </div>
 
-          {/* Registration */}
-          {/* <div className="border border-[var(--events-card-border)] rounded-xl p-6 border-none bg-transparent">
-            <h2 className="text-xl font-semibold mb-4">Register</h2>
-            <div className="flex items-center gap-3">
-              {canTransact ? (
-                <Transaction
-                  chainId={chainId}
-                  contracts={[
-                    {
-                      abi: eventAbi.abi as Abi,
-                      address: eventAddress as `0x${string}`,
-                      functionName: "registerForEvent",
-                      args: [BigInt(numericEventId || 1)],
-                    },
-                  ]}
-                  onStatus={(s) => {
-                    setIsRegistering(s.statusName === "transactionPending" || s.statusName === "buildingTransaction");
-                    if (s.statusName === "success") {
-                      setShowRegistrationSuccess(true);
-                    }
-                  }}
-                >
-                  <TransactionButton text={isRegistering ? "Registering..." : "Register for Event"} />
-                  <TransactionStatus>
-                    <TransactionStatusLabel />
-                    <TransactionStatusAction />
-                  </TransactionStatus>
-                </Transaction>
-              ) : (
-                <ConnectWallet />
-              )}
-            </div>
-          </div> */}
+
 
           {/* Agenda Section */}
           <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
@@ -925,7 +909,8 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
       </div>
 
       {/* Sticky Registration Button */}
-      {!isRegistered &&
+      {
+        !isRegistered &&
         (<div
           className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out bg-black/40 border-none ${isScrolling ? 'translate-y-full' : 'translate-y-0'
             }`}
@@ -997,16 +982,18 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
       />
 
       {/* Registration Success Card */}
-      {showRegistrationSuccess && (
-        <RegistrationSuccessCard
-          event={event}
-          ticketType={selectedTicket?.type}
-          quantity={effectiveQty}
-          totalPrice={totalPrice}
-          currency={selectedTicket?.currency || "USD"}
-          onClose={() => setShowRegistrationSuccess(false)}
-        />
-      )}
+      {
+        showRegistrationSuccess && (
+          <RegistrationSuccessCard
+            event={event}
+            ticketType={selectedTicket?.type}
+            quantity={effectiveQty}
+            totalPrice={totalPrice}
+            currency={selectedTicket?.currency || "USD"}
+            onClose={() => setShowRegistrationSuccess(false)}
+          />
+        )
+      }
     </div >
   );
 }

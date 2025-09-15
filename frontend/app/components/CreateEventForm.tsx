@@ -2031,7 +2031,7 @@ const CreateEventForm = () => {
                 <h3 className="text-lg font-medium">Choose Your Domain</h3>
 
                 <div className="space-y-4">
-                  <div className="space-y-2 sm:space-y-3">
+                  <div className="space-y-2 sm:space-y-3 mb-5">
                     <label className="text-sm font-medium text-foreground">
                       Domain Name *
                     </label>
@@ -2118,18 +2118,6 @@ const CreateEventForm = () => {
                     </div>
                   )}
 
-                  {/* Domain Benefits */}
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 className="font-medium text-blue-800 mb-2">Domain Benefits</h4>
-                    <ul className="text-sm text-blue-700 space-y-1">
-                      <li>• Easy-to-remember URL for your event (e.g., abc.nyuiela.eth)</li>
-                      <li>• Decentralized and censorship-resistant</li>
-                      <li>• Points directly to your event&apos;s IPFS metadata</li>
-                      <li>• Works with any IPFS gateway</li>
-                      <li>• You own the domain permanently</li>
-                      <li>• Part of the nyuiela.eth ecosystem</li>
-                    </ul>
-                  </div>
 
                   {/* Prepared Domain Status */}
                   {preparedDomainContracts && (
