@@ -38,7 +38,7 @@ const Footer = () => {
       </div> */}
       <div className="px-4 flex justify-center items-center border-none border-gray-00 bg-gray-000 w-[90%] p-2 gap-4 overflow-x-auto mx-10 bg-transparent ">
 
-        <div className="h-10 w-fit px-4 flex justify-center items-center border-[1px] border-gray-300 rounded-full bg-gray-000  bg-background dark:border-gray-500 shrink-0 gap-2 shadow-xl" onClick={() => router.push('/')}>
+        <div className="h-10 w-fit px-4 flex justify-center items-center border-[1px] border-gray-300 rounded-full bg-gray-000  bg-background dark:border-gray-500 shrink-0 gap-2 shadow-xl z-10" onClick={() => router.push('/')}>
           <Home className="w-4 h-4" />
           Home
         </div>
@@ -46,7 +46,7 @@ const Footer = () => {
           <Video className="w-4 h-4" />
           Go live
         </div> */}
-        <Link href="/e" className="h-10 w-fit px-4 flex justify-center items-center border-[1px] border-gray-300 rounded-full bg-gray-000  bg-background dark:border-gray-500 shrink-0 gap-2 shadow-xl">
+        <Link href="/e" className="h-10 w-fit px-4 flex justify-center items-center border-[1px] border-gray-300 rounded-full bg-gray-000  bg-background dark:border-gray-500 shrink-0 gap-2 shadow-xl z-10">
           <MapPin className="w-4 h-4" />
           Events
         </Link>

@@ -30,7 +30,7 @@ export async function GET() {
       lat: 40.718,
       lng: -73.967,
       isLive: false,
-      avatarUrl: "/splash.png",
+      avatarUrl: "/splash.svg",
       platforms: [],
     },
     {
@@ -60,7 +60,7 @@ export async function GET() {
       lat: 40.6996,
       lng: -73.9937,
       isLive: true,
-      avatarUrl: "/icon.png",
+      avatarUrl: "/icon.svg",
       platforms: ["YouTube"],
     },
 
@@ -82,7 +82,7 @@ export async function GET() {
       lat: 40.7580,
       lng: -73.9855,
       isLive: true,
-      avatarUrl: "/splash.png",
+      avatarUrl: "/splash.svg",
       platforms: ["Twitch", "YouTube"],
     },
     {

@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { Button } from "./DemoComponents";
 import { Icon } from "./DemoComponents";
 import { ChevronLeftIcon, ChevronRightIcon, Upload, X, Loader2 } from "lucide-react";
+import LocationPicker from "./LocationPicker";
 import { useAccount } from "wagmi";
 import { eventAbi, eventAddress } from "@/lib/contract";
 import { Transaction, TransactionButton, TransactionResponse, TransactionSponsor, TransactionStatus, TransactionStatusAction, TransactionStatusLabel } from "@coinbase/onchainkit/transaction";
@@ -50,6 +51,7 @@ const CreateEventForm = () => {
     tempHost: { name: "", role: "" },
     tempAgenda: { title: "", description: "", startTime: "", endTime: "", speakers: [] },
     tempTicket: { type: "", price: 0, currency: "USD", quantity: 0, perks: [] },
+    eventType: "offline", // "online" | "offline"
   });
   console.log('formData: ', formData);
 
@@ -64,7 +66,7 @@ const CreateEventForm = () => {
   const [transactionStep, setTransactionStep] = useState<'event' | 'tickets' | 'domain' | 'complete'>('event');
   const [createdEventId, setCreatedEventId] = useState<string | null>(null);
   const [transactionTimeout, setTransactionTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [useSimpleMode, setUseSimpleMode] = useState(false);
+  const [useSimpleMode] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<string>('');
   const [preparedContracts, setPreparedContracts] = useState<Record<string, unknown>[] | null>(null);
   const [preparedTicketContracts, setPreparedTicketContracts] = useState<Record<string, unknown>[] | null>(null);
@@ -333,7 +335,8 @@ const CreateEventForm = () => {
       hosts: [],
       agenda: [],
       sponsors: [],
-      socialLinks: {}
+      socialLinks: {},
+      eventType: "offline"
     });
 
     setIsAutoFilled(true);
@@ -741,7 +744,8 @@ const CreateEventForm = () => {
                             hosts: [],
                             agenda: [],
                             sponsors: [],
-                            socialLinks: {}
+                            socialLinks: {},
+                            eventType: "offline"
                           });
                           setIsAutoFilled(false);
                           setPreparedContracts(null);
@@ -946,20 +950,47 @@ const CreateEventForm = () => {
                 </div>
               </div>
 
-              {/* Location */}
+              {/* Event Type Select */}
               <div className="space-y-2 sm:space-y-3">
                 <label className="text-sm font-medium text-foreground">
-                  Location *
+                  Event Type *
                 </label>
-                <input
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) => handleInputChange('location', e.target.value)}
-                  className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
-                  placeholder="Enter event location"
-                  required
-                />
+                <select
+                  value={formData.eventType}
+                  onChange={(e) => setFormData(prev => ({ ...prev, eventType: e.target.value as "online" | "offline" }))}
+                  className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors text-sm sm:text-base"
+                >
+                  <option value="offline">Offline (in-person)</option>
+                  <option value="online">Online (virtual)</option>
+                </select>
               </div>
+
+              {/* Location picker with autocomplete + map pin (only for offline events) */}
+              {formData.eventType === "offline" ? (
+                <LocationPicker
+                  value={{ location: formData.location, coordinates: formData.coordinates }}
+                  onChange={(next) => {
+                    setFormData(prev => ({ ...prev, location: next.location, coordinates: next.coordinates }));
+                  }}
+                />
+              ) : (
+                <div className="space-y-2 sm:space-y-3">
+                  <label className="text-sm font-medium text-foreground">
+                    Online Platform/URL *
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.location}
+                    onChange={(e) => handleInputChange('location', e.target.value)}
+                    className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
+                    placeholder="https://zoom.us/j/123456789 or https://meet.google.com/abc-defg-hij"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Enter the meeting link or platform URL for your online event
+                  </p>
+                </div>
+              )}
 
               {/* Max Participants */}
               <div className="space-y-2 sm:space-y-3">
@@ -1586,29 +1617,6 @@ const CreateEventForm = () => {
                 </div>
               </div>
 
-              {/* Mode Toggle */}
-              {process.env.NEXT_PUBLIC_ENV !== "development" && (
-                <div className="mb-4 p-3 bg-app-card-bg border border-border rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-medium text-foreground">Transaction Mode</h4>
-                      <p className="text-xs text-muted-foreground">
-                        {useSimpleMode
-                          ? "Simple mode: Create event only (tickets can be added later)"
-                          : "Advanced mode: Create event + add tickets in sequence"
-                        }
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setUseSimpleMode(!useSimpleMode)}
-                      className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-primary-hover transition-colors"
-                    >
-                      {useSimpleMode ? "Advanced" : "Simple"}
-                    </button>
-                  </div>
-                </div>
-              )}
 
               {/* Simple Event Creation Transaction */}
               {isConnected && canUseTransaction && useSimpleMode && preparedContracts ? (

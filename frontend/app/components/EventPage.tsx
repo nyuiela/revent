@@ -11,7 +11,7 @@ import { Transaction, TransactionButton, TransactionStatus, TransactionStatusAct
 import { WalletModal } from "@coinbase/onchainkit/wallet";
 import { eventAbi, eventAddress } from "@/lib/contract";
 import type { Abi } from "viem";
-import Image from "next/image";
+import StaticLocationMap from "./StaticLocationMap";
 import config from "@/lib/wagmi";
 import ParticipantsGrid from "./ParticipantsGrid";
 import EventViewTracker from "../../components/EventViewTracker";
@@ -190,7 +190,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--app-accent)] mx-auto mb-4"></div>
           <p className="text-[var(--app-foreground-muted)]">
-            {eventId ? 'Loading event from blockchain...' : 'Loading event metadata...'}
+            {eventId ? 'Retrieving event data...' : 'Loading event metadata...'}
           </p>
         </div>
       </div>
@@ -538,6 +538,9 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
 
 
 
+  // Prepare map data for EventsMap
+  // Mapbox EventsMap dataset kept for future multi-event contexts if needed
+
 
   return (
     <div className="min-h-screen text-[var(--events-foreground)] bg-background relative z-[20]">
@@ -618,7 +621,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
       </div>
 
       {/* Content */}
-      <div className="p-6 max-w-7xl mx-auto space-y-12">
+      <div className="p-6 px-2 max-w-7xl mx-auto space-y-12">
         {/* <EventManagement eventId={eventId || "1"} defaultIpfsHash={ipfsHash || "bafkreia2uchzmzosieaj6tyim4qzq5xvxhlyapq2gzacen2tffknfeco6u"} /> */}
 
         {/* Tickets Section */}
@@ -872,16 +875,29 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
                 </div>
               </div>
 
-              {/* Map Placeholder */}
-              <div className="bg-transparent border border-border rounded-lg p-4 text-center">
-                <div className="w-full h-32 bg-transparent border-none border-[var(--events-card-border)] rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <MapPin className="w-8 h-8 text-[var(--events-foreground-muted)] mx-auto mb-2" />
-                    <p className="text-sm text-[var(--events-foreground-muted)]">Interactive Map</p>
-                    <p className="text-xs text-[var(--events-foreground-muted)]">Coordinates: {event.coordinates.lat}, {event.coordinates.lng}</p>
+              {/* Location display - map for offline, URL for online */}
+              {event.location.startsWith('http') ? (
+                <div className="bg-transparent border border-border rounded-lg text-center p-4">
+                  <div className="space-y-3">
+                    <div className="text-sm text-muted-foreground">Online Event</div>
+                    <a
+                      href={event.location}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                    >
+                      Join Online Event
+                    </a>
+                    <div className="text-xs text-muted-foreground break-all">
+                      {event.location}
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-transparent border border-border rounded-lg text-center p-0">
+                  <StaticLocationMap lat={event.coordinates.lat} lng={event.coordinates.lng} heightClass="h-64" />
+                </div>
+              )}
 
             </div>
           </div>
