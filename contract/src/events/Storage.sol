@@ -11,8 +11,6 @@ abstract contract EventStorage {
     Counters.Counter internal _eventIds;
     Counters.Counter internal _attendeeIds; // reserved if needed later
     Counters.Counter internal _ticketIds;
-    Counters.Counter internal _orderIds;
-    Counters.Counter internal _tradeIds;
 
     mapping(uint256 => EventTypes.EventData) public events;
     mapping(address => uint256[]) public creatorEvents;
@@ -29,17 +27,23 @@ abstract contract EventStorage {
     uint256 public minRegistrationFee = 0.001 ether;
     uint256 public maxRegistrationFee = 1 ether;
     address public feeRecipient;
+    address public trustedForwarderAddr;
 
-    // Doma integration config
+    // Doma integration config (basic)
     address public domaProxy;
     address public ownershipToken;
-    address public trustedForwarderAddr;
     uint256 public registrarIanaId;
     string public domaChainId; // CAIP-2 string if needed for bridging
 
     // Per-event doma linkage
     mapping(uint256 => uint256) public eventToDomaTokenId; // eventId => tokenId
     mapping(uint256 => uint8) public eventToDomaStatus; // 0-None,1-Requested,2-Minted,3-Claimed
+
+    // Marketplace configuration (owner-settable)
+    address public marketplaceUSDC;
+    address public marketplaceWETH;
+    address public marketplaceProtocolFeeReceiver;
+    uint256 public marketplaceProtocolFeeBps; // e.g., 50 == 0.5%
 
     // Investment and revenue sharing (simple pro-rata)
     mapping(uint256 => uint256) public totalInvested; // eventId => total ETH invested
@@ -50,13 +54,21 @@ abstract contract EventStorage {
     mapping(uint256 => mapping(address => uint256)) public revenueClaimed; // eventId => investor => cumulative claimed
     uint256 public investorBps = 5000; // default 50% of net to investors
 
-    // Marketplace configuration (owner-settable)
-    address public marketplaceUSDC;
-    address public marketplaceWETH;
-    address public marketplaceProtocolFeeReceiver;
-    uint256 public marketplaceProtocolFeeBps; // e.g., 50 == 0.5%
+    // Efficient investor tracking (no loops needed)
+    mapping(uint256 => address[]) public eventInvestors; // eventId => list of investor addresses
+    mapping(uint256 => mapping(address => bool)) public isEventInvestor; // eventId => investor => is investor
+    mapping(uint256 => uint256) public totalInvestorShares; // eventId => total shares owned by investors
+    
+    // Dynamic share pricing system
+    mapping(uint256 => uint256) public eventShareBasePrice; // eventId => base price per share (in wei)
+    mapping(uint256 => uint256) public eventShareMultiplier; // eventId => current price multiplier (basis points)
+    mapping(uint256 => uint256) public eventTotalValue; // eventId => total event value (domain + revenue)
+    mapping(uint256 => uint256) public eventShareSupply; // eventId => total share supply (totalInvested)
+    mapping(uint256 => uint256) public lastPriceUpdate; // eventId => last price update timestamp
 
     // Trading system storage
+    Counters.Counter internal _orderIds;
+    Counters.Counter internal _tradeIds;
     mapping(uint256 => EventTypes.TradingOrder) public orders; // orderId => TradingOrder
     mapping(uint256 => uint256[]) public eventOrders; // eventId => orderIds
     mapping(address => uint256[]) public userOrders; // user => orderIds
@@ -84,25 +96,10 @@ abstract contract EventStorage {
     mapping(uint256 => uint256) public totalInvestorApprovals; // eventId => total approval weight
     mapping(uint256 => uint256) public totalInvestorWeight; // eventId => total investor weight
     
-    // Efficient investor tracking (no loops needed)
-    mapping(uint256 => address[]) public eventInvestors; // eventId => list of investor addresses
-    mapping(uint256 => mapping(address => bool)) public isEventInvestor; // eventId => investor => is investor
-    mapping(uint256 => uint256) public totalInvestorShares; // eventId => total shares owned by investors
-    
-    // Dynamic share pricing system
-    mapping(uint256 => uint256) public eventShareBasePrice; // eventId => base price per share (in wei)
-    mapping(uint256 => uint256) public eventShareMultiplier; // eventId => current price multiplier (basis points)
-    mapping(uint256 => uint256) public eventTotalValue; // eventId => total event value (domain + revenue)
-    mapping(uint256 => uint256) public eventShareSupply; // eventId => total share supply (totalInvested)
-    mapping(uint256 => uint256) public lastPriceUpdate; // eventId => last price update timestamp
-    
     // Trading-based price momentum
     mapping(uint256 => uint256) public eventTradingVolume; // eventId => total trading volume (24h)
     mapping(uint256 => uint256) public eventBuyVolume; // eventId => buy volume (24h)
     mapping(uint256 => uint256) public eventSellVolume; // eventId => sell volume (24h)
     mapping(uint256 => uint256) public eventLastTradingUpdate; // eventId => last trading volume reset
     mapping(uint256 => uint256) public eventPriceMomentum; // eventId => price momentum factor (basis points)
-
 }
-
-
