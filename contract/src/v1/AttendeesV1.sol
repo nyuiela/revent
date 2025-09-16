@@ -20,16 +20,20 @@ abstract contract AttendeesV1 is ReentrancyGuardUpgradeable, ManagementV1 {
     {
         EventTypes.EventData storage eventData = events[eventId];
         require(
-            eventData.status == EventTypes.EventStatus.PUBLISHED,
+            eventData.status == EventTypes.EventStatus.PUBLISHED || eventData.status == EventTypes.EventStatus.LIVE,
             "Event is not open for registration"
         );
-        if (eventData.status == EventTypes.EventStatus.LIVE) {
+        if (eventData.status == EventTypes.EventStatus.PUBLISHED) {
             startLiveEvent(eventId);
         }
+
+
         require(msg.value == eventData.registrationFee, "Incorrect registration fee");
 
         address sender = _msgSender();
         string memory confirmationCode = _generateConfirmationCode(eventId, sender);
+        //@dev take this out
+        //@TODO remove this 
 
         attendees[eventId][sender] = EventTypes.AttendeeData({
             attendeeAddress: sender,
@@ -52,7 +56,7 @@ abstract contract AttendeesV1 is ReentrancyGuardUpgradeable, ManagementV1 {
         payable(eventData.creator).transfer(creatorAmount);
 
         emit AttendeeRegistered(eventId, sender, confirmationCode, msg.value);
-    }
+    } //@dev code generated -- > code signatuee --> newcode
 
     function confirmAttendance(
         uint256 eventId,
@@ -99,4 +103,6 @@ abstract contract AttendeesV1 is ReentrancyGuardUpgradeable, ManagementV1 {
         usedConfirmationCodes[confirmationCode] = true;
         return confirmationCode;
     }
+    
+    
 }

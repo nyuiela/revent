@@ -4,8 +4,9 @@ pragma solidity ^0.8.19;
 import "./StorageV1.sol";
 import "./ModifiersV1.sol";
 import "./InternalUtilsV1.sol";
+import "./confirmationCode.sol";
 
-abstract contract ManagementV1 is StorageV1, EventModifiersV1, EventInternalUtilsV1 {
+abstract contract ManagementV1 is Confirmation, StorageV1, EventModifiersV1, EventInternalUtilsV1 {
     function _afterEventCreated(uint256 eventId) internal virtual {}
 
     function createEvent(
@@ -13,7 +14,8 @@ abstract contract ManagementV1 is StorageV1, EventModifiersV1, EventInternalUtil
         uint256 startTime,
         uint256 endTime,
         uint256 maxAttendees,
-        uint256 registrationFee
+        uint256 registrationFee,
+        string memory code
     ) external validRegistrationFee(registrationFee) returns (uint256) {
         require(bytes(ipfsHash).length > 0, "IPFS hash cannot be empty");
         require(startTime > block.timestamp, "Start time must be in the future");
@@ -38,8 +40,9 @@ abstract contract ManagementV1 is StorageV1, EventModifiersV1, EventInternalUtil
             createdAt: block.timestamp,
             updatedAt: block.timestamp
         });
-
+        bytes eventConfirmationCode = _generateEventCode(eventId, code);
         creatorEvents[_msgSender()].push(eventId);
+        confirmationCode[eventId] = eventConfirmationCode;
         _afterEventCreated(eventId);
 
         emit EventCreated(
@@ -51,7 +54,7 @@ abstract contract ManagementV1 is StorageV1, EventModifiersV1, EventInternalUtil
             maxAttendees,
             registrationFee
         );
-
+        
         return eventId;
     }
 
@@ -136,3 +139,18 @@ abstract contract ManagementV1 is StorageV1, EventModifiersV1, EventInternalUtil
         emit EventStatusChanged(eventId, oldStatus, EventTypes.EventStatus.CANCELLED);
     }
 }
+
+//@dev q wwhat if the event needs the funds to operate or ryn the event?
+//@dev collateral method ? lockin some funds ------- buy etc 
+// event ends --- funds (run off funds)
+
+//@dev lock in system, right event ends, succsful event give them their funds
+// 20 people resgistere 
+// 15 join
+// 5 saying it was good iyt catually happn
+// 10 bro didnt happen
+// 10 ove the 5
+// threshold mechanism
+// off-chain - 
+// time-stamp
+// event 
