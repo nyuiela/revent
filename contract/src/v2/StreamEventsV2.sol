@@ -128,6 +128,7 @@ contract StreamEventsV2 is Initializable, UUPSUpgradeable, TradingV2 {
         // This function would be used to migrate data from V1 to V2
         // Implementation would depend on the specific migration requirements
         // For now, this is a placeholder
+        // what do we need to do before migration?
     }
 
 }
