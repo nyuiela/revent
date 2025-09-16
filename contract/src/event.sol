@@ -10,9 +10,6 @@ import "./events/Admin.sol";
 import "./events/Tickets.sol";
 import "./events/EventToken.sol";
 import "./interfaces/IEventTokenManager.sol";
-// import "./events/DomaIntegration.sol";
-// import "./events/Trading.sol";
-// import "./doma/interfaces/IERC2981.sol";
 
 /**
  * @title StreamEvents
