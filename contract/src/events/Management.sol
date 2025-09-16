@@ -9,6 +9,7 @@ import "./InternalUtils.sol";
 // import "../doma/interfaces/IDomaProxy.sol";
 // import "../doma/interfaces/IOwnershipToken.sol";
 import "./EventToken.sol";
+import "../interfaces/IEventTokenManager.sol";
 
 abstract contract EventManagement is EventModifiers, EventInternalUtils {
     using Counters for Counters.Counter;
@@ -49,7 +50,11 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils {
         });
         uint256 totalSupply = abi.decode(data, (uint256));
         creatorEvents[_msgSender()].push(eventId);
-        // mint(_msgSender(), eventId, totalSupply, bytes(ipfsHash));
+        
+        // Mint ERC1155 tokens for the event
+        string memory tokenUri = string(abi.encodePacked("https://api.stream-events.com/metadata/", uint2str(eventId), ".json"));
+        _mintEventTokens(eventId, totalSupply, tokenUri);
+        
         publishEvent(eventId);
 
         emit EventEvents.EventCreated(
@@ -63,6 +68,17 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils {
         );
 
         return eventId;
+    }
+    
+    /**
+     * @dev Mint ERC1155 tokens for an event
+     * @param eventId The event ID
+     * @param totalSupply Total supply of tokens to mint
+     * @param tokenUri URI for the token metadata
+     */
+    function _mintEventTokens(uint256 eventId, uint256 totalSupply, string memory tokenUri) internal virtual {
+        // This will be implemented by the main contract that has access to eventTokenManager
+        // The actual implementation will be in the StreamEvents contract
     }
 
 

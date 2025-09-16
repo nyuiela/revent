@@ -34,7 +34,6 @@ abstract contract EventStorage {
     // Doma integration config
     address public domaProxy;
     address public ownershipToken;
-    address public trustedForwarderAddr;
     uint256 public registrarIanaId;
     string public domaChainId; // CAIP-2 string if needed for bridging
 

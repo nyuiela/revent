@@ -51,6 +51,9 @@ abstract contract EventAttendees is ReentrancyGuard, EventManagement {
 		payable(eventData.creator).transfer(creatorAmount);
 
 		emit EventEvents.AttendeeRegistered(eventId, sender, confirmationCode, msg.value);
+		
+		// Transfer ERC1155 token to attendee as proof of registration
+		_transferRegistrationToken(eventId, sender);
 	}
 
 	function confirmAttendance(
@@ -133,6 +136,16 @@ abstract contract EventAttendees is ReentrancyGuard, EventManagement {
 
 		usedConfirmationCodes[confirmationCode] = true;
 		return confirmationCode;
+	}
+	
+	/**
+	 * @dev Transfer registration token to attendee
+	 * @param eventId The event ID
+	 * @param attendee Address of the attendee
+	 */
+	function _transferRegistrationToken(uint256 eventId, address attendee) internal virtual {
+		// This will be implemented by the main contract that has access to eventTokenManager
+		// The actual implementation will be in the StreamEvents contract
 	}
 }
 
