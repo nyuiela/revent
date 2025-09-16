@@ -4,12 +4,18 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "./ManagementV1.sol";
 import "./TicketsV1.sol";
+import "./Events.sol";
 
 abstract contract AttendeesV1 is
     ReentrancyGuardUpgradeable,
     ManagementV1,
     TicketsV1
+    // EventEvents
 {
+    // using EventTypes for EventTypes.EventData;
+    // using EventTypes for EventTypes.AttendeeData;
+    // using EventTypes for EventTypes.TicketData;
+
     function __AttendeesV1_init() internal onlyInitializing {
         __ReentrancyGuard_init();
     }
@@ -48,17 +54,10 @@ abstract contract AttendeesV1 is
         );
 
         address sender = _msgSender();
-        // string memory confirmationCode = _generateConfirmationCode(
-        //     eventId,
-        //     sender
-        // );
-        //@dev take this out
-        //@TODO remove this
 
         attendees[eventId][sender] = EventTypes.AttendeeData({
             attendeeAddress: sender,
             eventId: eventId,
-            confirmationCode: "",
             isConfirmed: false,
             hasAttended: false,
             registeredAt: block.timestamp,
@@ -68,14 +67,7 @@ abstract contract AttendeesV1 is
         eventData.currentAttendees++;
         eventAttendees[eventId].push(sender);
 
-        //   uint256 platformFeeAmount = (msg.value * platformFee) / 10000;
-        //   uint256 creatorAmount = msg.value - platformFeeAmount;
-
-        //   address recipient = feeRecipient == address(0) ? owner() : feeRecipient;
-        //   payable(recipient).transfer(platformFeeAmount);
-        //   payable(eventData.creator).transfer(creatorAmount);
-
-        emit AttendeeRegistered(eventId, sender, confirmationCode, msg.value);
+        emit EventEvents.AttendeeRegistered(eventId, sender, confirmationCode, msg.value);
     }
 
     function confirmAttendance(
@@ -101,7 +93,7 @@ abstract contract AttendeesV1 is
         attendee.hasAttended = true;
         attendee.confirmedAt = block.timestamp;
 
-        emit AttendeeConfirmed(eventId, msg.sender, hash);
+        emit EventEvents.AttendeeConfirmed(eventId, msg.sender, hash);
     }
 
     function markAttended(
@@ -120,6 +112,6 @@ abstract contract AttendeesV1 is
         attendee.isConfirmed = true;
         attendee.hasAttended = true;
 
-        emit AttendeeAttended(eventId, attendeeAddress);
+        emit EventEvents.AttendeeAttended(eventId, attendeeAddress);
     }
 }

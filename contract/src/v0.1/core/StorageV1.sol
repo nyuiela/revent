@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
-
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "../utils/counter.sol";
-import "./Types.sol";
+import "../structs/Types.sol";
 
-abstract contract EventStorage {
+abstract contract ReventStorage is
+    UUPSUpgradeable  {
     using Counters for Counters.Counter;
     using EventTypes for EventTypes.EventData;
 
@@ -107,4 +108,9 @@ abstract contract EventStorage {
     mapping(uint256 => uint256) public eventSellVolume; // eventId => sell volume (24h)
     mapping(uint256 => uint256) public eventLastTradingUpdate; // eventId => last trading volume reset
     mapping(uint256 => uint256) public eventPriceMomentum; // eventId => price momentum factor (basis points)
+
+    function __StorageV1_init() internal onlyInitializing {
+        __UUPSUpgradeable_init();
+    }
 }
+

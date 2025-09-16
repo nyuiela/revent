@@ -3,14 +3,15 @@ pragma solidity ^0.8.19;
 
 import "./StorageV1.sol";
 import "./ModifiersV1.sol";
-import "./InternalUtilsV1.sol";
-import "./confirmationCode.sol";
+import "../utils/InternalUtilsV1.sol";
 import "./EscrowV1.sol";
+import "./Events.sol";
 
 abstract contract ManagementV1 is
     EscrowV1,
-    Confirmation,
-    StorageV1,
+    // ReventStorage,
+    // EventEvents,
+    // EventTickets,
     EventModifiersV1,
     EventInternalUtilsV1
 {
@@ -18,6 +19,13 @@ abstract contract ManagementV1 is
         if (is_vip) {
             createEscrow(eventId);
         }
+    }
+
+    function _generateEventCode(
+        uint256 eventId,
+        string memory code
+    ) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(eventId, code));
     }
 
     //@todO ADD EVENT TYPE (FREE, VIP (TICKET))
@@ -60,7 +68,7 @@ abstract contract ManagementV1 is
         confirmationCode[eventId] = eventConfirmationCode;
         _afterEventCreated(eventId, isVIP);
 
-        emit EventCreated(
+        emit EventEvents.EventCreated(
             eventId,
             _msgSender(),
             ipfsHash,
@@ -105,7 +113,7 @@ abstract contract ManagementV1 is
         // eventData.registrationFee = 0;
         eventData.updatedAt = block.timestamp;
 
-        emit EventUpdated(
+        emit EventEvents.EventUpdated(
             eventId,
             _msgSender(),
             ipfsHash,
@@ -129,7 +137,7 @@ abstract contract ManagementV1 is
         eventData.status = EventTypes.EventStatus.PUBLISHED;
         eventData.updatedAt = block.timestamp;
 
-        emit EventStatusChanged(
+        emit EventEvents.EventStatusChanged(
             eventId,
             oldStatus,
             EventTypes.EventStatus.PUBLISHED
@@ -152,7 +160,7 @@ abstract contract ManagementV1 is
         eventData.isLive = true;
         eventData.updatedAt = block.timestamp;
 
-        emit EventStatusChanged(
+        emit EventEvents.EventStatusChanged(
             eventId,
             oldStatus,
             EventTypes.EventStatus.LIVE
@@ -173,7 +181,7 @@ abstract contract ManagementV1 is
         eventData.isLive = false;
         eventData.updatedAt = block.timestamp;
 
-        emit EventStatusChanged(
+        emit EventEvents.EventStatusChanged(
             eventId,
             oldStatus,
             EventTypes.EventStatus.COMPLETED
@@ -195,7 +203,7 @@ abstract contract ManagementV1 is
         eventData.isLive = false;
         eventData.updatedAt = block.timestamp;
 
-        emit EventStatusChanged(
+        emit EventEvents.EventStatusChanged(
             eventId,
             oldStatus,
             EventTypes.EventStatus.CANCELLED

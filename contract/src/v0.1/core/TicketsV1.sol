@@ -2,9 +2,10 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import "./AttendeesV1.sol";
-
-abstract contract TicketsV1 is ReentrancyGuardUpgradeable, AttendeesV1 {
+import "./StorageV1.sol";
+import "./ModifiersV1.sol";
+import "./Events.sol";
+abstract contract TicketsV1 is ReentrancyGuardUpgradeable, ReventStorage, EventModifiersV1  {
     function __TicketsV1_init() internal onlyInitializing {
         __ReentrancyGuard_init();
     }
@@ -43,7 +44,7 @@ abstract contract TicketsV1 is ReentrancyGuardUpgradeable, AttendeesV1 {
 
         eventTickets[eventId].push(ticketId);
 
-        emit TicketCreated(
+        emit EventEvents.TicketCreated(
             ticketId,
             eventId,
             name,
@@ -76,25 +77,26 @@ abstract contract TicketsV1 is ReentrancyGuardUpgradeable, AttendeesV1 {
         require(msg.value >= totalPrice, "Insufficient payment");
 
         ticket.soldQuantity += quantity;
-        purchasedTicketCounts[ticket.eventId][_msgSender()] += quantity;
+        purchasedTicketCounts[ticket.eventId][msg.sender] += quantity;
 
         // Distribute payment
         uint256 platformFeeAmount = (totalPrice * platformFee) / 10000;
         uint256 creatorAmount = totalPrice - platformFeeAmount;
 
-        address recipient = feeRecipient == address(0) ? owner() : feeRecipient;
+        // address recipient = feeRecipient == address(0) ? owner() : feeRecipient;
+        address recipient = feeRecipient; // TODO: change to owner()
         payable(recipient).transfer(platformFeeAmount);
         payable(events[ticket.eventId].creator).transfer(creatorAmount);
 
         // Refund excess payment
         if (msg.value > totalPrice) {
-            payable(_msgSender()).transfer(msg.value - totalPrice);
+            payable(msg.sender).transfer(msg.value - totalPrice);
         }
 
-        emit TicketPurchased(
+        emit EventEvents.TicketPurchased(
             ticketId,
             ticket.eventId,
-            _msgSender(),
+            msg.sender,
             quantity,
             totalPrice
         );
@@ -115,7 +117,7 @@ abstract contract TicketsV1 is ReentrancyGuardUpgradeable, AttendeesV1 {
             "Invalid ticket ID"
         );
         require(
-            events[tickets[ticketId].eventId].creator == _msgSender(),
+            events[tickets[ticketId].eventId].creator == msg.sender,
             "Not ticket creator"
         );
 
