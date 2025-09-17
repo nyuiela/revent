@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "./StorageV1.sol";
+import {EscrowV1} from "./EscrowV1.sol";
 
-abstract contract EventModifiersV1 is ReventStorage {
+contract EventModifiersV1 is EscrowV1 {
     modifier eventExists(uint256 eventId) {
         require(events[eventId].creator != address(0), "Event does not exist");
         _;
     }
 
-    modifier onlyEventCreator(uint256 eventId) {
-        require(events[eventId].creator == msg.sender, "Not event creator");
-        _;
-    }
+    // onlyEventCreator is inherited from EscrowV1
 
     modifier eventIsActive(uint256 eventId) {
         require(events[eventId].isActive, "Event is not active");

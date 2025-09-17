@@ -4,22 +4,16 @@ pragma solidity ^0.8.19;
 import "./StorageV1.sol";
 import "./ModifiersV1.sol";
 import "../utils/InternalUtilsV1.sol";
-import "./EscrowV1.sol";
 import "./Events.sol";
 
-abstract contract ManagementV1 is
-    EscrowV1,
+contract ManagementV1 is
     // ReventStorage,
     // EventEvents,
     // EventTickets,
     EventModifiersV1,
     EventInternalUtilsV1
 {
-    function _afterEventCreated(uint256 eventId, bool is_vip) internal virtual {
-        if (is_vip) {
-            createEscrow(eventId);
-        }
-    }
+    function _afterEventCreated(uint256 /*eventId*/, bool /*isVIP*/) internal virtual {}
 
     function _generateEventCode(
         uint256 eventId,

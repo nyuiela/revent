@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "../structs/Types.sol";
+import {EventTypes} from "../structs/Types.sol";
 
 library EventEvents {
     event EventCreated(

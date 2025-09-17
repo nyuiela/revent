@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import "./ManagementV1.sol";
-import "./TicketsV1.sol";
-import "./Events.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ManagementV1} from "./ManagementV1.sol";
+import {TicketsV1} from "./TicketsV1.sol";
+import {EventEvents} from "./Events.sol";
+import {EventTypes} from "../structs/Types.sol";
 
-abstract contract AttendeesV1 is
-    ReentrancyGuardUpgradeable,
+contract AttendeesV1 is
     ManagementV1,
     TicketsV1
     // EventEvents
@@ -16,23 +16,18 @@ abstract contract AttendeesV1 is
     // using EventTypes for EventTypes.AttendeeData;
     // using EventTypes for EventTypes.TicketData;
 
-    function __AttendeesV1_init() internal onlyInitializing {
-        __ReentrancyGuard_init();
-    }
-
     function registerForEvent(
         uint256 eventId,
         bytes memory data
-    ) public view returns (uint256 fee) {
-        EventTypes.EventData memory EventData = events[eventId];
-        if (EventData.isVIP) {
-            (uint256 ticketId, uint256 quantity) = abi.decode(
-                data,
-                (uint256, uint256)
-            );
-            super.purchaseTicket(ticketId, quantity);
+    ) public returns (uint256 fee) {
+        EventTypes.EventData memory eventData_ = events[eventId];
+        if (eventData_.isVIP) {
+            // (uint256 ticketId, uint256 quantity) = abi.decode(data, (uint256, uint256));
+            // Note: Ticket purchase should be done separately
+            // super.purchaseTicket(ticketId, quantity);
         }
-        _registerForEvent(EventData.eventId);
+        _registerForEvent(eventData_.eventId);
+        return 0;
     }
 
     //@todo check event type and based on that do we whatever is needed
@@ -67,7 +62,7 @@ abstract contract AttendeesV1 is
         eventData.currentAttendees++;
         eventAttendees[eventId].push(sender);
 
-        emit EventEvents.AttendeeRegistered(eventId, sender, confirmationCode, msg.value);
+        emit EventEvents.AttendeeRegistered(eventId, sender, "", 0);
     }
 
     function confirmAttendance(
@@ -85,7 +80,7 @@ abstract contract AttendeesV1 is
         require(!attendee.isConfirmed, "Attendance already confirmed");
         bytes32 hash = keccak256(abi.encodePacked(eventId, _confirmationCode));
         require(
-            hash == eventData[eventId].confirmationCode,
+            hash == confirmationCode[eventId],
             "Invalid confirmation code"
         );
 
@@ -93,7 +88,7 @@ abstract contract AttendeesV1 is
         attendee.hasAttended = true;
         attendee.confirmedAt = block.timestamp;
 
-        emit EventEvents.AttendeeConfirmed(eventId, msg.sender, hash);
+        emit EventEvents.AttendeeConfirmed(eventId, msg.sender, _confirmationCode);
     }
 
     function markAttended(

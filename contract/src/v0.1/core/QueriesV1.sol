@@ -2,11 +2,12 @@
 pragma solidity ^0.8.19;
 
 // import "./TicketsV1.sol";
-import "./StorageV1.sol";
-import "./Events.sol";
-import "./ModifiersV1.sol";
+import {EventModifiersV1} from "./ModifiersV1.sol";
+import {EventEvents} from "./Events.sol";
+import {EventTypes} from "../structs/Types.sol";
+import {Counters} from "../utils/counter.sol";
 
-abstract contract QueriesV1 is ReventStorage, EventModifiersV1 {
+contract QueriesV1 is EventModifiersV1 {
     function getEvent(uint256 eventId) external view returns (EventTypes.EventData memory) {
         require(events[eventId].eventId != 0, "Event does not exist");
         return events[eventId];
@@ -85,11 +86,11 @@ abstract contract QueriesV1 is ReventStorage, EventModifiersV1 {
     }
 
     // Ticket queries
-    function getEventTickets(uint256 eventId) external view eventExists(eventId) returns (uint256[] memory) {
+    function getEventTickets(uint256 eventId) external view virtual eventExists(eventId) returns (uint256[] memory) {
         return eventTickets[eventId];
     }
 
-    function getTicket(uint256 ticketId) external view returns (EventTypes.TicketData memory) {
+    function getTicket(uint256 ticketId) external view virtual returns (EventTypes.TicketData memory) {
         return tickets[ticketId];
     }
 

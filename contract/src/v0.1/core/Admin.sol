@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
-import "./StorageV1.sol";
-import "./Events.sol";
+import {ReventStorage} from "./StorageV1.sol";
+import {EventEvents} from "./Events.sol";
 
-abstract contract Admin is ReventStorage, OwnableUpgradeable, ERC2771ContextUpgradeable {
+contract Admin is ReventStorage {
 
     function emergencyWithdraw() external onlyOwner {
         address recipient = feeRecipient == address(0) ? owner() : feeRecipient;
@@ -44,30 +42,20 @@ abstract contract Admin is ReventStorage, OwnableUpgradeable, ERC2771ContextUpgr
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override
         returns (address)
     {
-        return ERC2771ContextUpgradeable._msgSender();
+        return msg.sender;
     }
 
     function _msgData()
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override
         returns (bytes calldata)
     {
-        return ERC2771ContextUpgradeable._msgData();
-    }
-
-    function _contextSuffixLength()
-        internal
-        view
-        virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (uint256)
-    {
-        return ERC2771ContextUpgradeable._contextSuffixLength();
+        return msg.data;
     }
 
     function isTrustedForwarder(
@@ -77,9 +65,8 @@ abstract contract Admin is ReventStorage, OwnableUpgradeable, ERC2771ContextUpgr
     }
 
     function setTrustedForwarder(address forwarder) external onlyOwner {
-        address oldForwarder = trustedForwarderAddr;
         trustedForwarderAddr = forwarder;
-        emit EventEvents.TrustedForwarderUpdated(oldForwarder, forwarder);
+        // emit EventEvents.TrustedForwarderUpdated(oldForwarder, forwarder);
     }
 
     function setPlatformFee(uint256 newFee) external onlyOwner {
@@ -90,9 +77,8 @@ abstract contract Admin is ReventStorage, OwnableUpgradeable, ERC2771ContextUpgr
     }
 
     function setFeeRecipient(address newRecipient) external onlyOwner {
-        address oldRecipient = feeRecipient;
         feeRecipient = newRecipient;
-        emit EventEvents.FeeRecipientUpdated(oldRecipient, newRecipient);
+        // emit EventEvents.FeeRecipientUpdated(oldRecipient, newRecipient);
     }
 
     function setRegistrationFeeLimits(

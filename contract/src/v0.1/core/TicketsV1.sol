@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import "./StorageV1.sol";
-import "./ModifiersV1.sol";
-import "./Events.sol";
-abstract contract TicketsV1 is ReentrancyGuardUpgradeable, ReventStorage, EventModifiersV1  {
-    function __TicketsV1_init() internal onlyInitializing {
-        __ReentrancyGuard_init();
-    }
+import {EventModifiersV1} from "./ModifiersV1.sol";
+import {EventEvents} from "./Events.sol";
+import {EventTypes} from "../structs/Types.sol";
+import {Counters} from "../utils/counter.sol";
+contract TicketsV1 is EventModifiersV1  {
+    function __TicketsV1_init() internal onlyInitializing {}
 
     function createTicket(
         uint256 eventId,
@@ -44,15 +42,20 @@ abstract contract TicketsV1 is ReentrancyGuardUpgradeable, ReventStorage, EventM
 
         eventTickets[eventId].push(ticketId);
 
-        emit EventEvents.TicketCreated(
-            ticketId,
+        // If this is a paid ticket and event is VIP, create escrow
+        if (price > 0 && events[eventId].isVIP) {
+            uint256 expectedAmount = price * totalQuantity;
+            this.createEscrow(eventId, expectedAmount);
+        }
+
+        emit EventEvents.TicketAdded(
             eventId,
+            ticketId,
             name,
             ticketType,
             price,
             currency,
-            totalQuantity,
-            perks
+            totalQuantity
         );
     }
 
@@ -79,14 +82,23 @@ abstract contract TicketsV1 is ReentrancyGuardUpgradeable, ReventStorage, EventM
         ticket.soldQuantity += quantity;
         purchasedTicketCounts[ticket.eventId][msg.sender] += quantity;
 
-        // Distribute payment
-        uint256 platformFeeAmount = (totalPrice * platformFee) / 10000;
-        uint256 creatorAmount = totalPrice - platformFeeAmount;
+        // Handle payment based on ticket type
+        if (ticket.price > 0) {
+            // Paid ticket - use escrow system
+            if (events[ticket.eventId].isVIP) {
+                // Deposit into escrow for VIP events
+                this.depositFunds{value: totalPrice}(ticket.eventId);
+            } else {
+                // Direct payment for non-VIP events
+                uint256 platformFeeAmount = (totalPrice * platformFee) / 10000;
+                uint256 creatorAmount = totalPrice - platformFeeAmount;
 
-        // address recipient = feeRecipient == address(0) ? owner() : feeRecipient;
-        address recipient = feeRecipient; // TODO: change to owner()
-        payable(recipient).transfer(platformFeeAmount);
-        payable(events[ticket.eventId].creator).transfer(creatorAmount);
+                address recipient = feeRecipient == address(0) ? owner() : feeRecipient;
+                payable(recipient).transfer(platformFeeAmount);
+                payable(events[ticket.eventId].creator).transfer(creatorAmount);
+            }
+        }
+        // Free tickets (price = 0) don't require payment handling
 
         // Refund excess payment
         if (msg.value > totalPrice) {
@@ -94,10 +106,9 @@ abstract contract TicketsV1 is ReentrancyGuardUpgradeable, ReventStorage, EventM
         }
 
         emit EventEvents.TicketPurchased(
-            ticketId,
             ticket.eventId,
+            ticketId,
             msg.sender,
-            quantity,
             totalPrice
         );
     }
@@ -139,13 +150,13 @@ abstract contract TicketsV1 is ReentrancyGuardUpgradeable, ReventStorage, EventM
 
     function getEventTickets(
         uint256 eventId
-    ) external view returns (uint256[] memory) {
+    ) external view virtual returns (uint256[] memory) {
         return eventTickets[eventId];
     }
 
     function getTicket(
         uint256 ticketId
-    ) external view returns (EventTypes.TicketData memory) {
+    ) external view virtual returns (EventTypes.TicketData memory) {
         require(
             ticketId > 0 && ticketId <= Counters.current(_ticketIds),
             "Invalid ticket ID"
