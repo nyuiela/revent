@@ -41,7 +41,7 @@ library EventTypes {
     struct AttendeeData {
         address attendeeAddress;
         uint256 eventId;
-        string confirmationCode; //@TODO remove
+        string confirmationCode;
         bool isConfirmed;
         bool hasAttended;
         uint256 registeredAt;

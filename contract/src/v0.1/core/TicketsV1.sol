@@ -43,9 +43,9 @@ contract TicketsV1 is EventModifiersV1  {
         eventTickets[eventId].push(ticketId);
 
         // If this is a paid ticket and event is VIP, create escrow
-        if (price > 0 && events[eventId].isVIP) {
+        if (price > 0 && events[eventId].isVIP && escrows[eventId].createdAt == 0) {
             uint256 expectedAmount = price * totalQuantity;
-            this.createEscrow(eventId, expectedAmount);
+            createEscrow(eventId, expectedAmount);
         }
 
         emit EventEvents.TicketAdded(
@@ -87,7 +87,7 @@ contract TicketsV1 is EventModifiersV1  {
             // Paid ticket - use escrow system
             if (events[ticket.eventId].isVIP) {
                 // Deposit into escrow for VIP events
-                this.depositFunds{value: totalPrice}(ticket.eventId);
+                depositFundsWithAmount(ticket.eventId, totalPrice);
             } else {
                 // Direct payment for non-VIP events
                 uint256 platformFeeAmount = (totalPrice * platformFee) / 10000;

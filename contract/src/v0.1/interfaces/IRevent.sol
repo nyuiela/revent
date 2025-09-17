@@ -20,6 +20,7 @@ interface IRevent {
         string memory code
     ) external returns (uint256);
 
+
     function updateEvent(
         uint256 eventId,
         string memory ipfsHash,

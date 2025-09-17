@@ -21,16 +21,15 @@ contract AttendeesV1 is
         bytes memory data
     ) public returns (uint256 fee) {
         EventTypes.EventData memory eventData_ = events[eventId];
-        if (eventData_.isVIP) {
-            // (uint256 ticketId, uint256 quantity) = abi.decode(data, (uint256, uint256));
-            // Note: Ticket purchase should be done separately
-            // super.purchaseTicket(ticketId, quantity);
+        if (eventData_.isVIP && data.length > 0) {
+            (uint256 ticketId, uint256 quantity) = abi.decode(data, (uint256, uint256));
+            // For VIP events with paid tickets, trigger purchase which deposits into escrow
+            this.purchaseTicket{value: tickets[ticketId].price * quantity}(ticketId, quantity);
         }
         _registerForEvent(eventData_.eventId);
         return 0;
     }
 
-    //@todo check event type and based on that do we whatever is needed
     function _registerForEvent(
         uint256 eventId
     )

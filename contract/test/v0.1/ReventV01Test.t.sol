@@ -250,7 +250,7 @@ contract ReventV01Test is Test {
         vm.warp(block.timestamp + 1 days + 1);
 
         // Release funds
-        revent.releaseFunds(eventId);
+        revent.releaseEscrowFunds(eventId);
 
         // Verify funds were released
         EscrowV1.EscrowData memory escrowDataAfter = revent.getEscrowData(eventId);
@@ -294,8 +294,8 @@ contract ReventV01Test is Test {
         // Cancel event
         revent.cancelEvent(eventId);
 
-        // Refund funds
-        revent.refundFunds(eventId);
+        // Refund funds (triggered automatically by cancelEvent)
+        // revent.refundFunds(eventId); // This is now internal and called by cancelEvent
 
         // Verify refunds
         EscrowV1.EscrowData memory escrowDataRefund = revent.getEscrowData(eventId);

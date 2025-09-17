@@ -146,7 +146,7 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
      * @param expectedAmount Expected total amount to be deposited
      */
     function createEscrow(uint256 eventId, uint256 expectedAmount) 
-        external 
+        internal 
         onlyEventCreator(eventId)
         validAmount(expectedAmount)
         nonReentrant
@@ -180,14 +180,26 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
      * @param eventId The event ID
      */
     function depositFunds(uint256 eventId) 
-        external 
-        payable 
+        internal 
         escrowExists(eventId)
         escrowNotLocked(eventId)
         escrowNotReleased(eventId)
         escrowNotRefunded(eventId)
         notDisputed(eventId)
-        validAmount(msg.value)
+        nonReentrant
+        whenNotPaused
+    {
+        depositFundsWithAmount(eventId, msg.value);
+    }
+
+    function depositFundsWithAmount(uint256 eventId, uint256 amount) 
+        internal 
+        escrowExists(eventId)
+        escrowNotLocked(eventId)
+        escrowNotReleased(eventId)
+        escrowNotRefunded(eventId)
+        notDisputed(eventId)
+        validAmount(amount)
         nonReentrant
         whenNotPaused
     {
@@ -209,25 +221,25 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
         // Track individual deposit
         eventDeposits[eventId].push(Deposit({
             depositor: _msgSender(),
-            amount: msg.value,
+            amount: amount,
             timestamp: block.timestamp,
             isRefunded: false
         }));
 
         // Update user's total deposits
-        userDeposits[eventId][_msgSender()] += msg.value;
+        userDeposits[eventId][_msgSender()] += amount;
         
         // Update escrow totals
-        escrow.depositedAmount += msg.value;
+        escrow.depositedAmount += amount;
         escrow.updatedAt = block.timestamp;
-        totalEscrowedAmount[eventId] += msg.value;
+        totalEscrowedAmount[eventId] += amount;
 
         // Check if escrow is fully funded
         if (escrow.depositedAmount >= escrow.totalAmount) {
             escrow.isFunded = true;
         }
 
-        emit FundsDeposited(eventId, _msgSender(), msg.value);
+        emit FundsDeposited(eventId, _msgSender(), amount);
     }
 
     /**
@@ -235,7 +247,7 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
      * @param eventId The event ID
      */
     function releaseFunds(uint256 eventId) 
-        external 
+        internal 
         escrowExists(eventId)
         onlyEventCreator(eventId)
         afterReleaseDelay(eventId)
@@ -269,7 +281,7 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
      * @param eventId The event ID
      */
     function refundFunds(uint256 eventId) 
-        external 
+        internal 
         escrowExists(eventId)
         onlyEventCreator(eventId)
         escrowNotLocked(eventId)
@@ -295,7 +307,7 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
                 deposits[i].isRefunded = true;
                 payable(deposits[i].depositor).transfer(deposits[i].amount);
                 emit FundsRefunded(eventId, deposits[i].depositor, deposits[i].amount);
-            }
+            }//@todo dont use array metjod its bad, pull not push
         }
     }
 
@@ -318,6 +330,7 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
         require(!escrows[eventId].isDisputed, "Dispute already exists");
 
         escrows[eventId].isDisputed = true;
+        escrows[eventId].isLocked = true;
         escrows[eventId].updatedAt = block.timestamp;
 
         disputes[eventId] = Dispute({
@@ -371,7 +384,22 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
             emit FundsReleased(eventId, escrows[eventId].creator, escrows[eventId].depositedAmount);
         }
 
+        // Unlock after resolution
+        escrows[eventId].isLocked = false;
         emit EscrowResolved(eventId, _msgSender(), refund);
+    }
+
+    /**
+     * @dev Public function to release funds after event completion
+     * @param eventId The event ID
+     */
+    function releaseEscrowFunds(uint256 eventId) 
+        external 
+        onlyEventCreator(eventId)
+        nonReentrant
+        whenNotPaused
+    {
+        releaseFunds(eventId);
     }
 
     /**

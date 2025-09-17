@@ -73,7 +73,10 @@ contract ManagementV1 is
         );
 
         return eventId;
+        // Note: Escrow will be created when first paid ticket (price > 0) is added
+        // This happens in TicketsV1.createTicket() for VIP events
     }
+
 
     function updateEvent(
         uint256 eventId,
@@ -138,6 +141,7 @@ contract ManagementV1 is
         );
     }
 
+
     function startLiveEvent(uint256 eventId) public eventExists(eventId) {
         EventTypes.EventData storage eventData = events[eventId];
         require(
@@ -161,6 +165,7 @@ contract ManagementV1 is
         );
     }
 
+    // Escrow release/refund is handled by EscrowV1: cancelEvent() triggers refunds; creator calls releaseFunds() after completion and delay.
     function endEvent(
         uint256 eventId
     ) external eventExists(eventId) onlyEventCreator(eventId) {
@@ -202,6 +207,12 @@ contract ManagementV1 is
             oldStatus,
             EventTypes.EventStatus.CANCELLED
         );
+
+        // If there was an escrow for this VIP event with paid tickets, trigger refunds
+        // Safe to call even if no escrow exists due to modifier checks in EscrowV1
+        if (escrows[eventId].createdAt != 0) {
+            refundFunds(eventId);
+        }
     }
 }
 
