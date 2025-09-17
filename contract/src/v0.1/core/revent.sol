@@ -29,7 +29,7 @@ contract Revent is
     Admin
 {
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() ERC2771ContextUpgradeable(address(0)) {
+    constructor() {
         _disableInitializers();
     }
 
@@ -38,8 +38,8 @@ contract Revent is
         address feeRecipient_,
         uint256 platformFee_
     ) public initializer {
-        // __ReventStorage_init();
         __StorageV1_init();
+        __TicketsV1_init();
 
         _transferOwnership(msg.sender);
         trustedForwarderAddr = trustedForwarder;
@@ -49,12 +49,9 @@ contract Revent is
 
     function _authorizeUpgrade(
         address newImplementation
-    ) internal override(ReventStorage, UUPSUpgradeable) onlyOwner {}
+    ) internal override(ReventStorage, UUPSUpgradeable, Admin) onlyOwner {}
 
-    // V1 specific functions
-    function pause() external onlyOwner {}
-
-    function unpause() external onlyOwner {}
+    // V1 uses pause/unpause from EscrowV1 (via inheritance)
 
     // Version information
     function version() external pure returns (string memory) {
@@ -63,5 +60,30 @@ contract Revent is
 
     function getImplementation() external view returns (address) {
         return ERC1967Utils.getImplementation();
+    }
+
+    // Override conflicting functions
+    function _msgSender() internal view override(ReventStorage, Admin, EscrowV1) returns (address) {
+        return ReventStorage._msgSender();
+    }
+
+    function _msgData() internal view override(ReventStorage, Admin, EscrowV1) returns (bytes calldata) {
+        return ReventStorage._msgData();
+    }
+
+    function isTrustedForwarder(address forwarder) public view override(ReventStorage, Admin) returns (bool) {
+        return ReventStorage.isTrustedForwarder(forwarder);
+    }
+
+    function getEventTickets(uint256 eventId) external view override(QueriesV1, TicketsV1) returns (uint256[] memory) {
+        return eventTickets[eventId];
+    }
+
+    function getTicket(uint256 ticketId) external view override(QueriesV1, TicketsV1) returns (EventTypes.TicketData memory) {
+        require(
+            ticketId > 0 && ticketId <= Counters.current(_ticketIds),
+            "Invalid ticket ID"
+        );
+        return tickets[ticketId];
     }
 }
