@@ -2,9 +2,10 @@
 pragma solidity ^0.8.19;
 
 // import "./TicketsV1.sol";
-import "./ModifiersV1.sol";
-import "./Events.sol";
-import "./ModifiersV1.sol";
+import {EventModifiersV1} from "./ModifiersV1.sol";
+import {EventEvents} from "./Events.sol";
+import {EventTypes} from "../structs/Types.sol";
+import {Counters} from "../utils/counter.sol";
 
 contract QueriesV1 is EventModifiersV1 {
     function getEvent(uint256 eventId) external view returns (EventTypes.EventData memory) {

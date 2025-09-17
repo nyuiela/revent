@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
-import "../../src/v0.1/core/revent.sol";
-import "../../src/v0.1/ReventProxy.sol";
-import "../../src/v0.1/core/EscrowV1.sol";
+import {Test} from "forge-std/Test.sol";
+import {console} from "forge-std/console.sol";
+import {Revent} from "../../src/v0.1/core/revent.sol";
+import {ReventProxy} from "../../src/v0.1/ReventProxy.sol";
+import {EscrowV1} from "../../src/v0.1/core/EscrowV1.sol";
+import {EventTypes} from "../../src/v0.1/structs/Types.sol";
 
 /**
  * @title ReventV01Test

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "./EscrowV1.sol";
+import {EscrowV1} from "./EscrowV1.sol";
 
 contract EventModifiersV1 is EscrowV1 {
     modifier eventExists(uint256 eventId) {

@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "./ModifiersV1.sol";
-import "./Events.sol";
+import {EventModifiersV1} from "./ModifiersV1.sol";
+import {EventEvents} from "./Events.sol";
+import {EventTypes} from "../structs/Types.sol";
+import {Counters} from "../utils/counter.sol";
 contract TicketsV1 is EventModifiersV1  {
     function __TicketsV1_init() internal onlyInitializing {}
 

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "forge-std/Script.sol";
-import "forge-std/console.sol";
-import "../../src/v0.1/core/revent.sol";
-import "../../src/v0.1/ReventProxy.sol";
+import {Script} from "forge-std/Script.sol";
+import {console} from "forge-std/console.sol";
+import {Revent} from "../../src/v0.1/core/revent.sol";
+import {ReventProxy} from "../../src/v0.1/ReventProxy.sol";
 
 /**
  * @title DeployReventV01

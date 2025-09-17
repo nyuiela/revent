@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
-import "./QueriesV1.sol";
-import "./AttendeesV1.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {ERC1967Utils} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
+import {QueriesV1} from "./QueriesV1.sol";
+import {AttendeesV1} from "./AttendeesV1.sol";
 // import "./EventQueries.sol";
-import "./Admin.sol";
-import "./StorageV1.sol";
+import {Admin} from "./Admin.sol";
+import {ReventStorage} from "./StorageV1.sol";
+import {ManagementV1} from "./ManagementV1.sol";
+import {TicketsV1} from "./TicketsV1.sol";
+import {EscrowV1} from "./EscrowV1.sol";
+import {EventTypes} from "../structs/Types.sol";
+import {Counters} from "../utils/counter.sol";
 
 // import "./EventTickets.sol";
 

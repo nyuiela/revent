@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import "./ManagementV1.sol";
-import "./TicketsV1.sol";
-import "./Events.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ManagementV1} from "./ManagementV1.sol";
+import {TicketsV1} from "./TicketsV1.sol";
+import {EventEvents} from "./Events.sol";
+import {EventTypes} from "../structs/Types.sol";
 
 contract AttendeesV1 is
     ManagementV1,
@@ -19,16 +20,13 @@ contract AttendeesV1 is
         uint256 eventId,
         bytes memory data
     ) public returns (uint256 fee) {
-        EventTypes.EventData memory EventData = events[eventId];
-        if (EventData.isVIP) {
-            (uint256 ticketId, uint256 quantity) = abi.decode(
-                data,
-                (uint256, uint256)
-            );
+        EventTypes.EventData memory eventData_ = events[eventId];
+        if (eventData_.isVIP) {
+            // (uint256 ticketId, uint256 quantity) = abi.decode(data, (uint256, uint256));
             // Note: Ticket purchase should be done separately
             // super.purchaseTicket(ticketId, quantity);
         }
-        _registerForEvent(EventData.eventId);
+        _registerForEvent(eventData_.eventId);
         return 0;
     }
 

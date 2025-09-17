@@ -13,12 +13,7 @@ contract ManagementV1 is
     EventModifiersV1,
     EventInternalUtilsV1
 {
-    function _afterEventCreated(uint256 eventId, bool is_vip) internal virtual {
-        if (is_vip) {
-            // Escrow will be created when tickets are added with price > 0
-            // This allows for more flexible escrow management
-        }
-    }
+    function _afterEventCreated(uint256 /*eventId*/, bool /*isVIP*/) internal virtual {}
 
     function _generateEventCode(
         uint256 eventId,

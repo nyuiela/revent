@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "./StorageV1.sol";
-import "./Events.sol";
+import {ReventStorage} from "./StorageV1.sol";
+import {EventEvents} from "./Events.sol";
 
 contract Admin is ReventStorage {
 
