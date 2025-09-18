@@ -6,6 +6,7 @@ import "./Management.sol";
 import "./Events.sol";
 import "./Types.sol";
 
+// we need to introduce napsp for this
 abstract contract EventAttendees is ReentrancyGuard, EventManagement {
 	function _owner() internal view virtual returns (address);
 	function registerForEvent(uint256 eventId)
@@ -23,7 +24,7 @@ abstract contract EventAttendees is ReentrancyGuard, EventManagement {
 			"Event is not open for registration"
 		);
 		if (eventData.status == EventTypes.EventStatus.LIVE) {
-			startLiveEvent(eventId);
+			  startLiveEvent(eventId);
 		}
 		require(msg.value == eventData.registrationFee, "Incorrect registration fee");
 
