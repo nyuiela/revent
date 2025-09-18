@@ -41,7 +41,6 @@ library EventTypes {
     struct AttendeeData {
         address attendeeAddress;
         uint256 eventId;
-        string confirmationCode;
         bool isConfirmed;
         bool hasAttended;
         uint256 registeredAt;
@@ -137,4 +136,67 @@ library EventTypes {
         bool approved;
         uint256 timestamp;
     }
+        event EventCreated(
+        uint256 indexed eventId,
+        address indexed creator,
+        string ipfsHash,
+        uint256 startTime,
+        uint256 endTime,
+        uint256 maxAttendees,
+        uint256 registrationFee
+    );
+
+    event EventUpdated(
+        uint256 indexed eventId,
+        address indexed creator,
+        string ipfsHash,
+        uint256 startTime,
+        uint256 endTime,
+        uint256 maxAttendees,
+        uint256 registrationFee
+    );
+
+    event EventStatusChanged(
+        uint256 indexed eventId,
+        EventTypes.EventStatus oldStatus,
+        EventTypes.EventStatus newStatus
+    );
+
+    event AttendeeRegistered(
+        uint256 indexed eventId,
+        address indexed attendee,
+        string confirmationCode,
+        uint256 registrationFee
+    );
+
+    event AttendeeConfirmed(
+        uint256 indexed eventId,
+        address indexed attendee,
+        string confirmationCode
+    );
+
+    event AttendeeAttended(uint256 indexed eventId, address indexed attendee);
+
+    event TicketCreated(
+        uint256 indexed ticketId,
+        uint256 indexed eventId,
+        string name,
+        string ticketType,
+        uint256 price,
+        string currency,
+        uint256 totalQuantity,
+        string[] perks
+    );
+
+    event TicketPurchased(
+        uint256 indexed ticketId,
+        uint256 indexed eventId,
+        address indexed buyer,
+        uint256 quantity,
+        uint256 totalPrice
+    );
+
+    event PlatformFeeUpdated(uint256 oldFee, uint256 newFee);
+    event FeeRecipientUpdated(address oldRecipient, address newRecipient);
+    event TrustedForwarderUpdated(address oldForwarder, address newForwarder);
 }

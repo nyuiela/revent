@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
-
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {ContextUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "../utils/counter.sol";
-import "./Types.sol";
+import {EventTypes} from "../structs/Types.sol";
 
-abstract contract EventStorage {
+contract ReventStorage is
+    UUPSUpgradeable,
+    OwnableUpgradeable {
     using Counters for Counters.Counter;
     using EventTypes for EventTypes.EventData;
 
@@ -27,7 +31,7 @@ abstract contract EventStorage {
         public purchasedTicketCounts; // eventId => buyer => count
 
     uint256 public platformFee = 250; // basis points
-    uint256 public minRegistrationFee = 0.000 ether;
+    uint256 public minRegistrationFee = 0.001 ether;
     uint256 public maxRegistrationFee = 1 ether;
     address public feeRecipient;
     address public trustedForwarderAddr;
@@ -107,4 +111,27 @@ abstract contract EventStorage {
     mapping(uint256 => uint256) public eventSellVolume; // eventId => sell volume (24h)
     mapping(uint256 => uint256) public eventLastTradingUpdate; // eventId => last trading volume reset
     mapping(uint256 => uint256) public eventPriceMomentum; // eventId => price momentum factor (basis points)
+
+
+    function __StorageV1_init() internal onlyInitializing {
+        __UUPSUpgradeable_init();
+        __Ownable_init(msg.sender);
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner {}
+
+    function _msgSender() internal view virtual override(ContextUpgradeable) returns (address) {
+        return msg.sender;
+    }
+
+    function _msgData() internal view virtual override(ContextUpgradeable) returns (bytes calldata) {
+        return msg.data;
+    }
+
+    function isTrustedForwarder(address forwarder) public view virtual returns (bool) {
+        return forwarder == trustedForwarderAddr && forwarder != address(0);
+    }
+
+    // Escrow logic is implemented in `EscrowV1.sol`.
 }
+

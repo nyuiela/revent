@@ -1,5 +1,5 @@
 [profile.default]
-src = "src"
+src = "src/v0.1"
 out = "out"
 libs = ["lib"]
 optimizer = true

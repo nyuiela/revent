@@ -1,0 +1,175 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+import "forge-std/Test.sol";
+import "../src/v1/StreamEventsV1.sol";
+import "../src/v2/StreamEventsV2.sol";
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+
+contract UpgradeableTest is Test {
+    StreamEventsV1 public v1;
+    StreamEventsV2 public v2;
+    ERC1967Proxy public proxy;
+    
+    address public owner = address(0x1);
+    address public user = address(0x2);
+    address public trustedForwarder = address(0x3);
+    address public feeRecipient = address(0x4);
+    
+    function setUp() public {
+        // Deploy V1 implementation
+        StreamEventsV1 v1Impl = new StreamEventsV1();
+        
+        // Deploy proxy with V1
+        bytes memory initData = abi.encodeWithSelector(
+            StreamEventsV1.initialize.selector,
+            owner,
+            trustedForwarder,
+            feeRecipient,
+            250 // 2.5%
+        );
+        
+        proxy = new ERC1967Proxy(address(v1Impl), initData);
+        v1 = StreamEventsV1(address(proxy));
+    }
+    
+    function testV1Initialization() public {
+        assertEq(v1.owner(), owner);
+        assertEq(v1.getPlatformFee(), 250);
+        assertEq(v1.version(), "1.0.0");
+    }
+    
+    function testV1BasicFunctionality() public {
+        vm.startPrank(owner);
+        
+        // Create an event
+        uint256 eventId = v1.createEvent(
+            "QmTestHash",
+            block.timestamp + 1 days,
+            block.timestamp + 2 days,
+            100,
+            0.01 ether
+        );
+        
+        assertEq(eventId, 1);
+        assertEq(v1.getEventCount(), 1);
+        
+        // Publish event
+        v1.publishEvent(eventId);
+        assertEq(uint256(v1.getEventStatus(eventId)), uint256(EventTypes.EventStatus.PUBLISHED));
+        
+        vm.stopPrank();
+    }
+    
+    function testUpgradeToV2() public {
+        // Deploy V2 implementation
+        StreamEventsV2 v2Impl = new StreamEventsV2();
+        
+        // Upgrade proxy to V2
+        vm.startPrank(owner);
+        v1.upgradeToAndCall(address(v2Impl), "");
+        vm.stopPrank();
+        
+        // Cast proxy to V2
+        v2 = StreamEventsV2(address(proxy));
+        
+        // Verify upgrade
+        assertEq(v2.owner(), owner);
+        assertEq(v2.getPlatformFee(), 250);
+        assertEq(v2.version(), "2.0.0");
+    }
+    
+    function testV2AdditionalFeatures() public {
+        // First upgrade to V2
+        testUpgradeToV2();
+        
+        vm.startPrank(owner);
+        
+        // Test Doma configuration
+        v2.setDomaConfig(
+            address(0x5), // domaProxy
+            address(0x6), // ownershipToken
+            123, // registrarIanaId
+            "eip155:1" // domaChainId
+        );
+        
+        assertEq(v2.domaProxy(), address(0x5));
+        assertEq(v2.ownershipToken(), address(0x6));
+        assertEq(v2.registrarIanaId(), 123);
+        assertEq(v2.domaChainId(), "eip155:1");
+        
+        // Test marketplace configuration
+        v2.setMarketplaceConfig(
+            address(0x7), // USDC
+            address(0x8), // WETH
+            address(0x9), // protocol fee receiver
+            50 // 0.5%
+        );
+        
+        assertEq(v2.marketplaceUSDC(), address(0x7));
+        assertEq(v2.marketplaceWETH(), address(0x8));
+        assertEq(v2.marketplaceProtocolFeeReceiver(), address(0x9));
+        assertEq(v2.marketplaceProtocolFeeBps(), 50);
+        
+        vm.stopPrank();
+    }
+    
+    function testStatePreservationAfterUpgrade() public {
+        vm.startPrank(owner);
+        
+        // Create events in V1
+        uint256 eventId1 = v1.createEvent(
+            "QmTestHash1",
+            block.timestamp + 1 days,
+            block.timestamp + 2 days,
+            100,
+            0.01 ether
+        );
+        
+        uint256 eventId2 = v1.createEvent(
+            "QmTestHash2",
+            block.timestamp + 3 days,
+            block.timestamp + 4 days,
+            200,
+            0.02 ether
+        );
+        
+        // Publish events
+        v1.publishEvent(eventId1);
+        v1.publishEvent(eventId2);
+        
+        vm.stopPrank();
+        
+        // Upgrade to V2
+        testUpgradeToV2();
+        
+        // Verify state is preserved
+        assertEq(v2.getEventCount(), 2);
+        assertEq(v2.getEventStatus(eventId1), EventTypes.EventStatus.PUBLISHED);
+        assertEq(v2.getEventStatus(eventId2), EventTypes.EventStatus.PUBLISHED);
+        
+        // Verify event data is preserved
+        EventTypes.EventData memory event1 = v2.getEvent(eventId1);
+        assertEq(event1.eventId, eventId1);
+        assertEq(event1.creator, owner);
+        assertEq(event1.maxAttendees, 100);
+        assertEq(event1.registrationFee, 0.01 ether);
+        
+        EventTypes.EventData memory event2 = v2.getEvent(eventId2);
+        assertEq(event2.eventId, eventId2);
+        assertEq(event2.creator, owner);
+        assertEq(event2.maxAttendees, 200);
+        assertEq(event2.registrationFee, 0.02 ether);
+    }
+    
+    function testOnlyOwnerCanUpgrade() public {
+        // Deploy V2 implementation
+        StreamEventsV2 v2Impl = new StreamEventsV2();
+        
+        // Try to upgrade as non-owner
+        vm.startPrank(user);
+        vm.expectRevert();
+        v1.upgradeToAndCall(address(v2Impl), "");
+        vm.stopPrank();
+    }
+}
