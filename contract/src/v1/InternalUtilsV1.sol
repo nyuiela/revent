@@ -1,21 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-abstract contract EventInternalUtils {
-    function uint2str(uint256 _i) internal pure virtual returns (string memory) {
+import "./ModifiersV1.sol";
+
+abstract contract EventInternalUtilsV1 is EventModifiersV1 {
+    function uint2str(uint256 _i) internal pure returns (string memory) {
         if (_i == 0) {
             return "0";
         }
         uint256 j = _i;
-        uint256 length;
+        uint256 len;
         while (j != 0) {
-            length++;
+            len++;
             j /= 10;
         }
-        bytes memory bstr = new bytes(length);
-        uint256 k = length;
+        bytes memory bstr = new bytes(len);
+        uint256 k = len;
         while (_i != 0) {
-            k -= 1;
+            k = k - 1;
             uint8 temp = (48 + uint8(_i - _i / 10 * 10));
             bytes1 b1 = bytes1(temp);
             bstr[k] = b1;
@@ -36,5 +38,3 @@ abstract contract EventInternalUtils {
         return string(bytesArray);
     }
 }
-
-

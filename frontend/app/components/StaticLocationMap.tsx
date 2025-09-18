@@ -67,3 +67,4 @@ const StaticLocationMap: React.FC<Props> = ({ lat, lng, heightClass = "h-64", zo
 export default StaticLocationMap;
 
 
+
