@@ -18,7 +18,11 @@ contract QueriesV1 is EventModifiersV1 {
         return eventAttendees[eventId];
     }
 
-    function getAttendeeData(uint256 eventId, address attendee) external view returns (EventTypes.AttendeeData memory) {
+    function getAttendeeData(uint256 eventId, address attendee)
+        external
+        view
+        returns (EventTypes.AttendeeData memory)
+    {
         require(events[eventId].eventId != 0, "Event does not exist");
         return attendees[eventId][attendee];
     }
@@ -72,8 +76,11 @@ contract QueriesV1 is EventModifiersV1 {
         return trustedForwarderAddr;
     }
 
-
-    function getAttendee(uint256 eventId, address attendeeAddress) external view returns (EventTypes.AttendeeData memory) {
+    function getAttendee(uint256 eventId, address attendeeAddress)
+        external
+        view
+        returns (EventTypes.AttendeeData memory)
+    {
         return attendees[eventId][attendeeAddress];
     }
 
@@ -93,6 +100,4 @@ contract QueriesV1 is EventModifiersV1 {
     function getTicket(uint256 ticketId) external view virtual returns (EventTypes.TicketData memory) {
         return tickets[ticketId];
     }
-
 }
- 

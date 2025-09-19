@@ -15,12 +15,12 @@ import {EventTypes} from "../../src/v0.1/structs/Types.sol";
 contract ReventV01Test is Test {
     Revent public revent;
     ReventProxy public proxy;
-    
+
     address public owner;
     address public user1;
     address public user2;
     address public feeRecipient;
-    
+
     uint256 public constant PLATFORM_FEE = 250; // 2.5%
     uint256 public constant MIN_REGISTRATION_FEE = 0.001 ether;
     uint256 public constant MAX_REGISTRATION_FEE = 1 ether;
@@ -59,10 +59,7 @@ contract ReventV01Test is Test {
         );
 
         // Deploy proxy
-        proxy = new ReventProxy(
-            address(implementation),
-            initData
-        );
+        proxy = new ReventProxy(address(implementation), initData);
 
         revent = Revent(payable(address(proxy)));
 
@@ -89,20 +86,13 @@ contract ReventV01Test is Test {
         vm.expectEmit(true, true, false, true);
         emit EventCreated(1, owner, ipfsHash, startTime, endTime, maxAttendees, 0);
 
-        uint256 eventId = revent.createEvent(
-            ipfsHash,
-            startTime,
-            endTime,
-            maxAttendees,
-            isVIP,
-            code
-        );
+        uint256 eventId = revent.createEvent(ipfsHash, startTime, endTime, maxAttendees, isVIP, code);
 
         assertEq(eventId, 1);
-        
+
         // Verify event data
         EventTypes.EventData memory eventData = revent.getEvent(eventId);
-        
+
         assertEq(eventData.eventId, 1);
         assertEq(eventData.creator, owner);
         assertEq(eventData.ipfsHash, ipfsHash);
@@ -147,7 +137,7 @@ contract ReventV01Test is Test {
 
         // Verify ticket was created
         EventTypes.TicketData memory ticket = revent.getTicket(1);
-        
+
         assertEq(ticket.ticketId, 1);
         assertEq(ticket.eventId, eventId);
         assertEq(ticket.name, "VIP Ticket");
@@ -173,15 +163,7 @@ contract ReventV01Test is Test {
         string[] memory perks = new string[](1);
         perks[0] = "VIP Access";
 
-        revent.createTicket(
-            eventId,
-            "VIP Ticket",
-            "VIP",
-            0.1 ether,
-            "NATIVE",
-            10,
-            perks
-        );
+        revent.createTicket(eventId, "VIP Ticket", "VIP", 0.1 ether, "NATIVE", 10, perks);
 
         // Publish event to allow ticket purchases
         revent.publishEvent(eventId);
@@ -213,15 +195,7 @@ contract ReventV01Test is Test {
         string[] memory perks = new string[](1);
         perks[0] = "VIP Access";
 
-        revent.createTicket(
-            eventId,
-            "VIP Ticket",
-            "VIP",
-            0.1 ether,
-            "NATIVE",
-            10,
-            perks
-        );
+        revent.createTicket(eventId, "VIP Ticket", "VIP", 0.1 ether, "NATIVE", 10, perks);
 
         // Publish event
         revent.publishEvent(eventId);
@@ -236,7 +210,7 @@ contract ReventV01Test is Test {
 
         // Verify escrow data
         EscrowV1.EscrowData memory escrowData = revent.getEscrowData(eventId);
-        
+
         assertEq(escrowData.eventId, eventId);
         assertEq(escrowData.creator, owner);
         assertEq(escrowData.totalAmount, 0.3 ether); // 10 tickets * 0.1 ETH
@@ -284,15 +258,7 @@ contract ReventV01Test is Test {
         string[] memory perks = new string[](1);
         perks[0] = "VIP Access";
 
-        revent.createTicket(
-            eventId,
-            "VIP Ticket",
-            "VIP",
-            0.1 ether,
-            "NATIVE",
-            10,
-            perks
-        );
+        revent.createTicket(eventId, "VIP Ticket", "VIP", 0.1 ether, "NATIVE", 10, perks);
 
         // Publish event
         revent.publishEvent(eventId);
@@ -330,15 +296,7 @@ contract ReventV01Test is Test {
         string[] memory perks = new string[](1);
         perks[0] = "VIP Access";
 
-        revent.createTicket(
-            eventId,
-            "VIP Ticket",
-            "VIP",
-            0.1 ether,
-            "NATIVE",
-            10,
-            perks
-        );
+        revent.createTicket(eventId, "VIP Ticket", "VIP", 0.1 ether, "NATIVE", 10, perks);
 
         // Publish event
         revent.publishEvent(eventId);
@@ -371,12 +329,7 @@ contract ReventV01Test is Test {
 
         // Test only event creator functions
         uint256 eventId = revent.createEvent(
-            "QmTestHash123",
-            block.timestamp + 1 days,
-            block.timestamp + 1 days + 4 hours,
-            100,
-            true,
-            "EVENT123"
+            "QmTestHash123", block.timestamp + 1 days, block.timestamp + 1 days + 4 hours, 100, true, "EVENT123"
         );
 
         vm.prank(user1);
@@ -391,32 +344,19 @@ contract ReventV01Test is Test {
     function testSecurityFeatures() public {
         // Test reentrancy protection
         uint256 eventId = revent.createEvent(
-            "QmTestHash123",
-            block.timestamp + 1 days,
-            block.timestamp + 1 days + 4 hours,
-            100,
-            true,
-            "EVENT123"
+            "QmTestHash123", block.timestamp + 1 days, block.timestamp + 1 days + 4 hours, 100, true, "EVENT123"
         );
 
         string[] memory perks = new string[](1);
         perks[0] = "VIP Access";
 
-        uint256 ticketId = revent.createTicket(
-            eventId,
-            "VIP Ticket",
-            "VIP",
-            0.1 ether,
-            "NATIVE",
-            10,
-            perks
-        );
+        uint256 ticketId = revent.createTicket(eventId, "VIP Ticket", "VIP", 0.1 ether, "NATIVE", 10, perks);
 
         revent.publishEvent(eventId);
 
         // Test pause functionality
         revent.pause();
-        
+
         vm.prank(user1);
         vm.expectRevert();
         revent.purchaseTicket{value: 0.1 ether}(ticketId, 1);

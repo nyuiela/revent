@@ -20,7 +20,6 @@ interface IRevent {
         string memory code
     ) external returns (uint256);
 
-
     function updateEvent(
         uint256 eventId,
         string memory ipfsHash,
@@ -35,5 +34,3 @@ interface IRevent {
     function endEvent(uint256 eventId) external;
     function cancelEvent(uint256 eventId) external;
 }
-
-

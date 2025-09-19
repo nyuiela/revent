@@ -13,12 +13,9 @@ contract ManagementV1 is
     EventModifiersV1,
     EventInternalUtilsV1
 {
-    function _afterEventCreated(uint256 /*eventId*/, bool /*isVIP*/) internal virtual {}
+    function _afterEventCreated(uint256, /*eventId*/ bool /*isVIP*/ ) internal virtual {}
 
-    function _generateEventCode(
-        uint256 eventId,
-        string memory code
-    ) internal pure returns (bytes32) {
+    function _generateEventCode(uint256 eventId, string memory code) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(eventId, code));
     }
 
@@ -32,10 +29,7 @@ contract ManagementV1 is
         string memory code
     ) external returns (uint256) {
         require(bytes(ipfsHash).length > 0, "IPFS hash cannot be empty");
-        require(
-            startTime > block.timestamp,
-            "Start time must be in the future"
-        );
+        require(startTime > block.timestamp, "Start time must be in the future");
         require(endTime > startTime, "End time must be after start time");
         require(maxAttendees > 0, "Max attendees must be greater than 0");
 
@@ -62,21 +56,12 @@ contract ManagementV1 is
         confirmationCode[eventId] = eventConfirmationCode;
         _afterEventCreated(eventId, isVIP);
 
-        emit EventEvents.EventCreated(
-            eventId,
-            _msgSender(),
-            ipfsHash,
-            startTime,
-            endTime,
-            maxAttendees,
-            0
-        );
+        emit EventEvents.EventCreated(eventId, _msgSender(), ipfsHash, startTime, endTime, maxAttendees, 0);
 
         return eventId;
         // Note: Escrow will be created when first paid ticket (price > 0) is added
         // This happens in TicketsV1.createTicket() for VIP events
     }
-
 
     function updateEvent(
         uint256 eventId,
@@ -85,22 +70,11 @@ contract ManagementV1 is
         uint256 endTime,
         uint256 maxAttendees,
         uint256 registrationFee
-    )
-        external
-        eventExists(eventId)
-        onlyEventCreator(eventId)
-        validRegistrationFee(registrationFee)
-    {
+    ) external eventExists(eventId) onlyEventCreator(eventId) validRegistrationFee(registrationFee) {
         require(bytes(ipfsHash).length > 0, "IPFS hash cannot be empty");
-        require(
-            startTime > block.timestamp,
-            "Start time must be in the future"
-        );
+        require(startTime > block.timestamp, "Start time must be in the future");
         require(endTime > startTime, "End time must be after start time");
-        require(
-            maxAttendees >= events[eventId].currentAttendees,
-            "Max attendees cannot be less than current attendees"
-        );
+        require(maxAttendees >= events[eventId].currentAttendees, "Max attendees cannot be less than current attendees");
 
         EventTypes.EventData storage eventData = events[eventId];
         eventData.ipfsHash = ipfsHash;
@@ -111,90 +85,50 @@ contract ManagementV1 is
         eventData.updatedAt = block.timestamp;
 
         emit EventEvents.EventUpdated(
-            eventId,
-            _msgSender(),
-            ipfsHash,
-            startTime,
-            endTime,
-            maxAttendees,
-            registrationFee
+            eventId, _msgSender(), ipfsHash, startTime, endTime, maxAttendees, registrationFee
         );
     }
 
-    function publishEvent(
-        uint256 eventId
-    ) external eventExists(eventId) onlyEventCreator(eventId) {
+    function publishEvent(uint256 eventId) external eventExists(eventId) onlyEventCreator(eventId) {
         EventTypes.EventData storage eventData = events[eventId];
-        require(
-            eventData.status == EventTypes.EventStatus.DRAFT,
-            "Event must be in DRAFT status to publish"
-        );
+        require(eventData.status == EventTypes.EventStatus.DRAFT, "Event must be in DRAFT status to publish");
 
         EventTypes.EventStatus oldStatus = eventData.status;
         eventData.status = EventTypes.EventStatus.PUBLISHED;
         eventData.updatedAt = block.timestamp;
 
-        emit EventEvents.EventStatusChanged(
-            eventId,
-            oldStatus,
-            EventTypes.EventStatus.PUBLISHED
-        );
+        emit EventEvents.EventStatusChanged(eventId, oldStatus, EventTypes.EventStatus.PUBLISHED);
     }
-
 
     function startLiveEvent(uint256 eventId) public eventExists(eventId) {
         EventTypes.EventData storage eventData = events[eventId];
-        require(
-            eventData.status == EventTypes.EventStatus.PUBLISHED,
-            "Event must be PUBLISHED to start live"
-        );
-        require(
-            block.timestamp >= eventData.startTime,
-            "Event start time has not been reached"
-        );
+        require(eventData.status == EventTypes.EventStatus.PUBLISHED, "Event must be PUBLISHED to start live");
+        require(block.timestamp >= eventData.startTime, "Event start time has not been reached");
 
         EventTypes.EventStatus oldStatus = eventData.status;
         eventData.status = EventTypes.EventStatus.LIVE;
         eventData.isLive = true;
         eventData.updatedAt = block.timestamp;
 
-        emit EventEvents.EventStatusChanged(
-            eventId,
-            oldStatus,
-            EventTypes.EventStatus.LIVE
-        );
+        emit EventEvents.EventStatusChanged(eventId, oldStatus, EventTypes.EventStatus.LIVE);
     }
 
     // Escrow release/refund is handled by EscrowV1: cancelEvent() triggers refunds; creator calls releaseFunds() after completion and delay.
-    function endEvent(
-        uint256 eventId
-    ) external eventExists(eventId) onlyEventCreator(eventId) {
+    function endEvent(uint256 eventId) external eventExists(eventId) onlyEventCreator(eventId) {
         EventTypes.EventData storage eventData = events[eventId];
-        require(
-            eventData.status == EventTypes.EventStatus.LIVE,
-            "Event must be LIVE to end"
-        );
+        require(eventData.status == EventTypes.EventStatus.LIVE, "Event must be LIVE to end");
 
         EventTypes.EventStatus oldStatus = eventData.status;
         eventData.status = EventTypes.EventStatus.COMPLETED;
         eventData.isLive = false;
         eventData.updatedAt = block.timestamp;
 
-        emit EventEvents.EventStatusChanged(
-            eventId,
-            oldStatus,
-            EventTypes.EventStatus.COMPLETED
-        );
+        emit EventEvents.EventStatusChanged(eventId, oldStatus, EventTypes.EventStatus.COMPLETED);
     }
 
-    function cancelEvent(
-        uint256 eventId
-    ) external eventExists(eventId) onlyEventCreator(eventId) {
+    function cancelEvent(uint256 eventId) external eventExists(eventId) onlyEventCreator(eventId) {
         EventTypes.EventData storage eventData = events[eventId];
-        require(
-            eventData.status != EventTypes.EventStatus.COMPLETED,
-            "Cannot cancel completed event"
-        );
+        require(eventData.status != EventTypes.EventStatus.COMPLETED, "Cannot cancel completed event");
 
         EventTypes.EventStatus oldStatus = eventData.status;
         eventData.status = EventTypes.EventStatus.CANCELLED;
@@ -202,11 +136,7 @@ contract ManagementV1 is
         eventData.isLive = false;
         eventData.updatedAt = block.timestamp;
 
-        emit EventEvents.EventStatusChanged(
-            eventId,
-            oldStatus,
-            EventTypes.EventStatus.CANCELLED
-        );
+        emit EventEvents.EventStatusChanged(eventId, oldStatus, EventTypes.EventStatus.CANCELLED);
 
         // If there was an escrow for this VIP event with paid tickets, trigger refunds
         // Safe to call even if no escrow exists due to modifier checks in EscrowV1

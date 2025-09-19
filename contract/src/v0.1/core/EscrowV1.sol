@@ -12,7 +12,6 @@ import {EventEvents} from "./Events.sol";
  * @dev Implements robust security patterns: reentrancy protection, access controls, emergency stops
  */
 contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStorage {
-    
     // Events for escrow operations
     event EscrowCreated(uint256 indexed eventId, address indexed creator, uint256 totalAmount);
     event FundsDeposited(uint256 indexed eventId, address indexed depositor, uint256 amount);
@@ -63,14 +62,14 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
     mapping(uint256 => mapping(address => uint256)) public userDeposits; // eventId => user => total deposited
     mapping(uint256 => Dispute) public disputes; // eventId => dispute data
     mapping(address => bool) public authorizedResolvers; // Addresses that can resolve disputes
-    
+
     // Security parameters
     uint256 public constant MIN_ESCROW_AMOUNT = 0.000001 ether;
     uint256 public constant MAX_ESCROW_AMOUNT = 1000 ether;
     uint256 public constant DISPUTE_WINDOW = 7 days; // 7 days to raise disputes
     uint256 public constant RELEASE_DELAY = 1 days; // 1 day delay before release
     uint256 public constant MAX_DEPOSITORS_PER_EVENT = 1000; // Prevent DoS
-    
+
     // State tracking
     mapping(uint256 => uint256) public totalEscrowedAmount; // Total amount in escrow per event
     mapping(uint256 => uint256) public totalReleasedAmount; // Total amount released per event
@@ -108,18 +107,12 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
     }
 
     modifier withinDisputeWindow(uint256 eventId) {
-        require(
-            block.timestamp <= escrows[eventId].disputeDeadline,
-            "Dispute window expired"
-        );
+        require(block.timestamp <= escrows[eventId].disputeDeadline, "Dispute window expired");
         _;
     }
 
     modifier afterReleaseDelay(uint256 eventId) {
-        require(
-            block.timestamp >= escrows[eventId].releaseTime,
-            "Release delay not met"
-        );
+        require(block.timestamp >= escrows[eventId].releaseTime, "Release delay not met");
         _;
     }
 
@@ -144,8 +137,8 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
      * @dev Create escrow for an event with paid tickets
      * @param eventId The event ID
      */
-    function createEscrow(uint256 eventId) 
-        internal 
+    function createEscrow(uint256 eventId)
+        internal
         onlyEventCreator(eventId)
         // validAmount()
         nonReentrant
@@ -178,22 +171,22 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
      * @dev Deposit funds into escrow
      * @param eventId The event ID
      */
-    function depositFunds(uint256 eventId) 
-        external 
+    function depositFunds(uint256 eventId)
+        external
+        payable
         escrowExists(eventId)
         escrowNotLocked(eventId)
         escrowNotReleased(eventId)
         escrowNotRefunded(eventId)
         notDisputed(eventId)
-        payable
         nonReentrant
         whenNotPaused
     {
         depositFundsWithAmount(eventId, msg.value);
     }
 
-    function depositFundsWithAmount(uint256 eventId, uint256 amount) 
-        internal 
+    function depositFundsWithAmount(uint256 eventId, uint256 amount)
+        internal
         escrowExists(eventId)
         escrowNotLocked(eventId)
         escrowNotReleased(eventId)
@@ -204,31 +197,25 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
         whenNotPaused
     {
         EscrowData storage escrow = escrows[eventId];
-        
+
         // Check if event is still accepting deposits
         require(
-            events[eventId].status == EventTypes.EventStatus.PUBLISHED ||
-            events[eventId].status == EventTypes.EventStatus.LIVE,
+            events[eventId].status == EventTypes.EventStatus.PUBLISHED
+                || events[eventId].status == EventTypes.EventStatus.LIVE,
             "Event not accepting deposits"
         );
 
         // Prevent too many depositors (DoS protection)
-        require(
-            eventDeposits[eventId].length < MAX_DEPOSITORS_PER_EVENT,
-            "Too many depositors"
-        );
+        require(eventDeposits[eventId].length < MAX_DEPOSITORS_PER_EVENT, "Too many depositors");
 
         // Track individual deposit
-        eventDeposits[eventId].push(Deposit({
-            depositor: _msgSender(),
-            amount: amount,
-            timestamp: block.timestamp,
-            isRefunded: false
-        }));
+        eventDeposits[eventId].push(
+            Deposit({depositor: _msgSender(), amount: amount, timestamp: block.timestamp, isRefunded: false})
+        );
 
         // Update user's total deposits
         userDeposits[eventId][_msgSender()] += amount;
-        
+
         // Update escrow totals
         escrow.depositedAmount += amount;
         escrow.totalAmount += amount;
@@ -237,7 +224,7 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
 
         // Check if escrow is fully funded
         // if (escrow.depositedAmount >= escrow.totalAmount) {
-            escrow.isFunded = true;
+        escrow.isFunded = true;
         // }
 
         emit FundsDeposited(eventId, _msgSender(), amount);
@@ -247,8 +234,8 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
      * @dev Release funds to event creator (only after event completion)
      * @param eventId The event ID
      */
-    function releaseFunds(uint256 eventId) 
-        internal 
+    function releaseFunds(uint256 eventId)
+        internal
         escrowExists(eventId)
         onlyEventCreator(eventId)
         afterReleaseDelay(eventId)
@@ -260,12 +247,9 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
         whenNotPaused
     {
         EscrowData storage escrow = escrows[eventId];
-        
+
         require(escrow.isFunded, "Escrow not fully funded");
-        require(
-            events[eventId].status == EventTypes.EventStatus.COMPLETED,
-            "Event not completed"
-        );
+        require(events[eventId].status == EventTypes.EventStatus.COMPLETED, "Event not completed");
 
         escrow.isReleased = true;
         escrow.updatedAt = block.timestamp;
@@ -281,8 +265,8 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
      * @dev Refund all deposits (when event is cancelled)
      * @param eventId The event ID
      */
-    function refundFunds(uint256 eventId) 
-        internal 
+    function refundFunds(uint256 eventId)
+        internal
         escrowExists(eventId)
         onlyEventCreator(eventId)
         escrowNotLocked(eventId)
@@ -291,10 +275,7 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
         nonReentrant
         whenNotPaused
     {
-        require(
-            events[eventId].status == EventTypes.EventStatus.CANCELLED,
-            "Event not cancelled"
-        );
+        require(events[eventId].status == EventTypes.EventStatus.CANCELLED, "Event not cancelled");
 
         EscrowData storage escrow = escrows[eventId];
         escrow.isRefunded = true;
@@ -308,7 +289,7 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
                 deposits[i].isRefunded = true;
                 payable(deposits[i].depositor).transfer(deposits[i].amount);
                 emit FundsRefunded(eventId, deposits[i].depositor, deposits[i].amount);
-            }//@todo dont use array metjod its bad, pull not push
+            } //@todo dont use array metjod its bad, pull not push
         }
     }
 
@@ -317,8 +298,8 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
      * @param eventId The event ID
      * @param reason Reason for the dispute
      */
-    function createDispute(uint256 eventId, string calldata reason) 
-        external 
+    function createDispute(uint256 eventId, string calldata reason)
+        external
         escrowExists(eventId)
         withinDisputeWindow(eventId)
         escrowNotLocked(eventId)
@@ -350,8 +331,8 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
      * @param eventId The event ID
      * @param refund Whether to refund or release funds
      */
-    function resolveDispute(uint256 eventId, bool refund) 
-        external 
+    function resolveDispute(uint256 eventId, bool refund)
+        external
         escrowExists(eventId)
         onlyAuthorizedResolver
         nonReentrant
@@ -368,7 +349,7 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
             // Refund all deposits
             escrows[eventId].isRefunded = true;
             totalRefundedAmount[eventId] = escrows[eventId].depositedAmount;
-            
+
             Deposit[] storage deposits = eventDeposits[eventId];
             for (uint256 i = 0; i < deposits.length; i++) {
                 if (!deposits[i].isRefunded) {
@@ -394,12 +375,7 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
      * @dev Public function to release funds after event completion
      * @param eventId The event ID
      */
-    function releaseEscrowFunds(uint256 eventId) 
-        external 
-        onlyEventCreator(eventId)
-        nonReentrant
-        whenNotPaused
-    {
+    function releaseEscrowFunds(uint256 eventId) external onlyEventCreator(eventId) nonReentrant whenNotPaused {
         releaseFunds(eventId);
     }
 
@@ -407,13 +383,7 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
      * @dev Emergency withdraw (only owner, when paused)
      * @param eventId The event ID
      */
-    function emergencyWithdraw(uint256 eventId) 
-        external 
-        onlyOwner
-        escrowExists(eventId)
-        whenPaused
-        nonReentrant
-    {
+    function emergencyWithdraw(uint256 eventId) external onlyOwner escrowExists(eventId) whenPaused nonReentrant {
         EscrowData storage escrow = escrows[eventId];
         require(escrow.depositedAmount > 0, "No funds to withdraw");
 
@@ -431,11 +401,7 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
      * @param eventId The event ID
      * @param locked Whether to lock or unlock
      */
-    function setEscrowLock(uint256 eventId, bool locked) 
-        external 
-        onlyOwner
-        escrowExists(eventId)
-    {
+    function setEscrowLock(uint256 eventId, bool locked) external onlyOwner escrowExists(eventId) {
         escrows[eventId].isLocked = locked;
         escrows[eventId].updatedAt = block.timestamp;
         emit EscrowLocked(eventId, locked);
@@ -495,23 +461,14 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
 
     function canReleaseFunds(uint256 eventId) external view returns (bool) {
         EscrowData memory escrow = escrows[eventId];
-        return escrow.isFunded && 
-               !escrow.isReleased && 
-               !escrow.isRefunded && 
-               !escrow.isDisputed && 
-               !escrow.isLocked &&
-               block.timestamp >= escrow.releaseTime &&
-               events[eventId].status == EventTypes.EventStatus.COMPLETED;
+        return escrow.isFunded && !escrow.isReleased && !escrow.isRefunded && !escrow.isDisputed && !escrow.isLocked
+            && block.timestamp >= escrow.releaseTime && events[eventId].status == EventTypes.EventStatus.COMPLETED;
     }
 
     function canCreateDispute(uint256 eventId) external view returns (bool) {
         EscrowData memory escrow = escrows[eventId];
-        return escrow.createdAt != 0 && 
-               !escrow.isDisputed && 
-               !escrow.isReleased && 
-               !escrow.isRefunded && 
-               !escrow.isLocked &&
-               block.timestamp <= escrow.disputeDeadline;
+        return escrow.createdAt != 0 && !escrow.isDisputed && !escrow.isReleased && !escrow.isRefunded
+            && !escrow.isLocked && block.timestamp <= escrow.disputeDeadline;
     }
 
     // Override to handle ETH transfers

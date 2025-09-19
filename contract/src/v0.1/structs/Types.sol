@@ -136,7 +136,8 @@ library EventTypes {
         bool approved;
         uint256 timestamp;
     }
-        event EventCreated(
+
+    event EventCreated(
         uint256 indexed eventId,
         address indexed creator,
         string ipfsHash,
@@ -157,23 +158,14 @@ library EventTypes {
     );
 
     event EventStatusChanged(
-        uint256 indexed eventId,
-        EventTypes.EventStatus oldStatus,
-        EventTypes.EventStatus newStatus
+        uint256 indexed eventId, EventTypes.EventStatus oldStatus, EventTypes.EventStatus newStatus
     );
 
     event AttendeeRegistered(
-        uint256 indexed eventId,
-        address indexed attendee,
-        string confirmationCode,
-        uint256 registrationFee
+        uint256 indexed eventId, address indexed attendee, string confirmationCode, uint256 registrationFee
     );
 
-    event AttendeeConfirmed(
-        uint256 indexed eventId,
-        address indexed attendee,
-        string confirmationCode
-    );
+    event AttendeeConfirmed(uint256 indexed eventId, address indexed attendee, string confirmationCode);
 
     event AttendeeAttended(uint256 indexed eventId, address indexed attendee);
 
@@ -189,11 +181,7 @@ library EventTypes {
     );
 
     event TicketPurchased(
-        uint256 indexed ticketId,
-        uint256 indexed eventId,
-        address indexed buyer,
-        uint256 quantity,
-        uint256 totalPrice
+        uint256 indexed ticketId, uint256 indexed eventId, address indexed buyer, uint256 quantity, uint256 totalPrice
     );
 
     event PlatformFeeUpdated(uint256 oldFee, uint256 newFee);

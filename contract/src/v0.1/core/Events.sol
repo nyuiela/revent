@@ -25,28 +25,16 @@ library EventEvents {
     );
 
     event EventStatusChanged(
-        uint256 indexed eventId,
-        EventTypes.EventStatus oldStatus,
-        EventTypes.EventStatus newStatus
+        uint256 indexed eventId, EventTypes.EventStatus oldStatus, EventTypes.EventStatus newStatus
     );
 
     event AttendeeRegistered(
-        uint256 indexed eventId,
-        address indexed attendee,
-        string confirmationCode,
-        uint256 registrationFee
+        uint256 indexed eventId, address indexed attendee, string confirmationCode, uint256 registrationFee
     );
 
-    event AttendeeConfirmed(
-        uint256 indexed eventId,
-        address indexed attendee,
-        string confirmationCode
-    );
+    event AttendeeConfirmed(uint256 indexed eventId, address indexed attendee, string confirmationCode);
 
-    event AttendeeAttended(
-        uint256 indexed eventId,
-        address indexed attendee
-    );
+    event AttendeeAttended(uint256 indexed eventId, address indexed attendee);
 
     event PlatformFeeUpdated(uint256 oldFee, uint256 newFee);
     event RegistrationFeeLimitsUpdated(uint256 minFee, uint256 maxFee);
@@ -75,12 +63,7 @@ library EventEvents {
 
     event TicketRemoved(uint256 indexed eventId, uint256 indexed ticketId);
 
-    event TicketPurchased(
-        uint256 indexed eventId,
-        uint256 indexed ticketId,
-        address indexed buyer,
-        uint256 pricePaid
-    );
+    event TicketPurchased(uint256 indexed eventId, uint256 indexed ticketId, address indexed buyer, uint256 pricePaid);
 
     // Trading Events
     event OrderCreated(
@@ -104,17 +87,11 @@ library EventEvents {
     );
 
     event OrderCancelled(
-        uint256 indexed orderId,
-        uint256 indexed eventId,
-        address indexed creator,
-        EventTypes.OrderType orderType
+        uint256 indexed orderId, uint256 indexed eventId, address indexed creator, EventTypes.OrderType orderType
     );
 
     event OrderExpired(
-        uint256 indexed orderId,
-        uint256 indexed eventId,
-        address indexed creator,
-        EventTypes.OrderType orderType
+        uint256 indexed orderId, uint256 indexed eventId, address indexed creator, EventTypes.OrderType orderType
     );
 
     event OrderFilled(
@@ -148,11 +125,7 @@ library EventEvents {
     );
 
     event EventPriceRangeSet(
-        uint256 indexed eventId,
-        address indexed setter,
-        uint256 minPrice,
-        uint256 maxPrice,
-        address currency
+        uint256 indexed eventId, address indexed setter, uint256 minPrice, uint256 maxPrice, address currency
     );
 
     event EventPriceRangeUpdated(
@@ -165,25 +138,13 @@ library EventEvents {
         address currency
     );
 
-    event EventPriceRangeRemoved(
-        uint256 indexed eventId,
-        address indexed setter
-    );
+    event EventPriceRangeRemoved(uint256 indexed eventId, address indexed setter);
 
-    event TradingFeeUpdated(
-        uint256 oldFeeBps,
-        uint256 newFeeBps
-    );
+    event TradingFeeUpdated(uint256 oldFeeBps, uint256 newFeeBps);
 
-    event OrderValueLimitsUpdated(
-        uint256 minOrderValue,
-        uint256 maxOrderValue
-    );
+    event OrderValueLimitsUpdated(uint256 minOrderValue, uint256 maxOrderValue);
 
-    event OrderExpirationTimeUpdated(
-        uint256 oldExpirationTime,
-        uint256 newExpirationTime
-    );
+    event OrderExpirationTimeUpdated(uint256 oldExpirationTime, uint256 newExpirationTime);
 
     event TradingFeeCollected(
         uint256 indexed eventId,
@@ -201,31 +162,15 @@ library EventEvents {
         address currency
     );
 
-    event MarketPriceUpdated(
-        uint256 indexed eventId,
-        uint256 oldPrice,
-        uint256 newPrice,
-        address currency
-    );
+    event MarketPriceUpdated(uint256 indexed eventId, uint256 oldPrice, uint256 newPrice, address currency);
 
     // Investor Protection Events
-    event InvestorSaleShareSet(
-        uint256 indexed eventId,
-        uint256 investorShareBps,
-        uint256 creatorShareBps
-    );
+    event InvestorSaleShareSet(uint256 indexed eventId, uint256 investorShareBps, uint256 creatorShareBps);
 
-    event InvestorApprovalRequired(
-        uint256 indexed eventId,
-        bool required,
-        uint256 thresholdBps
-    );
+    event InvestorApprovalRequired(uint256 indexed eventId, bool required, uint256 thresholdBps);
 
     event InvestorApprovalGiven(
-        uint256 indexed eventId,
-        address indexed investor,
-        bool approved,
-        uint256 approvalWeight
+        uint256 indexed eventId, address indexed investor, bool approved, uint256 approvalWeight
     );
 
     event InvestorSaleDistributionCreated(
@@ -246,23 +191,13 @@ library EventEvents {
     );
 
     event InvestorSaleDistributionCompleted(
-        uint256 indexed eventId,
-        uint256 indexed tradeId,
-        uint256 totalInvestorPayout,
-        uint256 totalCreatorPayout
+        uint256 indexed eventId, uint256 indexed tradeId, uint256 totalInvestorPayout, uint256 totalCreatorPayout
     );
 
-    event DomainSaleBlocked(
-        uint256 indexed eventId,
-        uint256 indexed orderId,
-        string reason
-    );
+    event DomainSaleBlocked(uint256 indexed eventId, uint256 indexed orderId, string reason);
 
     event InvestorValueProtected(
-        uint256 indexed eventId,
-        uint256 indexed tradeId,
-        uint256 protectedValue,
-        uint256 investorCount
+        uint256 indexed eventId, uint256 indexed tradeId, uint256 protectedValue, uint256 investorCount
     );
 
     // Investor Share Trading Events
@@ -288,10 +223,7 @@ library EventEvents {
     );
 
     event InvestorShareOrderCancelled(
-        uint256 indexed orderId,
-        uint256 indexed eventId,
-        address indexed creator,
-        EventTypes.OrderType orderType
+        uint256 indexed orderId, uint256 indexed eventId, address indexed creator, EventTypes.OrderType orderType
     );
 
     event InvestorShareOrderFilled(
@@ -319,20 +251,9 @@ library EventEvents {
         uint256 timestamp
     );
 
-    event InvestorSharePriceUpdated(
-        uint256 indexed eventId,
-        uint256 oldPrice,
-        uint256 newPrice,
-        address currency
-    );
+    event InvestorSharePriceUpdated(uint256 indexed eventId, uint256 oldPrice, uint256 newPrice, address currency);
 
     event InvestorSharesTransferred(
-        uint256 indexed eventId,
-        address indexed from,
-        address indexed to,
-        uint256 shareAmount,
-        uint256 pricePerShare
+        uint256 indexed eventId, address indexed from, address indexed to, uint256 shareAmount, uint256 pricePerShare
     );
 }
-
-

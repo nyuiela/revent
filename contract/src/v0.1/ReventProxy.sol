@@ -14,10 +14,7 @@ contract ReventProxy is ERC1967Proxy {
      * @param implementation Address of the implementation contract
      * @param data Encoded function call to initialize the implementation
      */
-    constructor(
-        address implementation,
-        bytes memory data
-    ) ERC1967Proxy(implementation, data) {
+    constructor(address implementation, bytes memory data) ERC1967Proxy(implementation, data) {
         // Admin is set in the implementation contract
     }
 
