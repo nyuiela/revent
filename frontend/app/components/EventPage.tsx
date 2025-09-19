@@ -621,7 +621,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
       </div>
 
       {/* Content */}
-      <div className="p-6 px-2 max-w-7xl mx-auto space-y-12">
+      <div className="p-6 px-4 max-w-7xl mx-auto space-y-12">
         {/* <EventManagement eventId={eventId || "1"} defaultIpfsHash={ipfsHash || "bafkreia2uchzmzosieaj6tyim4qzq5xvxhlyapq2gzacen2tffknfeco6u"} /> */}
 
         {/* Tickets Section */}
@@ -637,15 +637,15 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
             <>
               {/* Ticket types */}
               {ticketTypes.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-1 gap-1 mb-0 bg-gray-300 p-4 px-[0.2rem] pb-1 rounded-xl">
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-1 mb-0 bg-gray-300 dark:bg-gray-900 p-4 px-[0.2rem] pb-1 rounded-xl">
                   {ticketTypes.map((t, idx) => (
                     <button
                       type="button"
                       key={t.type}
                       onClick={() => setSelectedTicketIndex(idx)}
-                      className={`text-left p-4 rounded-2xl transition-colors bg-white dark:bg-transparent border-none ${selectedTicketIndex === idx
-                        ? "bg-[#edf6f9] dark:border-[var(--events-card-border)] bg-transparent "
-                        : "dark:border-[var(--events-card-border)] bg-transparent "}`}
+                      className={`text-left p-4 rounded-2xl transition-colors bg-white dark:bg-gray-800 border-none ${selectedTicketIndex === idx
+                        ? "bg-[#edf6f9] dark:border-[var(--events-card-border)] dark:bg-gray-700 "
+                        : "dark:border-[var(--events-card-border)] bg-transparent dark:bg-gray-800 "}`}
                     >
                       <div className="flex items-center justify-between">
                         <div>
