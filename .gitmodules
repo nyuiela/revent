@@ -4,6 +4,9 @@
 [submodule "revent/lib/openzeppelin-contracts"]
 	path = revent/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "contract/lib/openzeppelin-contracts"]
+	path = contract/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
 [submodule "contract/lib/openzeppelin-contracts-upgradeable"]
 	path = contract/lib/openzeppelin-contracts-upgradeable
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable

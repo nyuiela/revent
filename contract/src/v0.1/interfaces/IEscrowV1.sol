@@ -10,5 +10,3 @@ interface IEscrowV1 {
     function releaseFunds() external;
     function setEscrowLock(uint256 eventId, bool lockStatus) external;
 }
-
-

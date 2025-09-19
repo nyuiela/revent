@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
+
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {ContextUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "../utils/counter.sol";
 import {EventTypes} from "../structs/Types.sol";
 
-contract ReventStorage is
-    UUPSUpgradeable,
-    OwnableUpgradeable {
+contract ReventStorage is UUPSUpgradeable, OwnableUpgradeable {
     using Counters for Counters.Counter;
     using EventTypes for EventTypes.EventData;
 
@@ -19,16 +18,14 @@ contract ReventStorage is
     mapping(uint256 => EventTypes.EventData) public events;
     mapping(address => uint256[]) public creatorEvents;
     mapping(uint256 => address[]) public eventAttendees;
-    mapping(uint256 => mapping(address => EventTypes.AttendeeData))
-        public attendees;
+    mapping(uint256 => mapping(address => EventTypes.AttendeeData)) public attendees;
     mapping(string => bool) public usedConfirmationCodes;
     mapping(uint256 => bytes32) public confirmationCode;
 
     // Tickets
     mapping(uint256 => uint256[]) public eventTickets; // eventId => ticketIds
     mapping(uint256 => EventTypes.TicketData) public tickets; // ticketId => TicketData
-    mapping(uint256 => mapping(address => uint256))
-        public purchasedTicketCounts; // eventId => buyer => count
+    mapping(uint256 => mapping(address => uint256)) public purchasedTicketCounts; // eventId => buyer => count
 
     uint256 public platformFee = 250; // basis points
     uint256 public minRegistrationFee = 0.001 ether;
@@ -96,10 +93,8 @@ contract ReventStorage is
     uint256 public orderExpirationTime = 7 days; // default order expiration
 
     // Investor protection and distribution
-    mapping(uint256 => EventTypes.InvestorSaleDistribution)
-        public investorSaleDistributions; // tradeId => distribution
-    mapping(uint256 => mapping(address => EventTypes.InvestorApproval))
-        public investorApprovals; // eventId => investor => approval
+    mapping(uint256 => EventTypes.InvestorSaleDistribution) public investorSaleDistributions; // tradeId => distribution
+    mapping(uint256 => mapping(address => EventTypes.InvestorApproval)) public investorApprovals; // eventId => investor => approval
     mapping(uint256 => bool) public requireInvestorApproval; // eventId => whether investor approval required for sale
     mapping(uint256 => uint256) public investorApprovalThreshold; // eventId => minimum approval percentage required
     mapping(uint256 => uint256) public totalInvestorApprovals; // eventId => total approval weight
@@ -111,7 +106,6 @@ contract ReventStorage is
     mapping(uint256 => uint256) public eventSellVolume; // eventId => sell volume (24h)
     mapping(uint256 => uint256) public eventLastTradingUpdate; // eventId => last trading volume reset
     mapping(uint256 => uint256) public eventPriceMomentum; // eventId => price momentum factor (basis points)
-
 
     function __StorageV1_init() internal onlyInitializing {
         __UUPSUpgradeable_init();
@@ -134,4 +128,3 @@ contract ReventStorage is
 
     // Escrow logic is implemented in `EscrowV1.sol`.
 }
-

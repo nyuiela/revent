@@ -14,7 +14,7 @@ contract DeployReventV01 is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
-        
+
         console.log("Deploying Revent V0.1...");
         console.log("Deployer address:", deployer);
         console.log("Deployer balance:", deployer.balance);
@@ -30,18 +30,11 @@ contract DeployReventV01 is Script {
         address feeRecipient = deployer; // Set to actual fee recipient
         uint256 platformFee = 250; // 2.5% platform fee
 
-        bytes memory initData = abi.encodeWithSelector(
-            Revent.initialize.selector,
-            trustedForwarder,
-            feeRecipient,
-            platformFee
-        );
+        bytes memory initData =
+            abi.encodeWithSelector(Revent.initialize.selector, trustedForwarder, feeRecipient, platformFee);
 
         // Deploy proxy
-        ReventProxy proxy = new ReventProxy(
-            address(implementation),
-            initData
-        );
+        ReventProxy proxy = new ReventProxy(address(implementation), initData);
 
         console.log("Proxy deployed at:", address(proxy));
 

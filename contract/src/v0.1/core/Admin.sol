@@ -5,26 +5,18 @@ import {ReventStorage} from "./StorageV1.sol";
 import {EventEvents} from "./Events.sol";
 
 contract Admin is ReventStorage {
-
     function emergencyWithdraw() external onlyOwner {
         address recipient = feeRecipient == address(0) ? owner() : feeRecipient;
         payable(recipient).transfer(address(this).balance);
     }
 
-
     // Marketplace config (owner-only)
-    function setMarketplaceCurrencies(
-        address usdc,
-        address weth
-    ) external onlyOwner {
+    function setMarketplaceCurrencies(address usdc, address weth) external onlyOwner {
         marketplaceUSDC = usdc;
         marketplaceWETH = weth;
     }
 
-    function setMarketplaceProtocolFee(
-        address receiver,
-        uint256 feeBps
-    ) external onlyOwner {
+    function setMarketplaceProtocolFee(address receiver, uint256 feeBps) external onlyOwner {
         require(feeBps <= 1000, "fee too high");
         marketplaceProtocolFeeReceiver = receiver;
         marketplaceProtocolFeeBps = feeBps;
@@ -32,35 +24,17 @@ contract Admin is ReventStorage {
 
     // s1
 
+    function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner {}
 
-
-    function _authorizeUpgrade(
-        address newImplementation
-    ) internal virtual override onlyOwner {}
-
-    function _msgSender()
-        internal
-        view
-        virtual
-        override
-        returns (address)
-    {
+    function _msgSender() internal view virtual override returns (address) {
         return msg.sender;
     }
 
-    function _msgData()
-        internal
-        view
-        virtual
-        override
-        returns (bytes calldata)
-    {
+    function _msgData() internal view virtual override returns (bytes calldata) {
         return msg.data;
     }
 
-    function isTrustedForwarder(
-        address forwarder
-    ) public view virtual override returns (bool) {
+    function isTrustedForwarder(address forwarder) public view virtual override returns (bool) {
         return forwarder == trustedForwarderAddr && forwarder != address(0);
     }
 
@@ -81,10 +55,7 @@ contract Admin is ReventStorage {
         // emit EventEvents.FeeRecipientUpdated(oldRecipient, newRecipient);
     }
 
-    function setRegistrationFeeLimits(
-        uint256 minFee,
-        uint256 maxFee
-    ) external onlyOwner {
+    function setRegistrationFeeLimits(uint256 minFee, uint256 maxFee) external onlyOwner {
         require(minFee < maxFee, "Invalid limits");
         minRegistrationFee = minFee;
         maxRegistrationFee = maxFee;

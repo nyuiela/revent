@@ -38,11 +38,7 @@ contract Revent is
         _disableInitializers();
     }
 
-    function initialize(
-        address trustedForwarder,
-        address feeRecipient_,
-        uint256 platformFee_
-    ) public initializer {
+    function initialize(address trustedForwarder, address feeRecipient_, uint256 platformFee_) public initializer {
         __StorageV1_init();
         __TicketsV1_init();
 
@@ -52,9 +48,11 @@ contract Revent is
         platformFee = platformFee_;
     }
 
-    function _authorizeUpgrade(
-        address newImplementation
-    ) internal override(ReventStorage, UUPSUpgradeable, Admin) onlyOwner {}
+    function _authorizeUpgrade(address newImplementation)
+        internal
+        override(ReventStorage, UUPSUpgradeable, Admin)
+        onlyOwner
+    {}
 
     // V1 uses pause/unpause from EscrowV1 (via inheritance)
 
@@ -84,11 +82,13 @@ contract Revent is
         return eventTickets[eventId];
     }
 
-    function getTicket(uint256 ticketId) external view override(QueriesV1, TicketsV1) returns (EventTypes.TicketData memory) {
-        require(
-            ticketId > 0 && ticketId <= Counters.current(_ticketIds),
-            "Invalid ticket ID"
-        );
+    function getTicket(uint256 ticketId)
+        external
+        view
+        override(QueriesV1, TicketsV1)
+        returns (EventTypes.TicketData memory)
+    {
+        require(ticketId > 0 && ticketId <= Counters.current(_ticketIds), "Invalid ticket ID");
         return tickets[ticketId];
     }
 }

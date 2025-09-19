@@ -8,6 +8,7 @@ pragma solidity ^0.8.0;
  *
  * Include with `using Counters for Counters.Counter;`
  */
+
 library Counters {
     struct Counter {
         // This variable should never be directly accessed by users of the library: interactions must be restricted to

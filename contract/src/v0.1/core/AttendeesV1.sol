@@ -7,19 +7,13 @@ import {TicketsV1} from "./TicketsV1.sol";
 import {EventEvents} from "./Events.sol";
 import {EventTypes} from "../structs/Types.sol";
 
-contract AttendeesV1 is
-    ManagementV1,
-    TicketsV1
+contract AttendeesV1 is ManagementV1, TicketsV1 {
     // EventEvents
-{
     // using EventTypes for EventTypes.EventData;
     // using EventTypes for EventTypes.AttendeeData;
     // using EventTypes for EventTypes.TicketData;
 
-    function registerForEvent(
-        uint256 eventId,
-        bytes memory data
-    ) public returns (uint256 fee) {
+    function registerForEvent(uint256 eventId, bytes memory data) public returns (uint256 fee) {
         EventTypes.EventData memory eventData_ = events[eventId];
         if (eventData_.isVIP && data.length > 0) {
             (uint256 ticketId, uint256 quantity) = abi.decode(data, (uint256, uint256));
@@ -30,9 +24,7 @@ contract AttendeesV1 is
         return 0;
     }
 
-    function _registerForEvent(
-        uint256 eventId
-    )
+    function _registerForEvent(uint256 eventId)
         internal
         nonReentrant
         eventExists(eventId)
@@ -42,8 +34,7 @@ contract AttendeesV1 is
     {
         EventTypes.EventData storage eventData = events[eventId];
         require(
-            eventData.status == EventTypes.EventStatus.PUBLISHED ||
-                eventData.status == EventTypes.EventStatus.LIVE,
+            eventData.status == EventTypes.EventStatus.PUBLISHED || eventData.status == EventTypes.EventStatus.LIVE,
             "Event is not open for registration"
         );
 
@@ -68,9 +59,7 @@ contract AttendeesV1 is
         uint256 eventId,
         string memory _confirmationCode //QR code
     ) external eventExists(eventId) {
-        EventTypes.AttendeeData storage attendee = attendees[eventId][
-            msg.sender
-        ];
+        EventTypes.AttendeeData storage attendee = attendees[eventId][msg.sender];
         EventTypes.EventData storage eventData = events[eventId];
         if (eventData.status == EventTypes.EventStatus.PUBLISHED) {
             startLiveEvent(eventId);
@@ -78,10 +67,7 @@ contract AttendeesV1 is
         require(attendee.attendeeAddress != address(0), "Attendee not found");
         require(!attendee.isConfirmed, "Attendance already confirmed");
         bytes32 hash = keccak256(abi.encodePacked(eventId, _confirmationCode));
-        require(
-            hash == confirmationCode[eventId],
-            "Invalid confirmation code"
-        );
+        require(hash == confirmationCode[eventId], "Invalid confirmation code");
 
         attendee.isConfirmed = true;
         attendee.hasAttended = true;
@@ -90,18 +76,14 @@ contract AttendeesV1 is
         emit EventEvents.AttendeeConfirmed(eventId, msg.sender, _confirmationCode);
     }
 
-    function markAttended(
-        uint256 eventId,
-        address attendeeAddress
-    ) external eventExists(eventId) onlyEventCreator(eventId) {
-        EventTypes.AttendeeData storage attendee = attendees[eventId][
-            attendeeAddress
-        ];
+    function markAttended(uint256 eventId, address attendeeAddress)
+        external
+        eventExists(eventId)
+        onlyEventCreator(eventId)
+    {
+        EventTypes.AttendeeData storage attendee = attendees[eventId][attendeeAddress];
         require(attendee.attendeeAddress != address(0), "Attendee not found");
-        require(
-            !attendee.isConfirmed && !attendee.hasAttended,
-            "Attendance already marked"
-        );
+        require(!attendee.isConfirmed && !attendee.hasAttended, "Attendance already marked");
 
         attendee.isConfirmed = true;
         attendee.hasAttended = true;
