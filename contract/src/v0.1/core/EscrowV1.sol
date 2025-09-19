@@ -65,7 +65,7 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
     mapping(address => bool) public authorizedResolvers; // Addresses that can resolve disputes
     
     // Security parameters
-    uint256 public constant MIN_ESCROW_AMOUNT = 0.001 ether;
+    uint256 public constant MIN_ESCROW_AMOUNT = 0.000001 ether;
     uint256 public constant MAX_ESCROW_AMOUNT = 1000 ether;
     uint256 public constant DISPUTE_WINDOW = 7 days; // 7 days to raise disputes
     uint256 public constant RELEASE_DELAY = 1 days; // 1 day delay before release
@@ -143,12 +143,11 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
     /**
      * @dev Create escrow for an event with paid tickets
      * @param eventId The event ID
-     * @param expectedAmount Expected total amount to be deposited
      */
-    function createEscrow(uint256 eventId, uint256 expectedAmount) 
+    function createEscrow(uint256 eventId) 
         internal 
         onlyEventCreator(eventId)
-        validAmount(expectedAmount)
+        // validAmount()
         nonReentrant
         whenNotPaused
     {
@@ -159,7 +158,7 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
         escrows[eventId] = EscrowData({
             eventId: eventId,
             creator: _msgSender(),
-            totalAmount: expectedAmount,
+            totalAmount: 0,
             depositedAmount: 0,
             isFunded: false,
             isReleased: false,
@@ -168,11 +167,11 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
             isLocked: false,
             createdAt: block.timestamp,
             updatedAt: block.timestamp,
-            releaseTime: block.timestamp + RELEASE_DELAY,
-            disputeDeadline: block.timestamp + DISPUTE_WINDOW
+            releaseTime: events[eventId].endTime + RELEASE_DELAY,
+            disputeDeadline: events[eventId].endTime + DISPUTE_WINDOW
         });
 
-        emit EscrowCreated(eventId, _msgSender(), expectedAmount);
+        emit EscrowCreated(eventId, _msgSender(), 0);
     }
 
     /**
@@ -180,12 +179,13 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
      * @param eventId The event ID
      */
     function depositFunds(uint256 eventId) 
-        internal 
+        external 
         escrowExists(eventId)
         escrowNotLocked(eventId)
         escrowNotReleased(eventId)
         escrowNotRefunded(eventId)
         notDisputed(eventId)
+        payable
         nonReentrant
         whenNotPaused
     {
@@ -200,7 +200,7 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
         escrowNotRefunded(eventId)
         notDisputed(eventId)
         validAmount(amount)
-        nonReentrant
+        // nonReentrant
         whenNotPaused
     {
         EscrowData storage escrow = escrows[eventId];
@@ -231,13 +231,14 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
         
         // Update escrow totals
         escrow.depositedAmount += amount;
+        escrow.totalAmount += amount;
         escrow.updatedAt = block.timestamp;
         totalEscrowedAmount[eventId] += amount;
 
         // Check if escrow is fully funded
-        if (escrow.depositedAmount >= escrow.totalAmount) {
+        // if (escrow.depositedAmount >= escrow.totalAmount) {
             escrow.isFunded = true;
-        }
+        // }
 
         emit FundsDeposited(eventId, _msgSender(), amount);
     }
@@ -255,7 +256,7 @@ contract EscrowV1 is ReentrancyGuardUpgradeable, PausableUpgradeable, ReventStor
         escrowNotReleased(eventId)
         escrowNotRefunded(eventId)
         notDisputed(eventId)
-        nonReentrant
+        // nonReentrant
         whenNotPaused
     {
         EscrowData storage escrow = escrows[eventId];

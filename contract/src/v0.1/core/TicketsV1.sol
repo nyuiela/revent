@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+// import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {EventModifiersV1} from "./ModifiersV1.sol";
 import {EventEvents} from "./Events.sol";
 import {EventTypes} from "../structs/Types.sol";
 import {Counters} from "../utils/counter.sol";
-contract TicketsV1 is EventModifiersV1  {
-    function __TicketsV1_init() internal onlyInitializing {}
+contract TicketsV1 is EventModifiersV1 {
+    function __TicketsV1_init() internal onlyInitializing {
+    }
 
     function createTicket(
         uint256 eventId,
@@ -16,7 +18,7 @@ contract TicketsV1 is EventModifiersV1  {
         string memory currency,
         uint256 totalQuantity,
         string[] memory perks
-    ) external eventExists(eventId) onlyEventCreator(eventId) {
+    ) external eventExists(eventId) onlyEventCreator(eventId) returns (uint256) {
         require(bytes(name).length > 0, "Name cannot be empty");
         require(bytes(ticketType).length > 0, "Ticket type cannot be empty");
         require(price >= 0, "Price cannot be negative");
@@ -44,10 +46,9 @@ contract TicketsV1 is EventModifiersV1  {
 
         // If this is a paid ticket and event is VIP, create escrow
         if (price > 0 && events[eventId].isVIP && escrows[eventId].createdAt == 0) {
-            uint256 expectedAmount = price * totalQuantity;
-            createEscrow(eventId, expectedAmount);
+            // uint256 expectedAmount = price * totalQuantity;
+            createEscrow(eventId);
         }
-
         emit EventEvents.TicketAdded(
             eventId,
             ticketId,
@@ -57,6 +58,7 @@ contract TicketsV1 is EventModifiersV1  {
             currency,
             totalQuantity
         );
+        return ticketId;
     }
 
     function purchaseTicket(
@@ -81,6 +83,7 @@ contract TicketsV1 is EventModifiersV1  {
 
         ticket.soldQuantity += quantity;
         purchasedTicketCounts[ticket.eventId][msg.sender] += quantity;
+        // @audit wrong logic, which ticket does user have? 
 
         // Handle payment based on ticket type
         if (ticket.price > 0) {
