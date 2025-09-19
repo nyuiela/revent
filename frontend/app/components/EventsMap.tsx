@@ -211,8 +211,10 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
         el.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
         el.style.cursor = "pointer";
         el.style.position = "relative";
-        el.style.transition = "all 0.2s ease";
+        el.style.transition = "transform 0.2s ease, box-shadow 0.2s ease";
         el.style.display = "block";
+        el.style.transformOrigin = "center center";
+        el.style.boxSizing = "border-box";
         el.style.backgroundImage = `url(${ev.avatarUrl})`;
 
         if (ev.isLive) {
@@ -229,13 +231,17 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
         }
 
         el.addEventListener("mouseenter", () => {
-          el.style.transform = "scale(1.08)";
+          console.log("Marker hover enter:", ev.title, "Position:", el.style.transform);
+          el.style.transform = "scale(1.1)";
           el.style.zIndex = "1000";
+          el.style.boxShadow = "0 8px 20px rgba(0,0,0,0.4)";
           setHoveredEvent(ev);
         });
         el.addEventListener("mouseleave", () => {
+          console.log("Marker hover leave:", ev.title, "Position:", el.style.transform);
           el.style.transform = "scale(1)";
           el.style.zIndex = "auto";
+          el.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
           setHoveredEvent(null);
         });
 
@@ -244,29 +250,37 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
           e.stopPropagation();
           console.log("Marker clicked for event:", ev.title);
 
-          // Create popup content
+          // Create popup content with proper styling and theme support
+          const isDarkMode = theme === 'dark' || document.documentElement.classList.contains('dark');
+          const bgColor = isDarkMode ? '#1f2937' : 'white';
+          const textColor = isDarkMode ? '#f9fafb' : '#1f2937';
+          const borderColor = isDarkMode ? '#374151' : '#e5e7eb';
+          const secondaryTextColor = isDarkMode ? '#9ca3af' : '#6b7280';
+          
           const html = `
-            <div style="min-width:200px;padding:12px">
-              <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-                <img src="${ev.avatarUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover" alt="${ev.username}" />
+            <div style="min-width:200px;padding:16px;background:${bgColor};color:${textColor};border-radius:8px;box-shadow:0 10px 25px rgba(0,0,0,0.15);">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                <img src="${ev.avatarUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid ${borderColor}" alt="${ev.username}" />
                 <div>
-                  <div style="font-weight:600;font-size:16px;margin-bottom:2px">${ev.title}</div>
-                  <div style="font-size:14px;opacity:.7">@${ev.username}</div>
+                  <div style="font-weight:600;font-size:16px;margin-bottom:4px;color:${textColor}">${ev.title}</div>
+                  <div style="font-size:14px;color:${secondaryTextColor}">@${ev.username}</div>
                 </div>
               </div>
-              ${ev.isLive ? '<div style="color:#ef4444;font-size:12px;margin:8px 0;display:flex;align-items:center;gap:4px"><div style="width:8px;height:8px;background:#ef4444;border-radius:50%;animation:pulse 2s infinite"></div>LIVE NOW</div>' : ''}
-              ${ev.platforms && ev.platforms.length > 0 ? `<div style="font-size:12px;opacity:.6;margin-bottom:8px">Platforms: ${ev.platforms.join(', ')}</div>` : ''}
-              <button id="watch-${ev.id}" style="width:100%;padding:10px 12px;border-radius:8px;background:#111827;color:#fff;font-size:14px;font-weight:500;border:none;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='#374151'" onmouseout="this.style.background='#111827'">Watch Stream</button>
+              ${ev.isLive ? '<div style="color:#ef4444;font-size:12px;margin:8px 0;display:flex;align-items:center;gap:4px;font-weight:500"><div style="width:8px;height:8px;background:#ef4444;border-radius:50%;animation:pulse 2s infinite"></div>LIVE NOW</div>' : ''}
+              ${ev.platforms && ev.platforms.length > 0 ? `<div style="font-size:12px;color:${secondaryTextColor};margin-bottom:12px">Platforms: ${ev.platforms.join(', ')}</div>` : ''}
+              <button id="watch-${ev.id}" style="width:100%;padding:12px 16px;border-radius:8px;background:#3b82f6;color:#fff;font-size:14px;font-weight:500;border:none;cursor:pointer;transition:background 0.2s;margin-top:8px" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">Watch Stream</button>
             </div>
           `;
 
-          // Create and show popup
+          // Create and show popup with proper persistence
           const popup = new mapboxgl.Popup({
             offset: 25,
             closeButton: true,
             closeOnClick: false,
-            maxWidth: '300px',
-            className: 'event-popup'
+            closeOnMove: false,
+            maxWidth: '320px',
+            className: 'event-popup',
+            focusAfterOpen: false
           })
             .setLngLat([ev.lng, ev.lat])
             .setHTML(html)
@@ -288,7 +302,8 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
         // Create and add the marker to the map
         const marker = new mapboxgl.Marker({
           element: el,
-          anchor: 'center'
+          anchor: 'center', // This ensures the marker scales from its center point
+          offset: [0, 0] // Explicit offset to prevent any positioning issues
         })
           .setLngLat([ev.lng, ev.lat])
           .addTo(map);
@@ -328,7 +343,7 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
 
   return (
     <div className="relative h-full w-full">
-      {/* Add CSS for pulse animation */}
+      {/* Add CSS for pulse animation and popup styling */}
       <style jsx>{`
         @keyframes pulse {
           0%, 100% {
@@ -339,10 +354,68 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
           }
         }
         .event-marker {
-          transition: all 0.2s ease;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+          transform-origin: center center;
         }
         .event-marker:hover {
           transform: scale(1.1);
+        }
+        
+        /* Popup styling overrides */
+        :global(.mapboxgl-popup-content) {
+          background: white !important;
+          color: #1f2937 !important;
+          border-radius: 12px !important;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+          border: 1px solid #e5e7eb !important;
+          padding: 0 !important;
+        }
+        
+        :global(.mapboxgl-popup-close-button) {
+          color: #6b7280 !important;
+          font-size: 18px !important;
+          padding: 8px !important;
+          right: 8px !important;
+          top: 8px !important;
+          background: rgba(255, 255, 255, 0.9) !important;
+          border-radius: 50% !important;
+          width: 24px !important;
+          height: 24px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+        
+        :global(.mapboxgl-popup-close-button:hover) {
+          background: rgba(255, 255, 255, 1) !important;
+          color: #374151 !important;
+        }
+        
+        :global(.mapboxgl-popup-tip) {
+          border-top-color: white !important;
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+          :global(.mapboxgl-popup-content) {
+            background: #1f2937 !important;
+            color: #f9fafb !important;
+            border-color: #374151 !important;
+          }
+          
+          :global(.mapboxgl-popup-close-button) {
+            color: #9ca3af !important;
+            background: rgba(31, 41, 55, 0.9) !important;
+          }
+          
+          :global(.mapboxgl-popup-close-button:hover) {
+            background: rgba(31, 41, 55, 1) !important;
+            color: #f3f4f6 !important;
+          }
+          
+          :global(.mapboxgl-popup-tip) {
+            border-top-color: #1f2937 !important;
+          }
         }
       `}</style>
 
