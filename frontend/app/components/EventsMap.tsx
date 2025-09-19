@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useImperativeHandle, forwardRef } from "react";
+import { useEffect, useMemo, useRef, useState, useImperativeHandle, forwardRef, useCallback } from "react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
-import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 
@@ -48,69 +47,37 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
   const [hoveredEvent, setHoveredEvent] = useState<LiveEvent | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [mapboxgl, setMapboxgl] = useState<any>(null);
+  const markersRef = useRef<Map<string, unknown>>(new Map());
+  const isUserInteractingRef = useRef(false);
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   const { theme } = useTheme();
+  const [mapStyle, setStyle] = useState<string | null>(null);
 
-  // Calculate center based on events density - prioritize areas with most events
-  const center = useMemo(() => {
-    // lat: 40.7189,
-    //   lng: -73.959,
-    //   isLive: true,
-    if (events.length === 0) return [-73.957, 40.72]; // Default to Brooklyn
-
-    // Group events by proximity and find the densest area
-    const clusters: { center: [number, number]; events: LiveEvent[]; density: number }[] = [];
-
-    events.forEach((event) => {
-      let addedToCluster = false;
-
-      // Check if event is close to existing cluster
-      for (const cluster of clusters) {
-        const distance = Math.sqrt(
-          Math.pow(event.lng - cluster.center[0], 2) +
-          Math.pow(event.lat - cluster.center[1], 2)
-        );
-
-        if (distance < 0.01) { // Roughly 1km radius
-          cluster.events.push(event);
-          // Update cluster center to be average of all events in cluster
-          const avgLng = cluster.events.reduce((sum, e) => sum + e.lng, 0) / cluster.events.length;
-          const avgLat = cluster.events.reduce((sum, e) => sum + e.lat, 0) / cluster.events.length;
-          cluster.center = [avgLng, avgLat];
-          cluster.density = cluster.events.length;
-          addedToCluster = true;
-          break;
-        }
-      }
-
-      // Create new cluster if not close to any existing one
-      if (!addedToCluster) {
-        clusters.push({
-          center: [event.lng, event.lat],
-          events: [event],
-          density: 1
-        });
-      }
-    });
-
-    // Find cluster with highest density
-    const densestCluster = clusters.reduce((max, cluster) =>
-      cluster.density > max.density ? cluster : max
-    );
-
-    console.log(`🗺️ Found ${clusters.length} clusters, densest has ${densestCluster.density} events at [${densestCluster.center[0]}, ${densestCluster.center[1]}]`);
-
-    return densestCluster.center as [number, number];
+  // Helper: compute initial center once from current events
+  const initialCenter = useMemo<[number, number]>(() => {
+    if (events.length === 0) return [-73.957, 40.72];
+    const avgLng = events.reduce((s, e) => s + e.lng, 0) / events.length;
+    const avgLat = events.reduce((s, e) => s + e.lat, 0) / events.length;
+    return [avgLng, avgLat];
   }, [events]);
 
   // Get appropriate Mapbox style based on theme
-  const mapStyle = useMemo(() => {
+  // const mapStyle = useMemo(() => {
+  //   console.log('🗺️ Theme:', theme);
+  //   const style = theme == 'dark'
+  //     ? 'mapbox://styles/mapbox/dark-v11'
+  //     : 'mapbox://styles/mapbox/light-v11';
+  //   console.log('🗺️ Map style selected:', style, 'for theme:', theme);
+  //   return style;
+  // }, [theme]);
+  useEffect(() => {
     console.log('🗺️ Theme:', theme);
     const style = theme == 'dark'
       ? 'mapbox://styles/mapbox/dark-v11'
       : 'mapbox://styles/mapbox/light-v11';
     console.log('🗺️ Map style selected:', style, 'for theme:', theme);
-    return style;
+    setStyle(style);
+    // return style;
   }, [theme]);
 
   useImperativeHandle(ref, () => ({
@@ -143,20 +110,20 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
     async function init() {
       if (!containerRef.current) return;
       if (!token) return;
-      
+
       try {
         console.log("🗺️ Initializing Mapbox with token:", token.substring(0, 20) + "...");
-        
+
         const mapboxglModule = (await import("mapbox-gl")).default;
         setMapboxgl(mapboxglModule);
         mapboxgl = mapboxglModule;
-        
+
         mapboxgl.accessToken = token;
-        
+
         map = new mapboxgl.Map({
           container: containerRef.current,
           style: mapStyle,
-          center,
+          center: initialCenter,
           zoom: 13, // Slightly closer zoom to see events better
           maxZoom: 150,
           minZoom: 10.12,
@@ -166,27 +133,31 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
 
         mapRef.current = map;
 
-        // Add drag event listeners
-        if (onMapDrag) {
-          map.on("dragstart", () => {
-            onMapDrag(true);
-          });
-
-          map.on("dragend", () => {
-            onMapDrag(false);
-          });
-        }
+        // Add interaction listeners
+        map.on("dragstart", () => {
+          isUserInteractingRef.current = true;
+          onMapDrag?.(true);
+        });
+        map.on("dragend", () => {
+          isUserInteractingRef.current = false;
+          onMapDrag?.(false);
+        });
+        map.on("movestart", () => { isUserInteractingRef.current = true; });
+        map.on("moveend", () => { isUserInteractingRef.current = false; });
 
         map.on("load", () => {
           setMapReady(true);
+          updateMarkers();
           console.log("✅ Map loaded successfully, ready for events");
         });
 
-        map.on("error", (e) => {
+        map.on("error", (e: unknown) => {
           console.error("❌ Map error:", e);
         });
 
         map.on("style.load", () => {
+          // Re-add markers after style changes
+          updateMarkers();
           console.log("✅ Map style loaded");
         });
 
@@ -203,7 +174,9 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
         map.remove();
       }
     };
-  }, [token, onMapDrag, mapStyle, center, events]); // Include center and events in dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, mapStyle]); // Initialize once for token/style; do not depend on events
 
   // Update map style when theme changes
   useEffect(() => {
@@ -212,39 +185,24 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
     }
   }, [mapStyle, mapReady]);
 
-  // Handle events updates without recreating the map
-  useEffect(() => {
-    if (!mapRef.current || !mapReady || !mapboxgl) return;
-
+  // Local function to (re)build markers
+  const updateMarkers = useCallback(() => {
+    if (!mapRef.current || !mapboxgl) return;
     const map = mapRef.current;
-    console.log(`🗺️ Updating markers for ${events.length} events`);
 
-    // Remove existing event listeners to prevent duplicates
-    map.off("click", "touch-points");
-
-    // Clear existing markers first - use Mapbox's internal marker tracking
-    const mapContainer = map.getContainer();
-    const existingMarkers = mapContainer.querySelectorAll('.event-marker');
-    existingMarkers.forEach((el: Element) => {
-      try {
-        if (el.parentNode) {
-          el.parentNode.removeChild(el);
-        }
-      } catch (error) {
-        console.warn('Error removing marker:', error);
-      }
+    // Clear existing markers
+    markersRef.current.forEach((marker) => {
+      try { (marker as { remove: () => void }).remove(); } catch { }
     });
+    markersRef.current.clear();
 
-    // Create new markers for each event using the pattern you provided
-    events.forEach((ev, index) => {
+    // Add new markers
+    events.forEach((ev) => {
       try {
-        console.log(`🗺️ Creating marker for event ${index + 1}: ${ev.title} at [${ev.lng}, ${ev.lat}]`);
-        
-        // Create marker element following the Mapbox example pattern
         const el = document.createElement("div");
         el.className = "event-marker";
-        el.style.width = "50px";
-        el.style.height = "50px";
+        el.style.width = "44px";
+        el.style.height = "44px";
         el.style.backgroundSize = "cover";
         el.style.backgroundPosition = "center";
         el.style.backgroundRepeat = "no-repeat";
@@ -255,36 +213,28 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
         el.style.position = "relative";
         el.style.transition = "all 0.2s ease";
         el.style.display = "block";
-
-        // Set background image to the event's avatar
         el.style.backgroundImage = `url(${ev.avatarUrl})`;
 
-        // Add live indicator for live events
         if (ev.isLive) {
-          const liveIndicator = document.createElement("div");
-          liveIndicator.style.position = "absolute";
-          liveIndicator.style.top = "-2px";
-          liveIndicator.style.right = "-2px";
-          liveIndicator.style.width = "16px";
-          liveIndicator.style.height = "16px";
-          liveIndicator.style.backgroundColor = "#ef4444";
-          liveIndicator.style.borderRadius = "50%";
-          liveIndicator.style.border = "2px solid white";
-          liveIndicator.style.animation = "pulse 2s infinite";
-          el.appendChild(liveIndicator);
+          const live = document.createElement("div");
+          live.style.position = "absolute";
+          live.style.top = "-2px";
+          live.style.right = "-2px";
+          live.style.width = "14px";
+          live.style.height = "14px";
+          live.style.backgroundColor = "#ef4444";
+          live.style.borderRadius = "50%";
+          live.style.border = "2px solid white";
+          el.appendChild(live);
         }
 
-        // Add hover effects
         el.addEventListener("mouseenter", () => {
-          el.style.transform = "scale(1.1)";
-          el.style.boxShadow = "0 8px 20px rgba(0,0,0,0.4)";
+          el.style.transform = "scale(1.08)";
           el.style.zIndex = "1000";
           setHoveredEvent(ev);
         });
-
         el.addEventListener("mouseleave", () => {
           el.style.transform = "scale(1)";
-          el.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
           el.style.zIndex = "auto";
           setHoveredEvent(null);
         });
@@ -293,7 +243,7 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
         el.addEventListener("click", (e) => {
           e.stopPropagation();
           console.log("Marker clicked for event:", ev.title);
-          
+
           // Create popup content
           const html = `
             <div style="min-width:200px;padding:12px">
@@ -336,22 +286,25 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
         });
 
         // Create and add the marker to the map
-        const marker = new mapboxgl.Marker({ 
+        const marker = new mapboxgl.Marker({
           element: el,
           anchor: 'center'
         })
           .setLngLat([ev.lng, ev.lat])
           .addTo(map);
 
-        console.log(`✅ Marker created for ${ev.title}`);
+        markersRef.current.set(ev.id, marker);
       } catch (error) {
         console.error(`❌ Error creating marker for event ${ev.id}:`, error);
       }
     });
+  }, [events, mapboxgl]);
 
-    console.log(`✅ Finished creating ${events.length} markers`);
-
-  }, [events, mapReady, mapboxgl]);
+  // Update markers when events change (no recentering)
+  useEffect(() => {
+    if (!mapRef.current || !mapReady) return;
+    updateMarkers();
+  }, [events, mapReady, updateMarkers]);
 
   if (!token) {
     return (
@@ -427,7 +380,17 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
         </div>
       )}
 
-      <div ref={containerRef} className="absolute inset-0" aria-label={mapReady ? "interactive map" : "loading map"} />
+      <div
+        ref={containerRef}
+        className="absolute inset-0 z-0"
+        style={{
+          transform: "translateZ(0)",
+          backfaceVisibility: "hidden",
+          WebkitBackfaceVisibility: "hidden",
+          willChange: "transform",
+        }}
+        aria-label={mapReady ? "interactive map" : "loading map"}
+      />
     </div>
   );
 });

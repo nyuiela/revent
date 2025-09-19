@@ -31,12 +31,12 @@ const Footer = () => {
 
   return (
 
-    <footer className={`pt-4 flex justify-center items-center w-full bg-transparent border-none flex-col fixed bottom-0 transition-transform duration-300 ease-out will-change-transform bg-red-00 mx-auto ${isHidden ? 'translate-y-full opacity-0' : 'translate-y-0 opacity-100'}`}>
+    <footer className={`pt-4 flex justify-center items-center w-full bg-transparent border-none flex-col fixed bottom-0 transition-transform duration-300 ease-out will-change-transform ${isHidden ? 'translate-y-full opacity-0' : 'translate-y-0 opacity-100'}`}>
       {/* <StreamHeader /> */}
       {/* <div className="w-full flex justify-start px-4 p-2 items-center bg-transparent border-none">
         Menu
       </div> */}
-      <div className="px-4 flex justify-center items-center border-none border-gray-00 bg-gray-000 w-[90%] p-2 gap-4 overflow-x-auto mx-10 bg-transparent ">
+      <div className="px-4 flex justify-center items-center border-none border-gray-00 bg-gray-000 w-[90%] p-2 gap-4 overflow-x-auto mx-10 bg-transparent">
 
         <div className="h-10 w-fit px-4 flex justify-center items-center border-none border-gray-300 rounded-full bg-gray-000  bg-background dark:border-gray-500 shrink-0 gap-2 shadow-xl z-10 shadow-gray-500" onClick={() => router.push('/')}>
           <Home className="w-4 h-4" />

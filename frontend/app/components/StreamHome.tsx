@@ -20,7 +20,8 @@ export default function StreamHome() {
   const [showDiscover, setShowDiscover] = useState(true);
   const [searchBarVisible, setSearchBarVisible] = useState(true);
   const [selectedEventTitle, setSelectedEventTitle] = useState<string>("");
-  const [isMounted, setIsMounted] = useState(false);
+  const [isMounted, setIsMounted] = useState(false); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const dragOverlayTimerRef = useRef<number | null>(null);
   const mapRef = useRef<EventsMapRef>(null);
   // const viewProfile = useViewProfile();
 
@@ -73,7 +74,19 @@ export default function StreamHome() {
   };
 
   const handleMapDrag = (isDragging: boolean) => {
-    setSearchBarVisible(!isDragging);
+    if (isDragging) {
+      if (dragOverlayTimerRef.current) {
+        window.clearTimeout(dragOverlayTimerRef.current);
+        dragOverlayTimerRef.current = null;
+      }
+      setSearchBarVisible(false);
+    } else {
+      // Slight hysteresis to avoid flicker on small moveend/movestart sequences
+      dragOverlayTimerRef.current = window.setTimeout(() => {
+        setSearchBarVisible(true);
+        dragOverlayTimerRef.current = null;
+      }, 150);
+    }
   };
 
   // Show loading state while data is being fetched
@@ -126,15 +139,18 @@ export default function StreamHome() {
           )}
 
           {/* Search bar - responsive to map dragging */}
-          <div className={`absolute left-4 right-4 top-4 flex items-center gap-2 transition-all duration-300 ${searchBarVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
-            }`}>
-            <EventSearch
-              events={events}
-              onEventSelect={handleEventSelect}
-              onSearch={handleSearch}
-              selectedEventTitle={selectedEventTitle}
-              onClearSelectedEvent={() => setSelectedEventTitle("")}
-            />
+          <div
+            className={`absolute left-4 right-4 top-4 flex items-center gap-2 transition-all duration-300 pointer-events-none ${searchBarVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}
+          >
+            <div className={`${searchBarVisible ? 'pointer-events-auto' : 'pointer-events-none'} w-full`}>
+              <EventSearch
+                events={events}
+                onEventSelect={handleEventSelect}
+                onSearch={handleSearch}
+                selectedEventTitle={selectedEventTitle}
+                onClearSelectedEvent={() => setSelectedEventTitle("")}
+              />
+            </div>
           </div>
 
           {/* Mode segmented control */}
