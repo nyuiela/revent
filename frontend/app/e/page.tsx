@@ -7,6 +7,7 @@ import OwnerDisplay from '../../components/OwnerDisplay'
 import ViewCount from '../../components/ViewCount'
 import { useEvents } from '../../hooks/useEvents'
 import { useViewCounts } from '../../hooks/useViewCounts'
+import StreamHeader from '../components/StreamHeader'
 
 
 // Function to format timestamp to readable date
@@ -83,6 +84,7 @@ const EventsPage = () => {
     <div className="min-h-screen text-[var(--events-foreground)] bg-events-background relative z-[20] pt-10 bg-[#F2F4F3]">
       {/* Header */}
       <div className="top-0 z-40 bg-transparent border-none">
+        <StreamHeader />
         <div className="flex items-center justify-between p-4">
           <div>
             <h1 className="text-xl font-bold text-[var(--events-foreground)]">Events</h1>

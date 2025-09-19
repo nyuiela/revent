@@ -50,6 +50,7 @@
     "request": "^2.88.2",
     "simple-peer": "^9.11.1",
     "styled-components": "^6.1.19",
+    "tailwind-animate": "^0.2.10",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
     "tsparticles": "^3.9.1",

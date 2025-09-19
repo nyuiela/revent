@@ -179,7 +179,7 @@ export default function MediaGrid({
                 ) : (
                   <Image 
                     src={m.url} 
-                    alt={m.title} 
+                    alt={m.title || 'Media item'} 
                     width={100}
                     height={100}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" 

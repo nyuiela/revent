@@ -16,6 +16,7 @@ import { EventFormData } from "@/utils/types";
 import { useQuery } from "@tanstack/react-query";
 import { headers, namesQuery, url } from "@/utils/subgraph";
 import request from "graphql-request";
+import Image from "next/image";
 // Removed unused import
 
 
@@ -40,6 +41,7 @@ const CreateEventForm = () => {
     isLive: false,
     platforms: [],
     totalRewards: 0,
+    eventType: "offline",
     hosts: [],
     agenda: [],
     sponsors: [],
@@ -331,6 +333,7 @@ const CreateEventForm = () => {
       isLive: false,
       platforms: [],
       totalRewards: 0,
+      eventType: "offline",
       hosts: [],
       agenda: [],
       sponsors: [],
@@ -711,7 +714,7 @@ const CreateEventForm = () => {
                     <button
                       type="button"
                       onClick={autoFillMockData}
-                      className="px-4 py-3 bg-primary text-primary-foreground text-sm rounded-lg hover:bg-primary/90 transition-colors min-h-[44px]"
+                      className="px-2 py-2 bg-primary text-primary-foreground text-sm rounded-lg hover:bg-primary/90 transition-colors min-h-[44px] text-nowrap"
                     >
                       {isAutoFilled ? "✓ Auto-filled" : "Auto-fill"}
                     </button>
@@ -739,6 +742,7 @@ const CreateEventForm = () => {
                             isLive: false,
                             platforms: [],
                             totalRewards: 0,
+                            eventType: "offline",
                             hosts: [],
                             agenda: [],
                             sponsors: [],
@@ -1484,18 +1488,23 @@ const CreateEventForm = () => {
                 </div>
 
                 {/* Event Image */}
-                {formData.image && (
+                {formData.image ? (
                   <div className="pt-3 border-t border-border">
                     <h4 className="text-base sm:text-lg font-medium text-foreground mb-3">Event Image</h4>
                     <div className="flex items-center gap-3">
                       <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center">
-                        <Icon name="camera" size="lg" className="text-muted-foreground" />
+                        <Image src={formData.image || "/revent-logo.png"} alt="Event Image" width={64} height={64} className="object-cover w-full h-full" />
                       </div>
                       <div className="flex-1">
                         <p className="text-sm sm:text-base text-muted-foreground break-all">{formData.image}</p>
                         <p className="text-xs text-muted-foreground mt-1">Image URL</p>
                       </div>
                     </div>
+                  </div>
+                ) : (
+                  <div className="pt-3 border-t border-border">
+                    <h4 className="text-base sm:text-lg font-medium text-foreground mb-3">Event Image</h4>
+                    <p className="text-sm sm:text-base text-muted-foreground italic">No image added</p>
                   </div>
                 )}
 
@@ -1507,7 +1516,7 @@ const CreateEventForm = () => {
                       {formData.hosts.map((host, index) => (
                         <div key={index} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                           <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                            <Icon name="users" size="sm" className="text-white" />
+                            <Image src={host.avatar || "/revent-logo.png"} alt="Host Avatar" width={40} height={40} />
                           </div>
                           <div>
                             <p className="font-medium text-sm sm:text-base">@{host.name}</p>
@@ -1539,7 +1548,7 @@ const CreateEventForm = () => {
                           )}
                           {item.speakers && item.speakers.length > 0 && (
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <Icon name="users" size="sm" />
+                              <Image src={"/revent-logo.png"} alt="Speaker Avatar" width={16} height={16} />
                               <span>Speakers: {item.speakers.join(', ')}</span>
                             </div>
                           )}

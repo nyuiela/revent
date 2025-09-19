@@ -8,8 +8,6 @@ export const headers = {
 
 export const graphqlClient = new GraphQLClient(endpoint, {
   headers,
-  timeout: 10000, // 10 second timeout
-  errorPolicy: 'all', // Return both data and errors
 });
 
 export async function requestGraphQL<T>(query: string, variables?: Record<string, unknown>) {

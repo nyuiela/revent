@@ -125,12 +125,19 @@ export default function BridgeModal({ isOpen, onClose }: BridgeModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-3xl h-[90vh] flex flex-col shadow-2xl relative">
+    <div 
+      className="fixed inset-0 bg-gradient-to-br from-white/5 via-gray-500/5 to-black/10 dark:from-black/5 dark:via-gray-500/5 dark:to-black/20 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-xl w-full max-w-3xl h-[90vh] flex flex-col shadow-2xl relative border border-white/20 dark:border-gray-700/50 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg hover:bg-white dark:hover:bg-gray-800 transition-all duration-200 border border-white/20 dark:border-gray-700/50"
           aria-label="Close modal"
         >
           <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import Link from "next/link";
 import StreamHeader from "./StreamHeader";
 import EventsMap, { type LiveEvent, type EventsMapRef } from "./EventsMap";
@@ -20,8 +20,13 @@ export default function StreamHome() {
   const [showDiscover, setShowDiscover] = useState(true);
   const [searchBarVisible, setSearchBarVisible] = useState(true);
   const [selectedEventTitle, setSelectedEventTitle] = useState<string>("");
+  const [isMounted, setIsMounted] = useState(false);
   const mapRef = useRef<EventsMapRef>(null);
   // const viewProfile = useViewProfile();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Use React Query for events data
   const { data: events = [], isLoading: eventsLoading } = useEvents();
@@ -144,7 +149,7 @@ export default function StreamHome() {
                   `}
               >
                 <ChevronUp className={`w-3 h-3 transition-transform ${showDiscover ? 'rotate-180' : ''}`} />
-                discover
+                Discover
               </button>
             </div>
 
@@ -176,7 +181,7 @@ export default function StreamHome() {
       {
         showDiscover && (
           <section className="space-y-3 px-4">
-            <h3 className="text-sm font-medium">Discover events</h3>
+            <h3 className="text-sm font-medium">Discover Events</h3>
             <div className="grid grid-cols-2 gap-3">
               {discoverEvents.map((event) => (
                 <Link

@@ -81,6 +81,24 @@ export default async function RootLayout({
   })
   return (
     <html lang="en" className={plusJakarta.variable}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const theme = localStorage.getItem('theme');
+                const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const resolvedTheme = theme === 'system' 
+                  ? (systemPrefersDark ? 'dark' : 'light')
+                  : theme || 'light';
+                document.documentElement.classList.add(resolvedTheme);
+              } catch (e) {
+                document.documentElement.classList.add('light');
+              }
+            `,
+          }}
+        />
+      </head>
       <body className="bg-background">
         <ThemeProvider>
           <Providers>

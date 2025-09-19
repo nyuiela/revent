@@ -169,9 +169,8 @@ export default function DashboardPage() {
         </div>
       </div>
       {/* Hero */}
-      <section className="bg-amber-300 border border-gray-200 rounded-xl mb-4 h-[45vh]">
-        <Image src="/illustration.svg" alt='hero' className="w-full h-full object-cover" width={192} height={192} unoptimized />
-
+      <section className="bg-[#282233] border-4 border-gray-200 rounded-xl mb-4 h-[45vh]">
+        <Image src="/illustration.svg" alt='hero' className="w-full h-full rounded-lg scale-[0.99] object-cover" width={192} height={192} unoptimized />
       </section>
 
       {/* Bridge Domain */}

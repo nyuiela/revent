@@ -1,13 +1,16 @@
 "use client";
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import { MediaItem, PermissionRequest } from '@/components/MediaGrid';
+import Image from 'next/image';
 
 const mockMedia: MediaItem[] = [
   {
     id: '1',
-    url: '/icon.png',
+    url: '/stream.jpg',
     title: 'Image_HD_Dec 15 2:30 PM_a1b2c3',
     price: 0.5,
     accessRights: 'read',
@@ -26,7 +29,7 @@ const mockMedia: MediaItem[] = [
   },
   {
     id: '2',
-    url: '/icon.png',
+    url: '/stream.jpg',
     title: 'Video_SD_Dec 14 4:15 PM_d4e5f6',
     price: 1.2,
     accessRights: 'write',
@@ -73,6 +76,15 @@ export default function PermissionsPage() {
     <div className="min-h-screen p-6 bg-transparent overflow-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center space-x-4">
+          <Link 
+            href="/dashboard" 
+            className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back to Dashboard</span>
+          </Link>
+        </div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Permissions Dashboard</h1>
         <ThemeToggle />
       </div>
@@ -110,7 +122,7 @@ export default function PermissionsPage() {
             <div key={media.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex items-start space-x-4">
                 <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
-                  <img src={media.url} alt={media.title} className="w-full h-full object-cover" />
+                  <Image src={media.url || '/stream.jpg'} alt={`${media.title}`} className="w-full h-full object-cover" width={80} height={80} />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">{media.title}</h3>
@@ -203,7 +215,7 @@ export default function PermissionsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden">
-                            <img src="/icon.png" alt="Media" className="w-full h-full object-cover" />
+                            <Image src={transfer.mediaId === '1' ? '/stream.jpg' : '/stream.jpg'} alt="Media" className="w-full h-full object-cover" width={40} height={40} />
                           </div>
                           <div className="ml-3">
                             <div className="text-sm font-medium text-gray-900 dark:text-gray-100">

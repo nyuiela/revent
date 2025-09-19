@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Eye,
   X,
@@ -24,6 +24,7 @@ type Platform = {
 export default function StreamHeader() {
   const [showModal, setShowModal] = useState(false);
   const [showModalConnect, setShowModalConnect] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const [platforms, setPlatforms] = useState<Platform[]>([
@@ -59,6 +60,39 @@ export default function StreamHeader() {
 
   const isAnyLive = platforms.some((p) => p.live);
 
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Prevent hydration mismatch by not rendering wallet-dependent content until mounted
+  if (!isMounted) {
+    return (
+      <div className="flex items-center justify-between py-2 px-4">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-app-card-bg border border-app-card-border text-sm">
+            <div className="w-4 h-4 bg-gray-300 rounded animate-pulse"></div>
+            <div className="w-20 h-4 bg-gray-300 rounded animate-pulse"></div>
+          </div>
+        </div>
+        <ThemeSwitcher className="scale-[1.0] lg:scale-[0.8] ml-0 lg:-ml-4" />
+        {process.env.NEXT_PUBLIC_ENV === "development" && (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 rounded-full border border-app-card-border bg-app-card-bg px-3 py-1.5">
+              <div className="flex -space-x-1">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="w-6 h-6 bg-gray-300 rounded-full animate-pulse"></div>
+                ))}
+              </div>
+              <div className="flex items-center gap-1">
+                <Eye className="w-3 h-3" />
+                <span className="text-xs text-app-foreground-muted">offline</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <>
@@ -67,7 +101,7 @@ export default function StreamHeader() {
         <div className="flex items-center gap-2">
 
           {isConnected && address ? (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-app-card-bg border border-app-card-border text-sm">
+            <div className="flex items-center gap-2 px-3 py-1.5 scale-[1.2] lg:scale-[1.0] rounded-full bg-app-card-bg border border-app-card-border text-sm">
               <User className="w-4 h-4 text-primary" />
               <span className="text-app-foreground">
                 {address.slice(0, 6)}...{address.slice(-4)}
@@ -113,7 +147,7 @@ export default function StreamHeader() {
         </div>
 
         {/* Center section with theme switcher and streaming platforms */}
-        <ThemeSwitcher />
+        <ThemeSwitcher className="scale-[1.0] lg:scale-[0.8] ml-0 lg:-ml-4" />
         {process.env.NEXT_PUBLIC_ENV === "development" && (
           <div className="flex items-center gap-2">
             {/* Theme toggle button */}

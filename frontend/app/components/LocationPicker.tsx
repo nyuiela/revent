@@ -81,31 +81,41 @@ const LocationPicker: React.FC<Props> = ({ value, onChange, label = "Location", 
         });
         mapRef.current = map;
 
-        // Add marker (custom HTML for guaranteed visibility without CSS sprites)
-        const el = document.createElement("div");
-        el.style.width = "16px";
-        el.style.height = "16px";
-        el.style.borderRadius = "50%";
-        el.style.background = "#ef4444";
-        el.style.border = "2px solid white";
-        el.style.boxShadow = "0 2px 6px rgba(0,0,0,.3)";
-        const marker = new mod.Marker({ element: el, draggable: true })
-          .setLngLat(center)
-          .addTo(map);
-        marker.on("dragend", () => {
-          const lngLat = marker.getLngLat();
-          onChange({ location: query || value.location, coordinates: { lat: lngLat.lat, lng: lngLat.lng } });
-        });
-        markerRef.current = marker as unknown as mapboxgl.Marker;
+        // Ensure marker is created after the map loads
+        map.on("load", () => {
+          try {
+            if (!markerRef.current) {
+              const el = document.createElement("div");
+              el.style.width = "16px";
+              el.style.height = "16px";
+              el.style.borderRadius = "50%";
+              el.style.background = "#ef4444";
+              el.style.border = "2px solid white";
+              el.style.boxShadow = "0 2px 6px rgba(0,0,0,.3)";
+              const m = new mod.Marker({ element: el, draggable: true })
+                .setLngLat(center)
+                .addTo(map!);
+              m.on("dragend", () => {
+                const lngLat = m.getLngLat();
+                onChange({ location: query || value.location, coordinates: { lat: lngLat.lat, lng: lngLat.lng } });
+              });
+              markerRef.current = m as unknown as mapboxgl.Marker;
+            } else {
+              markerRef.current.setLngLat(center);
+            }
 
-        // Click to set marker
-        map.on("click", (e) => {
-          const { lng, lat } = e.lngLat;
-          marker.setLngLat([lng, lat]);
-          onChange({ location: query || value.location, coordinates: { lat, lng } });
+            // Click to set marker
+            map!.on("click", (e) => {
+              const { lng, lat } = e.lngLat;
+              if (markerRef.current) markerRef.current.setLngLat([lng, lat]);
+              onChange({ location: query || value.location, coordinates: { lat, lng } });
+            });
+          } catch (err) {
+            console.error("Map load/marker init error:", err);
+          }
         });
-      } catch {
-        // no map fallback
+      } catch (err) {
+        console.error("Map init error:", err);
       }
     }
 
@@ -123,7 +133,26 @@ const LocationPicker: React.FC<Props> = ({ value, onChange, label = "Location", 
     if (!mapRef.current || !mapboxgl) return;
     try {
       mapRef.current.flyTo({ center, zoom: 13, essential: true });
-      if (markerRef.current) markerRef.current.setLngLat(center);
+      if (markerRef.current) {
+        markerRef.current.setLngLat(center);
+      } else {
+        // Create a marker on-the-fly if missing
+        const el = document.createElement("div");
+        el.style.width = "16px";
+        el.style.height = "16px";
+        el.style.borderRadius = "50%";
+        el.style.background = "#ef4444";
+        el.style.border = "2px solid white";
+        el.style.boxShadow = "0 2px 6px rgba(0,0,0,.3)";
+        const M = new mapboxgl.Marker({ element: el, draggable: true })
+          .setLngLat(center)
+          .addTo(mapRef.current);
+        M.on("dragend", () => {
+          const lngLat = (M as any).getLngLat();
+          onChange({ location: query || value.location, coordinates: { lat: lngLat.lat, lng: lngLat.lng } });
+        });
+        markerRef.current = M as unknown as mapboxgl.Marker;
+      }
     } catch {
       // noop
     }
@@ -135,7 +164,26 @@ const LocationPicker: React.FC<Props> = ({ value, onChange, label = "Location", 
     onChange({ location: s.name, coordinates: { lat: s.center[1], lng: s.center[0] } });
     if (mapRef.current) {
       mapRef.current.flyTo({ center: s.center, zoom: 14, essential: true });
-      if (markerRef.current) markerRef.current.setLngLat(s.center);
+      if (markerRef.current) {
+        markerRef.current.setLngLat(s.center);
+      } else if (mapboxgl) {
+        // Create marker if it doesn't exist yet
+        const el = document.createElement("div");
+        el.style.width = "16px";
+        el.style.height = "16px";
+        el.style.borderRadius = "50%";
+        el.style.background = "#ef4444";
+        el.style.border = "2px solid white";
+        el.style.boxShadow = "0 2px 6px rgba(0,0,0,.3)";
+        const M = new mapboxgl.Marker({ element: el, draggable: true })
+          .setLngLat(s.center)
+          .addTo(mapRef.current);
+        M.on("dragend", () => {
+          const lngLat = (M as any).getLngLat();
+          onChange({ location: s.name, coordinates: { lat: lngLat.lat, lng: lngLat.lng } });
+        });
+        markerRef.current = M as unknown as mapboxgl.Marker;
+      }
     }
   }, [onChange]);
 

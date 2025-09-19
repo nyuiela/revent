@@ -2,7 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode, useState } from "react";
-import { ThemeProvider } from "@/context/ThemeContext";
+import { DynamicThemeProvider } from "@/context/DynamicThemeProvider";
 import PixelBlastBackground from "@/components/PixelBlastBackground";
 
 type ProvidersProps = {
@@ -13,7 +13,7 @@ export default function Providers({ children }: ProvidersProps) {
   const [queryClient] = useState(() => new QueryClient());
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
+      <DynamicThemeProvider>
         <div className="relative min-h-screen">
           {/* PixelBlast Background */}
           <PixelBlastBackground 
@@ -26,7 +26,7 @@ export default function Providers({ children }: ProvidersProps) {
             {children}
           </div>
         </div>
-      </ThemeProvider>
+      </DynamicThemeProvider>
     </QueryClientProvider>
   );
 }

@@ -6,7 +6,11 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "deploy:example": "node scripts/deploy-example.js",
+    "setup:registry": "node scripts/setup-registry.js",
+    "test:theme": "node scripts/test-theme.js",
+    "favicon:generate": "node scripts/generate-favicon.js"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.87.1",
