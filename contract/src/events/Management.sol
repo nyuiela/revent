@@ -6,24 +6,43 @@ import "./Modifiers.sol";
 import "./Events.sol";
 import "./Types.sol";
 import "./InternalUtils.sol";
-// import "../doma/interfaces/IDomaProxy.sol";
-// import "../doma/interfaces/IOwnershipToken.sol";
-import "./EventToken.sol";
-import "../interfaces/IEventTokenManager.sol";
+import "../doma/interfaces/IDomaProxy.sol";
+import "../doma/interfaces/IOwnershipToken.sol";
 
 abstract contract EventManagement is EventModifiers, EventInternalUtils {
     using Counters for Counters.Counter;
     using EventTypes for EventTypes.EventData;
-    
+
+    event DomaConfigUpdated(address domaProxy, address ownershipToken, address trustedForwarder, uint256 registrarIanaId, string domaChainId);
+    event DomaRequested(uint256 indexed eventId);
+    event DomaClaimed(uint256 indexed eventId, uint256 tokenId);
+    event DomaBridged(uint256 indexed eventId, string targetChainId, string targetOwnerAddress);
+
     function _afterEventCreated(uint256 eventId) internal virtual {}
+
+    function _linkDomaRequested(uint256 eventId) internal {
+        eventToDomaStatus[eventId] = 1; // Requested
+        emit DomaRequested(eventId);
+    }
+
+    function linkDomaMinted(uint256 eventId, uint256 tokenId) internal {
+        // callable by off-chain agent or registrar role in a fuller design
+        eventToDomaTokenId[eventId] = tokenId;
+        eventToDomaStatus[eventId] = 2; // Minted
+    }
+
+    function linkDomaClaimed(uint256 eventId) internal{
+        require(eventToDomaTokenId[eventId] != 0, "no token");
+        eventToDomaStatus[eventId] = 3; // Claimed
+        emit DomaClaimed(eventId, eventToDomaTokenId[eventId]);
+    }
 
     function createEvent(
         string memory ipfsHash,
         uint256 startTime,
         uint256 endTime,
         uint256 maxAttendees,
-        uint256 registrationFee,
-        bytes memory data
+        uint256 registrationFee
     ) external validRegistrationFee(registrationFee) returns (uint256) {
         require(bytes(ipfsHash).length > 0, "IPFS hash cannot be empty");
         require(startTime > block.timestamp, "Start time must be in the future");
@@ -48,14 +67,8 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils {
             createdAt: block.timestamp,
             updatedAt: block.timestamp
         });
-        uint256 totalSupply = abi.decode(data, (uint256));
+
         creatorEvents[_msgSender()].push(eventId);
-        
-        // Mint ERC1155 tokens for the event
-        string memory tokenUri = string(abi.encodePacked("https://api.stream-events.com/metadata/", uint2str(eventId), ".json"));
-        _mintEventTokens(eventId, totalSupply, tokenUri);
-        
-        publishEvent(eventId);
 
         emit EventEvents.EventCreated(
             eventId,
@@ -69,18 +82,6 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils {
 
         return eventId;
     }
-    
-    /**
-     * @dev Mint ERC1155 tokens for an event
-     * @param eventId The event ID
-     * @param totalSupply Total supply of tokens to mint
-     * @param tokenUri URI for the token metadata
-     */
-    function _mintEventTokens(uint256 eventId, uint256 totalSupply, string memory tokenUri) internal virtual {
-        // This will be implemented by the main contract that has access to eventTokenManager
-        // The actual implementation will be in the StreamEvents contract
-    }
-
 
     function updateEvent(
         uint256 eventId,
@@ -88,8 +89,7 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils {
         uint256 startTime,
         uint256 endTime,
         uint256 maxAttendees,
-        uint256 registrationFee,
-        bytes memory data
+        uint256 registrationFee
     ) external eventExists(eventId) onlyEventCreator(eventId) validRegistrationFee(registrationFee) {
         require(bytes(ipfsHash).length > 0, "IPFS hash cannot be empty");
         require(startTime > block.timestamp, "Start time must be in the future");
@@ -104,7 +104,6 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils {
         eventData.registrationFee = registrationFee;
         eventData.updatedAt = block.timestamp;
 
-
         emit EventEvents.EventUpdated(
             eventId,
             _msgSender(),
@@ -116,7 +115,7 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils {
         );
     }
 
-    function publishEvent(uint256 eventId) internal eventExists(eventId) onlyEventCreator(eventId) {
+    function publishEvent(uint256 eventId) external eventExists(eventId) onlyEventCreator(eventId) {
         EventTypes.EventData storage eventData = events[eventId];
         require(eventData.status == EventTypes.EventStatus.DRAFT, "Event must be in DRAFT status to publish");
 
@@ -127,7 +126,7 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils {
         emit EventEvents.EventStatusChanged(eventId, oldStatus, EventTypes.EventStatus.PUBLISHED);
     }
 
-    function _startLiveEvent(uint256 eventId) internal eventExists(eventId) 
+    function startLiveEvent(uint256 eventId) public eventExists(eventId) 
     // onlyEventCreator(eventId) 
     {
         EventTypes.EventData storage eventData = events[eventId];
@@ -140,10 +139,6 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils {
         eventData.updatedAt = block.timestamp;
 
         emit EventEvents.EventStatusChanged(eventId, oldStatus, EventTypes.EventStatus.LIVE);
-    }
-
-    function startLiveEvent(uint256 eventId) external onlyEventCreator(eventId) {
-        _startLiveEvent(eventId);
     }
 
     function endEvent(uint256 eventId) external eventExists(eventId) onlyEventCreator(eventId) {
@@ -169,18 +164,6 @@ abstract contract EventManagement is EventModifiers, EventInternalUtils {
         eventData.updatedAt = block.timestamp;
 
         emit EventEvents.EventStatusChanged(eventId, oldStatus, EventTypes.EventStatus.CANCELLED);
-    }
-
-    function setMinRegistrationFee(uint256 minRegistrationFee) external  {
-        require(minRegistrationFee < maxRegistrationFee, "Min fee must be less than max fee");
-        minRegistrationFee = minRegistrationFee;
-        emit EventEvents.RegistrationFeeLimitsUpdated(minRegistrationFee, maxRegistrationFee);
-    }
-
-    function setMaxRegistrationFee(uint256 maxRegistrationFee) external {
-        require(minRegistrationFee < maxRegistrationFee, "Min fee must be less than max fee");
-        maxRegistrationFee = maxRegistrationFee;
-        emit EventEvents.RegistrationFeeLimitsUpdated(minRegistrationFee, maxRegistrationFee);
     }
 }
 

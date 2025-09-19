@@ -48,12 +48,6 @@ library EventEvents {
         address indexed attendee
     );
 
-    event EventConfirmationCodeGenerated(
-        uint256 indexed eventId,
-        address indexed creator,
-        bytes32 confirmationCodeHash
-    );
-
     event PlatformFeeUpdated(uint256 oldFee, uint256 newFee);
     event RegistrationFeeLimitsUpdated(uint256 minFee, uint256 maxFee);
 

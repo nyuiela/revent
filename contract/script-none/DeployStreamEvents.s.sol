@@ -25,7 +25,7 @@ contract DeployStreamEvents is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         // Deploy the StreamEvents contract
-        streamEvents = new StreamEvents("https://api.streamevents.io/token");
+        streamEvents = new StreamEvents();
         
         vm.stopBroadcast();
 

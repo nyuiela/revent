@@ -36,7 +36,7 @@ abstract contract EventAdmin is Ownable, EventStorage {
     ) external onlyOwner {
         domaProxy = _domaProxy;
         ownershipToken = _ownershipToken;
-        // trustedForwarderAddr is now handled by the upgradeable contract
+        trustedForwarderAddr = _trustedForwarder;
         registrarIanaId = _registrarIanaId;
         domaChainId = _domaChainId;
     }

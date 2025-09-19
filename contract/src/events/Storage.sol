@@ -27,7 +27,7 @@ abstract contract EventStorage {
         public purchasedTicketCounts; // eventId => buyer => count
 
     uint256 public platformFee = 250; // basis points
-    uint256 public minRegistrationFee = 0.000 ether;
+    uint256 public minRegistrationFee = 0.001 ether;
     uint256 public maxRegistrationFee = 1 ether;
     address public feeRecipient;
     address public trustedForwarderAddr;

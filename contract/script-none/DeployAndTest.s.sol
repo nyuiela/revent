@@ -24,7 +24,7 @@ contract DeployAndTest is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         // Deploy the StreamEvents contract
-        streamEvents = new StreamEvents("https://api.streamevents.io/token");
+        streamEvents = new StreamEvents();
         
         vm.stopBroadcast();
 
@@ -64,16 +64,19 @@ contract DeployAndTest is Script {
             startTime,
             endTime,
             maxAttendees,
-            registrationFee,
-            bytes(abi.encode(100))
+            registrationFee
         );
         
         vm.stopBroadcast();
         
         console.log("   Event created with ID:", eventId);
         
-        // Test 2: Event is automatically published when created
-        console.log("   Event automatically published during creation");
+        // Test 2: Publish the event
+        console.log("   Testing event publishing...");
+        vm.startBroadcast(deployerPrivateKey);
+        streamEvents.publishEvent(eventId);
+        vm.stopBroadcast();
+        console.log("  Event published successfully");
         
         // Test 3: Add a ticket
         console.log("   Testing ticket creation...");
