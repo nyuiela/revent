@@ -21,6 +21,8 @@ import { EventDetails } from "@/utils/types";
 import RegistrationSuccessCard from "./RegistrationSuccessCard";
 import { Avatar, FollowersYouKnow, ProfileSocials } from "ethereum-identity-kit";
 import Image from "next/image";
+import { Button } from "./DemoComponents";
+import { ArrowLeft } from "lucide-react";
 
 
 type Props = {
@@ -539,6 +541,10 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
 
 
 
+  function onBack(): void {
+    window.history.back();
+  }
+
   // Prepare map data for EventsMap
   // Mapbox EventsMap dataset kept for future multi-event contexts if needed
 
@@ -576,11 +582,16 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
 
       {/* Hero Section */}
       <div className="relative h-[25rem] md:h-[25rem] mt-12 overflow-hidden">
+        <div className="absolute bottom-6 left-0">
+          <Button variant="ghost" className="rounded-lg mb-6 -mt-4 bg-white dark:bg-gray-800" onClick={onBack}>
+            <ArrowLeft className="w-4 h-4" /> Back
+          </Button>
+        </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <Image
           src={event.image}
           alt={event.title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover rounded-lg"
           width={1000}
           height={1000}
         />
