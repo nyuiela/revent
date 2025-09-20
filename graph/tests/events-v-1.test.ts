@@ -6,26 +6,30 @@ import {
   beforeAll,
   afterAll
 } from "matchstick-as/assembly/index"
-import { BigInt, Address } from "@graphprotocol/graph-ts"
-import { AttendeeAttended } from "../generated/schema"
-import { AttendeeAttended as AttendeeAttendedEvent } from "../generated/EventsV1/EventsV1"
-import { handleAttendeeAttended } from "../src/events-v-1"
-import { createAttendeeAttendedEvent } from "./events-v-1-utils"
+import { Address, BigInt } from "@graphprotocol/graph-ts"
+import { ApprovalForAll } from "../generated/schema"
+import { ApprovalForAll as ApprovalForAllEvent } from "../generated/EventsV1/EventsV1"
+import { handleApprovalForAll } from "../src/events-v-1"
+import { createApprovalForAllEvent } from "./events-v-1-utils"
 
 // Tests structure (matchstick-as >=0.5.0)
 // https://thegraph.com/docs/en/subgraphs/developing/creating/unit-testing-framework/#tests-structure
 
 describe("Describe entity assertions", () => {
   beforeAll(() => {
-    let eventId = BigInt.fromI32(234)
-    let attendee = Address.fromString(
+    let account = Address.fromString(
       "0x0000000000000000000000000000000000000001"
     )
-    let newAttendeeAttendedEvent = createAttendeeAttendedEvent(
-      eventId,
-      attendee
+    let operator = Address.fromString(
+      "0x0000000000000000000000000000000000000001"
     )
-    handleAttendeeAttended(newAttendeeAttendedEvent)
+    let approved = "boolean Not implemented"
+    let newApprovalForAllEvent = createApprovalForAllEvent(
+      account,
+      operator,
+      approved
+    )
+    handleApprovalForAll(newApprovalForAllEvent)
   })
 
   afterAll(() => {
@@ -35,21 +39,27 @@ describe("Describe entity assertions", () => {
   // For more test scenarios, see:
   // https://thegraph.com/docs/en/subgraphs/developing/creating/unit-testing-framework/#write-a-unit-test
 
-  test("AttendeeAttended created and stored", () => {
-    assert.entityCount("AttendeeAttended", 1)
+  test("ApprovalForAll created and stored", () => {
+    assert.entityCount("ApprovalForAll", 1)
 
     // 0xa16081f360e3847006db660bae1c6d1b2e17ec2a is the default address used in newMockEvent() function
     assert.fieldEquals(
-      "AttendeeAttended",
+      "ApprovalForAll",
       "0xa16081f360e3847006db660bae1c6d1b2e17ec2a-1",
-      "eventId",
-      "234"
+      "account",
+      "0x0000000000000000000000000000000000000001"
     )
     assert.fieldEquals(
-      "AttendeeAttended",
+      "ApprovalForAll",
       "0xa16081f360e3847006db660bae1c6d1b2e17ec2a-1",
-      "attendee",
+      "operator",
       "0x0000000000000000000000000000000000000001"
+    )
+    assert.fieldEquals(
+      "ApprovalForAll",
+      "0xa16081f360e3847006db660bae1c6d1b2e17ec2a-1",
+      "approved",
+      "boolean Not implemented"
     )
 
     // More assert options:

@@ -14,14 +14,14 @@ interface IUpgradeableProxy {
     // Upgrade functions
     function upgradeTo(address newImplementation) external;
     function upgradeToAndCall(address newImplementation, bytes calldata data) external;
-    
+
     // Admin functions
     function changeAdmin(address newAdmin) external;
-    
+
     // View functions
     function getImplementation() external view returns (address);
     function getAdmin() external view returns (address);
-    
+
     // Receive function
     receive() external payable;
 }
