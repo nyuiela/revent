@@ -1,0 +1,108 @@
+type AttendeeAttended @entity(immutable: true) {
+  id: Bytes!
+  eventId: BigInt! # uint256
+  attendee: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type AttendeeConfirmed @entity(immutable: true) {
+  id: Bytes!
+  eventId: BigInt! # uint256
+  attendee: Bytes! # address
+  confirmationCode: String! # string
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type AttendeeRegistered @entity(immutable: true) {
+  id: Bytes!
+  eventId: BigInt! # uint256
+  attendee: Bytes! # address
+  confirmationCode: String! # string
+  fee: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type EventCreated @entity(immutable: true) {
+  id: Bytes!
+  eventId: BigInt! # uint256
+  creator: Bytes! # address
+  ipfsHash: String! # string
+  startTime: BigInt! # uint256
+  endTime: BigInt! # uint256
+  maxAttendees: BigInt! # uint256
+  registrationFee: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type EventStatusChanged @entity(immutable: true) {
+  id: Bytes!
+  eventId: BigInt! # uint256
+  oldStatus: Int! # uint8
+  newStatus: Int! # uint8
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type EventUpdated @entity(immutable: true) {
+  id: Bytes!
+  eventId: BigInt! # uint256
+  ipfsHash: String! # string
+  startTime: BigInt! # uint256
+  endTime: BigInt! # uint256
+  maxAttendees: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Initialized @entity(immutable: true) {
+  id: Bytes!
+  version: BigInt! # uint64
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ModuleUpdated @entity(immutable: true) {
+  id: Bytes!
+  moduleType: String! # string
+  oldModule: Bytes! # address
+  newModule: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type OwnershipTransferred @entity(immutable: true) {
+  id: Bytes!
+  previousOwner: Bytes! # address
+  newOwner: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Paused @entity(immutable: true) {
+  id: Bytes!
+  account: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Unpaused @entity(immutable: true) {
+  id: Bytes!
+  account: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}

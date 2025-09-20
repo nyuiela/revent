@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "../core/ModifiersV1.sol";
+// import "../core/ModifiersV1.sol";
 
-contract EventInternalUtilsV1 is EventModifiersV1 {
+contract EventInternalUtilsV1 {
+    // is EventModifiersV1 {
     function uint2str(uint256 _i) internal pure returns (string memory) {
         if (_i == 0) {
             return "0";
