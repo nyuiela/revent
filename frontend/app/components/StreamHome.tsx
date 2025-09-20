@@ -55,12 +55,20 @@ export default function StreamHome() {
   }));
 
   // Use proximity-sorted events for curations section
-  const curations = proximityEvents.slice(4, 6).map(event => ({
+  const curations: Array<{
+    id: string;
+    title: string;
+    image: string;
+    author: string;
+    distance: number | null;
+    slug?: string;
+  }> = proximityEvents.slice(4, 6).map(event => ({
     id: event.id,
     title: event.title.toLowerCase(),
     image: event.avatarUrl,
     author: event.creator || '', // Store creator address for OwnerDisplay
     distance: location ? calculateDistance(location.lat, location.lng, event.lat, event.lng) : null,
+    slug: event.slug, // Include slug for routing - TypeScript fix
   }));
 
   // Use proximity-sorted event creators for curators section
@@ -121,12 +129,12 @@ export default function StreamHome() {
       <StreamHeader />
 
       {/* Main viewport card */}
-      <div className="relative rounded-3xl overflow-hidden border-2 border-gray-200 bg-app-card-bg dark:border-gray-700 h-[30rem] w-full shadow-none scale-[0.9] lg:scale-[1.0]">
+      <div className="relative rounded-3xl overflow-hidden border-4 border-gray-200 dark:border-gray-700 h-[30rem] w-full shadow-none scale-[0.95] lg:scale-[1.0]">
         {/* Mode preview background */}
         <div className="relative h-full">
           {mode === "map" && (
             <div className="absolute inset-0">
-              <EventsMap ref={mapRef} events={proximityEvents} onMapDrag={handleMapDrag} />
+              <EventsMap ref={mapRef} events={proximityEvents} onMapDrag={handleMapDrag} userLocation={location} />
             </div>
           )}
 
@@ -150,22 +158,22 @@ export default function StreamHome() {
 
           {/* Search bar - responsive to map dragging */}
           <div
-            className={`absolute left-4 right-4 top-4 flex items-center gap-2 transition-all duration-300 pointer-events-none ${searchBarVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}
+            className={`absolute left-4 right-4 top-4 flex items-center gap-2 transition-all duration-300 pointer-events-none z-20 ${searchBarVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}
           >
             <div className={`${searchBarVisible ? 'pointer-events-auto' : 'pointer-events-none'} w-full`}>
-              <EventSearch
-                events={events}
-                onEventSelect={handleEventSelect}
-                onSearch={handleSearch}
-                selectedEventTitle={selectedEventTitle}
-                onClearSelectedEvent={() => setSelectedEventTitle("")}
-              />
-            </div>
+            <EventSearch
+              events={events}
+              onEventSelect={handleEventSelect}
+              onSearch={handleSearch}
+              selectedEventTitle={selectedEventTitle}
+              onClearSelectedEvent={() => setSelectedEventTitle("")}
+            />
+          </div>
           </div>
 
           {/* Location Indicator */}
           {location && (
-            <div className="absolute top-16 right-4 bg-black/70 text-white rounded-full px-3 py-2 text-xs flex items-center gap-2 pointer-events-none">
+            <div className="absolute top-16 right-4 bg-black/70 text-white rounded-full px-3 py-2 text-xs flex items-center gap-2 pointer-events-none z-20">
               <Navigation className="w-3 h-3" />
               <span>Your location detected</span>
             </div>
@@ -173,7 +181,7 @@ export default function StreamHome() {
 
           {/* Location Error/Retry */}
           {locationError && (
-            <div className="absolute top-16 right-4 bg-red-500/80 text-white rounded-full px-3 py-2 text-xs flex items-center gap-2 pointer-events-auto">
+            <div className="absolute top-16 right-4 bg-red-500/80 text-white rounded-full px-3 py-2 text-xs flex items-center gap-2 pointer-events-auto z-20">
               <button
                 onClick={getCurrentLocation}
                 className="flex items-center gap-1 hover:underline"
@@ -185,7 +193,7 @@ export default function StreamHome() {
           )}
 
           {/* Mode segmented control */}
-          <div className="absolute left-4 bottom-4 right-4 flex items-center justify-between">
+          <div className="absolute left-4 bottom-4 right-4 flex items-center justify-between z-20">
             <div className="inline-flex items-center bg-black/70 text-white rounded-full p-1">
               <button
                 onClick={() => setShowDiscover(!showDiscover)}
@@ -243,7 +251,7 @@ export default function StreamHome() {
               {discoverEvents.map((event) => (
                 <Link
                   key={event.id}
-                  href={`/e/${event.id}`}
+                         href={`/${event.slug || event.id}`}
                   className="rounded-2xl overflow-hidden border border-border bg-card-bg cursor-pointer hover:shadow-lg transition-shadow shadow-none relative h-32 block"
                 >
                   {/* Background image covering the whole card */}
@@ -302,7 +310,7 @@ export default function StreamHome() {
       {/* Curations for you */}
       <section className="space-y-3 px-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium">Events for you</h3>
+        <h3 className="text-sm font-medium">Events for you</h3>
           {location && (
             <div className="text-xs text-[var(--app-foreground-muted)] flex items-center gap-1">
               <MapPin className="w-3 h-3" />
@@ -315,8 +323,8 @@ export default function StreamHome() {
           {curations.map((c) => (
             <Link
               key={c.id}
-              href={`/e/${c.id}`}
-              className="min-w-[72%] rounded-2xl overflow-hidden border border-border bg-card-bg shadow block relative"
+                     href={`/${c.slug || c.id}`}
+                     className="min-w-[72%] rounded-2xl overflow-hidden border border-border bg-card-bg shadow block relative"
             >
               <div className="relative h-32">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

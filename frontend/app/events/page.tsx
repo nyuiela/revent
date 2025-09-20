@@ -127,7 +127,7 @@ const EventsPage = () => {
           events.map((event) => (
             <Link
               key={event.id}
-              href={`/${event.slug || event.id}`}
+              href={`/${event.slug || event.id}`} // Use slug if available, fallback to ID
               className="block border-b-[1px] border-border rounded-xl p-4 bg-events-card-bg hover:bg-events-card-bg transition-colors"
             >
               <div className="flex gap-4">

@@ -12,6 +12,7 @@ import { useNotification } from "@coinbase/onchainkit/minikit";
 import { WalletModal } from "@coinbase/onchainkit/wallet";
 import { useRouter } from 'next/navigation';
 import { EventFormData } from "@/utils/types";
+import { generateSlug } from "@/lib/slug-generator";
 // import VerticalLinearStepper from "./register-stepper";
 import { useQuery } from "@tanstack/react-query";
 import { headers, namesQuery, url } from "@/utils/subgraph";
@@ -493,6 +494,13 @@ const CreateEventForm = () => {
         throw new Error("End time must be after start time");
       }
 
+      // Generate a unique slug for this event
+      const eventSlug = generateSlug();
+      console.log('Generated event slug:', eventSlug);
+      
+      // Store the slug in form data for reference
+      setFormData(prev => ({ ...prev, slug: eventSlug }));
+
       // Return a ContractFunctionParameters[] for OnchainKit <Transaction contracts={...}>
       const contracts = [
         {
@@ -505,6 +513,7 @@ const CreateEventForm = () => {
             BigInt(endTime),
             BigInt(formData.maxParticipants),
             BigInt(0.006 * 10 ** 18),
+            eventSlug, // Add the generated slug as the last parameter
           ],
         },
       ];
@@ -1662,7 +1671,7 @@ const CreateEventForm = () => {
                             clearTimeout(transactionTimeout);
                             setTransactionTimeout(null);
                           }
-                          router.push(`/e/${createdEventId}`);
+                          router.push(`/${formData.slug || createdEventId}`);
                         } else {
                           console.log('Domain transaction failed or error');
                           setIsSubmitting(false);
@@ -1843,7 +1852,7 @@ const CreateEventForm = () => {
                             clearTimeout(transactionTimeout);
                             setTransactionTimeout(null);
                           }
-                          router.push(`/e/${createdEventId}`);
+                          router.push(`/${formData.slug || createdEventId}`);
                         } else {
                           // Transaction failed or error
                           console.log('Domain transaction failed or error: ', lifecycle.statusData);

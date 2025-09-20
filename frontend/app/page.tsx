@@ -36,18 +36,6 @@ export default function App() {
   //   setFrameAdded(Boolean(frameAdded));
   // }, [addFrame]);
 
-  const handleJoinWaitlist = async (email: string) => {
-    // Here you would typically send the email to your backend
-    // For now, we'll just simulate the API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Mark user as having visited
-    localStorage.setItem("hasVisitedStream", "true");
-
-    // You could also store the email in localStorage or send to your API
-    localStorage.setItem("waitlistEmail", email);
-  };
-
   const handleCloseWaitlist = () => {
     setShowWaitlist(false);
     // Mark user as having visited even if they don't join
@@ -103,7 +91,6 @@ export default function App() {
       {showWaitlist && (
         <WaitlistModal
           isOpen={showWaitlist}
-          onJoinWaitlist={handleJoinWaitlist}
           onClose={handleCloseWaitlist}
         />
       )}
