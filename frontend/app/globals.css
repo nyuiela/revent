@@ -259,4 +259,43 @@ html {
     font-weight: 500;
     font-size: 0.875rem;
   }
+
+  /* Custom Scrollbars */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--app-gray-dark)) transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--app-gray-dark));
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--app-foreground-muted));
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Dark theme scrollbar adjustments */
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--app-gray));
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--app-foreground-muted));
+  }
 }

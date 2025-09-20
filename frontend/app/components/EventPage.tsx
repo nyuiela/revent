@@ -20,6 +20,9 @@ import { useEventViews } from "../../hooks/useEventViews";
 import { EventDetails } from "@/utils/types";
 import RegistrationSuccessCard from "./RegistrationSuccessCard";
 import { Avatar, FollowersYouKnow, ProfileSocials } from "ethereum-identity-kit";
+import Image from "next/image";
+import { Button } from "./DemoComponents";
+import { ArrowLeft } from "lucide-react";
 
 
 type Props = {
@@ -538,12 +541,16 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
 
 
 
+  function onBack(): void {
+    window.history.back();
+  }
+
   // Prepare map data for EventsMap
   // Mapbox EventsMap dataset kept for future multi-event contexts if needed
 
 
   return (
-    <div className="min-h-screen text-[var(--events-foreground)] bg-background relative z-[20]">
+    <div className="min-h-screen mt-12 text-[var(--events-foreground)] bg-background relative z-[20]">
       {/* Track view when page loads */}
       {eventId && <EventViewTracker eventId={eventId} />}
       {/* <StreamPublisher /> */}
@@ -574,12 +581,19 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
       </div> */}
 
       {/* Hero Section */}
-      <div className="relative h-[25rem] md:h-[25rem] overflow-hidden">
+      <div className="relative h-[25rem] md:h-[25rem] mt-12 overflow-hidden">
+        <div className="absolute bottom-6 left-0">
+          <Button variant="ghost" className="rounded-lg mb-6 -mt-4 bg-white dark:bg-gray-800" onClick={onBack}>
+            <ArrowLeft className="w-4 h-4" /> Back
+          </Button>
+        </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={event.image}
           alt={event.title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover rounded-lg"
+          width={1000}
+          height={1000}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6">
@@ -628,7 +642,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
         <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
           <h2 className="text-xl font-semibold mb-4">Register</h2>
           {isRegistered !== undefined && isRegistered && (
-            <div className="border border-[var(--events-card-border)] border-none bg-transparent mb-2">You are already registered for this event</div>
+            <div className="border border-[var(--events-card-border)] border-none bg-blue-500 mb-2">You are already registered for this event</div>
           )}
 
 
