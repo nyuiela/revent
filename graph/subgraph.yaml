@@ -37,7 +37,8 @@ dataSources:
           handler: handleAttendeeConfirmed
         - event: AttendeeRegistered(indexed uint256,indexed address,string,uint256)
           handler: handleAttendeeRegistered
-        - event: EventCreated(indexed uint256,indexed address,string,uint256,uint256,uint256,uint256)
+        - event: EventCreated(indexed uint256,indexed
+            address,string,uint256,uint256,uint256,uint256)
           handler: handleEventCreated
         - event: EventStatusChanged(indexed uint256,uint8,uint8)
           handler: handleEventStatusChanged
@@ -54,3 +55,43 @@ dataSources:
         - event: Unpaused(address)
           handler: handleUnpaused
       file: ./src/events-v-1.ts
+  - kind: ethereum
+    name: TicketsV1
+    network: base-sepolia
+    source:
+      address: "0xE62bD9baF34F1593CBADd9cab6097305921344C0"
+      abi: TicketsV1
+      startBlock: 31302940
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - TicketsV1Initialized
+        - TicketsV1OwnershipTransferred
+        - TicketsV1Paused
+        - TicketCreated
+        - TicketPurchased
+        - TicketUpdated
+        - TicketsV1Unpaused
+      abis:
+        - name: TicketsV1
+          file: ./abis/TicketsV1.json
+      eventHandlers:
+        - event: Initialized(uint64)
+          handler: handleInitialized
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
+        - event: Paused(address)
+          handler: handlePaused
+        - event: TicketCreated(indexed uint256,indexed uint256,indexed
+            address,string,string,uint256,string,uint256,string[])
+          handler: handleTicketCreated
+        - event: TicketPurchased(indexed uint256,indexed uint256,indexed
+            address,uint256,uint256,string)
+          handler: handleTicketPurchased
+        - event: TicketUpdated(indexed uint256,string,string,uint256,string,uint256,string[],bool)
+          handler: handleTicketUpdated
+        - event: Unpaused(address)
+          handler: handleUnpaused
+      file: ./src/tickets-v-1.ts
