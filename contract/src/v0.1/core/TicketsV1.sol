@@ -14,7 +14,7 @@ contract TicketsV1 is EventModifiersV1 {
         uint256 eventId,
         string memory name,
         string memory ticketType,
-        uint256 price,
+        uint256 price, // in dollars
         string memory currency,
         uint256 totalQuantity,
         string[] memory perks
@@ -45,7 +45,7 @@ contract TicketsV1 is EventModifiersV1 {
         eventTickets[eventId].push(ticketId);
 
         // If this is a paid ticket and event is VIP, create escrow
-        if (price > 0 && events[eventId].isVIP && escrows[eventId].createdAt == 0) {
+        if (price > 0 && events[eventId].isVIP && escrows[eventId].createdAt == 0) { 
             // uint256 expectedAmount = price * totalQuantity;
             createEscrow(eventId);
         }

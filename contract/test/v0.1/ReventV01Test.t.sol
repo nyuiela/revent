@@ -68,7 +68,7 @@ contract ReventV01Test is Test {
         vm.deal(user2, 10 ether);
     }
 
-    function testInitialization() public {
+    function testInitialization() public view {
         assertEq(revent.version(), "0.1.0");
         assertEq(revent.owner(), owner);
         assertEq(revent.getPlatformFee(), PLATFORM_FEE);
