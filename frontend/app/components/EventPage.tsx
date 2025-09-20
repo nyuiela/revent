@@ -28,7 +28,7 @@ import { ArrowLeft } from "lucide-react";
 type Props = {
   eventId?: string;
   ipfsHash?: string; // e.g., ipfs://CID or CID
-  idType?: "eventId" | "ipfs" | "unknown";
+  idType?: "eventId" | "ipfs" | "unknown" | "slug";
   graphEventData?: {
     id: string;
     eventId: string;
@@ -41,10 +41,26 @@ type Props = {
     blockTimestamp: string;
     transactionHash: string;
   };
+  eventSlugData?: {
+    id: string;
+    title: string;
+    description?: string;
+    slug?: string;
+    creator?: string;
+    avatarUrl?: string;
+    lat?: number;
+    lng?: number;
+    isLive?: boolean;
+    platforms?: string[];
+    category?: string;
+    startTime?: string;
+    endTime?: string;
+    maxAttendees?: string;
+  };
   onBack?: () => void;
 };
 
-export default function EventPage({ eventId, ipfsHash, idType, graphEventData }: Props) {
+export default function EventPage({ eventId, ipfsHash, idType, graphEventData, eventSlugData }: Props) {
   const [isScrolling, setIsScrolling] = useState(false);
   const { viewCount, isLoading: viewCountLoading } = useEventViews(eventId || '');
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -457,16 +473,16 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData }:
     },
 
     // ✅ Hosts (if ipfsHash present, only render IPFS hosts; else fallback to mock)
-    hosts: ipfsHash
-      ? (Array.isArray(ipfsData?.hosts)
-        ? ipfsData.hosts.map((h: Record<string, unknown>) => ({
+    hosts: ipfsHash && ipfsData && Array.isArray(ipfsData.hosts)
+      ? ipfsData.hosts.map((h: Record<string, unknown>) => ({
           name: h.name as string,
           avatar: (h.avatar as string) || "/hero.png",
           role: (h.role as string) || "Host",
           bio: h.bio as string,
           social: h.social as Record<string, string> || {},
         }))
-        : [])
+      : ipfsHash
+        ? []
       : [
         {
           name: "Sarah Chen",

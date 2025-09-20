@@ -19,6 +19,7 @@ export interface GraphEvent {
   category?: string;
   locationName?: string;
   viewers?: number;
+  slug?: string;
 }
 
 interface EventsResponse {
@@ -46,6 +47,8 @@ export function useEvents() {
     gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
     refetchOnWindowFocus: false,
     refetchOnMount: false,
+    refetchInterval: 30 * 1000, // Poll every 30 seconds for new events
+    refetchIntervalInBackground: true, // Continue polling even when tab is not active
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });

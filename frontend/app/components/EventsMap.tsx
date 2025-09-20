@@ -26,11 +26,13 @@ export type LiveEvent = {
   category?: string;
   locationName?: string;
   viewers?: number;
+  slug?: string;
 };
 
 type Props = {
   events: LiveEvent[];
   onMapDrag?: (isDragging: boolean) => void;
+  userLocation?: { lat: number; lng: number } | null;
 };
 
 export interface EventsMapRef {
@@ -39,7 +41,7 @@ export interface EventsMapRef {
 
 // Renders a real map when Mapbox GL is available and a token is set.
 // Falls back to a static image background otherwise.
-const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) => {
+const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag, userLocation }, ref) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -51,15 +53,20 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
   const isUserInteractingRef = useRef(false);
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   const { theme } = useTheme();
-  const [mapStyle, setStyle] = useState<string | null>(null);
+  const [mapStyle, setStyle] = useState<string | null>('mapbox://styles/mapbox/dark-v11');
 
-  // Helper: compute initial center once from current events
+  // Helper: compute initial center once from current events or user location
   const initialCenter = useMemo<[number, number]>(() => {
+    // Prioritize user location if available
+    if (userLocation) {
+      return [userLocation.lng, userLocation.lat];
+    }
+    // Fallback to events center or default location
     if (events.length === 0) return [-73.957, 40.72];
     const avgLng = events.reduce((s, e) => s + e.lng, 0) / events.length;
     const avgLat = events.reduce((s, e) => s + e.lat, 0) / events.length;
     return [avgLng, avgLat];
-  }, [events]);
+  }, [events, userLocation]);
 
   // Get appropriate Mapbox style based on theme
   // const mapStyle = useMemo(() => {
@@ -110,6 +117,7 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
     async function init() {
       if (!containerRef.current) return;
       if (!token) return;
+      if (!mapStyle) return;
 
       try {
         console.log("🗺️ Initializing Mapbox with token:", token.substring(0, 20) + "...");
@@ -216,6 +224,7 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
         el.style.transformOrigin = "center center";
         el.style.boxSizing = "border-box";
         el.style.backgroundImage = `url(${ev.avatarUrl})`;
+        el.style.zIndex = "1000";
 
         if (ev.isLive) {
           const live = document.createElement("div");
@@ -321,6 +330,51 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
     updateMarkers();
   }, [events, mapReady, updateMarkers]);
 
+  // Handle user location changes - center map on user location when available
+  useEffect(() => {
+    if (mapReady && userLocation && mapRef.current) {
+      console.log("📍 Centering map on user location:", userLocation);
+      
+      // Fly to user location
+      mapRef.current.flyTo({
+        center: [userLocation.lng, userLocation.lat],
+        zoom: 13,
+        duration: 1000,
+      });
+
+      // Add user location marker if not already present
+      const userMarkerId = 'user-location-marker';
+      const existingUserMarker = markersRef.current.get(userMarkerId);
+      
+      if (existingUserMarker) {
+        // Update existing marker position
+        (existingUserMarker as any).setLngLat([userLocation.lng, userLocation.lat]);
+      } else {
+        // Create new user location marker
+        const userMarkerEl = document.createElement("div");
+        userMarkerEl.className = "user-location-marker";
+        userMarkerEl.style.width = "16px";
+        userMarkerEl.style.height = "16px";
+        userMarkerEl.style.backgroundColor = "#3b82f6";
+        userMarkerEl.style.borderRadius = "50%";
+        userMarkerEl.style.border = "3px solid white";
+        userMarkerEl.style.boxShadow = "0 2px 8px rgba(59, 130, 246, 0.5)";
+        userMarkerEl.style.position = "relative";
+        userMarkerEl.style.animation = "pulse 2s infinite";
+        userMarkerEl.style.zIndex = "1001";
+
+        const userMarker = new mapboxgl.Marker({
+          element: userMarkerEl,
+          anchor: 'center',
+        })
+          .setLngLat([userLocation.lng, userLocation.lat])
+          .addTo(mapRef.current);
+
+        markersRef.current.set(userMarkerId, userMarker);
+      }
+    }
+  }, [userLocation, mapReady, mapboxgl]);
+
   if (!token) {
     return (
       <div className="relative h-full w-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
@@ -342,7 +396,17 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
   }
 
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-full w-full bg-transparent">
+      {/* Loading indicator */}
+      {!mapReady && mapStyle && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 z-20">
+          <div className="flex flex-col items-center gap-3">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Loading map...</p>
+          </div>
+        </div>
+      )}
+      
       {/* Add CSS for pulse animation and popup styling */}
       <style jsx>{`
         @keyframes pulse {
@@ -455,12 +519,14 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag }, ref) =
 
       <div
         ref={containerRef}
-        className="absolute inset-0 z-0"
+        className="absolute inset-0 z-0 bg-transparent"
         style={{
           transform: "translateZ(0)",
           backfaceVisibility: "hidden",
           WebkitBackfaceVisibility: "hidden",
           willChange: "transform",
+          minHeight: "100%",
+          minWidth: "100%",
         }}
         aria-label={mapReady ? "interactive map" : "loading map"}
       />

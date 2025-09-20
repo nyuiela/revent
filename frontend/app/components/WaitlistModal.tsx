@@ -33,7 +33,7 @@ export default function WaitlistModal({ isOpen, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="relative w-full max-w-md mx-auto bg-[var(--app-card-bg)] border border-[var(--app-card-border)] rounded-2xl shadow-xl p-6 m-4 bg-background">
+      <div className="relative w-full max-w-md mx-auto bg-[var(--app-card-bg)] border border-[var(--app-card-border)] rounded-2xl shadow-xl p-6 m-4">
         {/* Close button */}
         <button
           type="button"
@@ -84,10 +84,10 @@ export default function WaitlistModal({ isOpen, onClose }: Props) {
 
               <button
                 type="submit"
-                disabled={isSubmitting || !email.trim()}
+                disabled={isLoading || !email.trim()}
                 className="w-full bg-[var(--app-accent)] hover:bg-[var(--app-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors"
               >
-                {isSubmitting ? "Joining..." : "Join Waitlist"}
+                {isLoading ? "Joining..." : "Join Waitlist"}
               </button>
             </form>
 
@@ -109,9 +109,14 @@ export default function WaitlistModal({ isOpen, onClose }: Props) {
             <h2 className="text-xl font-semibold text-[var(--app-foreground)] mb-2">
               Welcome to the Waitlist!
             </h2>
-            <p className="text-sm text-[var(--app-foreground-muted)] mb-6">
+            <p className="text-sm text-[var(--app-foreground-muted)] mb-4">
               You&apos;ve successfully joined our waitlist. We&apos;ll notify you as soon as we launch.
             </p>
+            {totalCount && (
+              <p className="text-xs text-[var(--app-foreground-muted)] mb-6">
+                You&apos;re #{totalCount} on the waitlist
+              </p>
+            )}
             <button
               type="button"
               onClick={onClose}

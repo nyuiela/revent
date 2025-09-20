@@ -97,7 +97,7 @@ export default function InfiniteScrollEvents({
               className="rounded-2xl overflow-hidden border border-border bg-card-bg cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] shadow-none"
             >
               <Link
-                href={`/e/${event.id}`}
+                href={`/${event.slug || event.id}`}
                 onClick={() => onEventSelect?.(event)}
                 className="block"
               >

@@ -46,7 +46,7 @@ const Footer = () => {
           <Video className="w-4 h-4" />
           Go live
         </div> */}
-        <Link href="/e" className="h-10 w-fit px-4 flex justify-center items-center border-none border-gray-300 rounded-full bg-gray-000  bg-background dark:border-gray-500 shrink-0 gap-2 shadow-xl z-10">
+        <Link href="/events" className="h-10 w-fit px-4 flex justify-center items-center border-none border-gray-300 rounded-full bg-gray-000  bg-background dark:border-gray-500 shrink-0 gap-2 shadow-xl z-10">
           <MapPin className="w-4 h-4" />
           Events
         </Link>
