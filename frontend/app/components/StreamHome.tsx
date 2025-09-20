@@ -222,7 +222,7 @@ export default function StreamHome() {
                   )}
 
                   {/* View count (replaced viewer count) */}
-                  <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full z-10 flex items-center gap-1">
+                  <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full z-0 flex items-center gap-1">
                     <Eye className="w-3 h-3" />
                     <ViewCount
                       count={viewCounts[event.id] || 0}
