@@ -475,43 +475,43 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
     // ✅ Hosts (if ipfsHash present, only render IPFS hosts; else fallback to mock)
     hosts: ipfsHash && ipfsData && Array.isArray(ipfsData.hosts)
       ? ipfsData.hosts.map((h: Record<string, unknown>) => ({
-          name: h.name as string,
-          avatar: (h.avatar as string) || "/hero.png",
-          role: (h.role as string) || "Host",
-          bio: h.bio as string,
-          social: h.social as Record<string, string> || {},
-        }))
+        name: h.name as string,
+        avatar: (h.avatar as string) || "/hero.png",
+        role: (h.role as string) || "Host",
+        bio: h.bio as string,
+        social: h.social as Record<string, string> || {},
+      }))
       : ipfsHash
         ? []
-      : [
-        {
-          name: "Sarah Chen",
-          avatar: "/hero.png",
-          role: "Event Director & Co-Founder",
-          bio: "Blockchain gaming enthusiast with 8+ years in esports. Former professional gamer and current advocate for Web3 gaming adoption.",
-          social: {
-            twitter: "https://x.com/sarahchen",
-            linkedin: "https://linkedin.com/in/sarahchen",
-            website: "https://sarahchen.dev"
+        : [
+          {
+            name: "Sarah Chen",
+            avatar: "/hero.png",
+            role: "Event Director & Co-Founder",
+            bio: "Blockchain gaming enthusiast with 8+ years in esports. Former professional gamer and current advocate for Web3 gaming adoption.",
+            social: {
+              twitter: "https://x.com/sarahchen",
+              linkedin: "https://linkedin.com/in/sarahchen",
+              website: "https://sarahchen.dev"
+            }
+          },
+          {
+            name: "Marcus Rodriguez",
+            avatar: "/hero.png",
+            role: "Technical Lead",
+            bio: "Full-stack developer specializing in blockchain integration and smart contract development for gaming platforms.",
+            social: {
+              twitter: "https://x.com/marcusrodriguez",
+              linkedin: "https://linkedin.com/in/marcusrodriguez"
+            }
+          },
+          {
+            name: "Crypto Gaming Alliance",
+            avatar: "/hero.png",
+            role: "Organizing Partner",
+            bio: "Leading organization dedicated to advancing blockchain gaming and fostering community growth in the Web3 gaming space."
           }
-        },
-        {
-          name: "Marcus Rodriguez",
-          avatar: "/hero.png",
-          role: "Technical Lead",
-          bio: "Full-stack developer specializing in blockchain integration and smart contract development for gaming platforms.",
-          social: {
-            twitter: "https://x.com/marcusrodriguez",
-            linkedin: "https://linkedin.com/in/marcusrodriguez"
-          }
-        },
-        {
-          name: "Crypto Gaming Alliance",
-          avatar: "/hero.png",
-          role: "Organizing Partner",
-          bio: "Leading organization dedicated to advancing blockchain gaming and fostering community growth in the Web3 gaming space."
-        }
-      ],
+        ],
 
     // ✅ Social Links (prefer IPFS)
     socialLinks: ipfsData?.socialLinks || {
