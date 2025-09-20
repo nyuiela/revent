@@ -77,6 +77,7 @@ function generateFallbackEvent(graphEvent: GraphEvent): {
   maxAttendees: string;
   registrationFee: string;
   slug: string;
+  ipfsHash: string;
   blockTimestamp: string;
 } {
   const isLive = isEventLive(graphEvent.startTime, graphEvent.endTime);
@@ -96,17 +97,30 @@ function generateFallbackEvent(graphEvent: GraphEvent): {
     maxAttendees: graphEvent.maxAttendees,
     registrationFee: graphEvent.registrationFee,
     slug: graphEvent.slug,
+    ipfsHash: graphEvent.ipfsHash,
     blockTimestamp: graphEvent.blockTimestamp,
   };
 }
 
-export async function GET() {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ slug: string }> }
+) {
   try {
-    console.log("Fetching events from The Graph Protocol...");
+    const { slug } = await params;
 
-    // Define the query as a string to avoid gql template literal issues
+    if (!slug) {
+      return NextResponse.json(
+        { error: 'Slug is required' },
+        { status: 400 }
+      );
+    }
+
+    console.log(`Fetching event with slug: ${slug} from The Graph Protocol...`);
+
+    // Define the query to find event by slug
     const query = `{
-      eventCreateds(first: 100, orderBy: blockTimestamp, orderDirection: desc) {
+      eventCreateds(where: { slug: "${slug}" }, first: 1, orderBy: blockTimestamp, orderDirection: desc) {
         id
         eventId
         creator
@@ -121,77 +135,77 @@ export async function GET() {
       }
     }`;
 
-    // Fetch events from The Graph Protocol using GraphQLClient
+    // Fetch event from The Graph Protocol using GraphQLClient
     const client = new GraphQLClient(url, { headers });
     const graphData = await client.request(query) as { eventCreateds?: GraphEvent[] };
     const graphEvents: GraphEvent[] = graphData.eventCreateds || [];
 
-    // console.log(`Fetched ${graphEvents.length} events from The Graph Protocol:`, graphEvents);
+    if (graphEvents.length === 0) {
+      return NextResponse.json(
+        { error: 'Event not found' },
+        { status: 404 }
+      );
+    }
 
-    // Process events and fetch IPFS metadata
-    const processedEvents = await Promise.all(
-      graphEvents.map(async (graphEvent) => {
-        try {
-          // Fetch IPFS metadata
-          const metadata = await fetchIPFSMetadata(graphEvent.ipfsHash);
+    const graphEvent = graphEvents[0];
 
-          if (metadata) {
-            // Use IPFS metadata if available
-            const isLive = isEventLive(graphEvent.startTime, graphEvent.endTime);
+    try {
+      // Fetch IPFS metadata
+      const metadata = await fetchIPFSMetadata(graphEvent.ipfsHash);
 
-            return {
-              id: graphEvent.eventId,
-              title: metadata.title || `Event #${graphEvent.eventId}`,
-              username: metadata.username || `user_${graphEvent.creator.slice(0, 6)}`,
-              lat: metadata.location?.lat || (40.7189 + (Math.random() - 0.5) * 0.1),
-              lng: metadata.location?.lng || (-73.959 + (Math.random() - 0.5) * 0.1),
-              isLive,
-              avatarUrl: metadata.image || "/icon.png",
-              platforms: metadata.platforms || ["Farcaster"],
-              creator: graphEvent.creator,
-              startTime: graphEvent.startTime,
-              endTime: graphEvent.endTime,
-              maxAttendees: graphEvent.maxAttendees,
-              registrationFee: graphEvent.registrationFee,
-              slug: graphEvent.slug,
-              blockTimestamp: graphEvent.blockTimestamp,
-              description: metadata.description,
-              category: metadata.category,
-              locationName: metadata.location?.name,
-            };
-          } else {
-            // Use fallback data if IPFS metadata is not available
-            return generateFallbackEvent(graphEvent);
-          }
-        } catch (error) {
-          console.warn(`Error processing event ${graphEvent.eventId}:`, error);
-          return generateFallbackEvent(graphEvent);
-        }
-      })
-    );
+      if (metadata) {
+        // Use IPFS metadata if available
+        const isLive = isEventLive(graphEvent.startTime, graphEvent.endTime);
 
-    // Filter out any null/undefined events and sort by timestamp
-    const validEvents = processedEvents.filter(event => event !== null);
+        const event = {
+          id: graphEvent.eventId,
+          title: metadata.title || `Event #${graphEvent.eventId}`,
+          username: metadata.username || `user_${graphEvent.creator.slice(0, 6)}`,
+          lat: metadata.location?.lat || (40.7189 + (Math.random() - 0.5) * 0.1),
+          lng: metadata.location?.lng || (-73.959 + (Math.random() - 0.5) * 0.1),
+          isLive,
+          avatarUrl: metadata.image || "/icon.png",
+          platforms: metadata.platforms || ["Farcaster"],
+          creator: graphEvent.creator,
+          startTime: graphEvent.startTime,
+          endTime: graphEvent.endTime,
+          maxAttendees: graphEvent.maxAttendees,
+          registrationFee: graphEvent.registrationFee,
+          slug: graphEvent.slug,
+          ipfsHash: graphEvent.ipfsHash,
+          blockTimestamp: graphEvent.blockTimestamp,
+          description: metadata.description,
+          category: metadata.category,
+          locationName: metadata.location?.name,
+        };
 
-    console.log(`Successfully processed ${validEvents.length} events`);
-
-    return NextResponse.json({
-      events: validEvents,
-      total: validEvents.length,
-      source: "graph_protocol"
-    });
+        return NextResponse.json({
+          event,
+          source: "graph_protocol"
+        });
+      } else {
+        // Use fallback data if IPFS metadata is not available
+        const event = generateFallbackEvent(graphEvent);
+        return NextResponse.json({
+          event,
+          source: "graph_protocol_fallback"
+        });
+      }
+    } catch (error) {
+      console.warn(`Error processing event ${graphEvent.eventId}:`, error);
+      const event = generateFallbackEvent(graphEvent);
+      return NextResponse.json({
+        event,
+        source: "graph_protocol_fallback"
+      });
+    }
 
   } catch (error) {
-    console.error("Error fetching events from The Graph Protocol:", error);
+    console.error("Error fetching event by slug from The Graph Protocol:", error);
 
-    // Return detailed error information for debugging
     return NextResponse.json({
-      events: [],
-      total: 0,
-      source: "error",
       error: error instanceof Error ? error.message : "Unknown error",
-      stack: error instanceof Error ? error.stack : undefined,
-      details: "Failed to fetch events from The Graph Protocol"
-    });
+      details: "Failed to fetch event by slug from The Graph Protocol"
+    }, { status: 500 });
   }
 }
