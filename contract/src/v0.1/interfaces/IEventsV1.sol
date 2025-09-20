@@ -19,7 +19,7 @@ interface IEventsV1 {
         uint256 maxAttendees,
         uint256 registrationFee
     );
-    event ModuleUpdated(string indexed moduleType, address indexed oldModule, address indexed newModule);
+    event ModuleUpdated(string moduleType, address oldModule, address newModule);
     event EventStatusChanged(uint256 indexed eventId, EventTypes.EventStatus oldStatus, EventTypes.EventStatus newStatus);
     event EventUpdated(uint256 indexed eventId, string ipfsHash, uint256 startTime, uint256 endTime, uint256 maxAttendees);
     
