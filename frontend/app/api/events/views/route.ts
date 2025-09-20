@@ -111,10 +111,29 @@ export async function GET(request: NextRequest) {
 // Get view counts for multiple events
 export async function PUT(request: NextRequest) {
   try {
-    const { eventIds } = await request.json();
+    // Check if request has body
+    const contentType = request.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      return NextResponse.json({ error: 'Content-Type must be application/json' }, { status: 400 });
+    }
+
+    const body = await request.text();
+    if (!body) {
+      return NextResponse.json({ error: 'Request body is empty' }, { status: 400 });
+    }
+
+    let parsedBody;
+    try {
+      parsedBody = JSON.parse(body);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
+    }
+
+    const { eventIds } = parsedBody;
 
     if (!Array.isArray(eventIds)) {
-      return NextResponse.json({ error: 'Event IDs array is required' }, { status: 400 });
+      return NextResponse.json({ error: 'eventIds must be an array' }, { status: 400 });
     }
 
     const viewCountsMap = eventIds.reduce((acc, eventId) => {

@@ -2,33 +2,30 @@
 
 import { useState } from "react";
 import { X, Mail, CheckCircle } from "lucide-react";
+import { useWaitlist } from "../../hooks/useWaitlist";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  onJoinWaitlist: (email: string) => Promise<void>;
 };
 
-export default function WaitlistModal({ isOpen, onClose, onJoinWaitlist }: Props) {
+export default function WaitlistModal({ isOpen, onClose }: Props) {
   const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [error, setError] = useState("");
+  const [totalCount, setTotalCount] = useState<number | null>(null);
+  const { addToWaitlist, isLoading, error } = useWaitlist();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
 
-    setIsSubmitting(true);
-    setError("");
-
     try {
-      await onJoinWaitlist(email.trim());
+      const response = await addToWaitlist(email.trim());
       setIsSubmitted(true);
-    } catch {
-      setError("Failed to join waitlist. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+      setTotalCount(response.totalCount || null);
+    } catch (err) {
+      // Error is handled by the hook
+      console.error('Waitlist submission error:', err);
     }
   };
 

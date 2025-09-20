@@ -11,6 +11,7 @@ import ViewCount from "../../components/ViewCount";
 import { useEvents } from "../../hooks/useEvents";
 import { useViewCounts } from "../../hooks/useViewCounts";
 import { useLocation, useProximityEvents, calculateDistance } from "../../hooks/useLocation";
+import InfiniteScrollEvents from "./InfiniteScrollEvents";
 // import { useViewProfile } from "@coinbase/onchainkit/minikit";
 // Removed unused Graph Protocol imports - now handled by API route
 type Mode = "map" | "camera" | "screen";
@@ -120,7 +121,7 @@ export default function StreamHome() {
       <StreamHeader />
 
       {/* Main viewport card */}
-      <div className="relative rounded-3xl overflow-hidden border border-gray-200 bg-app-card-bg dark:border-gray-700 h-[30rem] w-full shadow-none">
+      <div className="relative rounded-3xl overflow-hidden border-2 border-gray-200 bg-app-card-bg dark:border-gray-700 h-[30rem] w-full shadow-none scale-[0.9] lg:scale-[1.0]">
         {/* Mode preview background */}
         <div className="relative h-full">
           {mode === "map" && (
@@ -344,6 +345,12 @@ export default function StreamHome() {
           ))}
         </div>
       </section>
+
+      {/* Discover All Events - Infinite Scroll */}
+      <InfiniteScrollEvents 
+        userLocation={location}
+        onEventSelect={handleEventSelect}
+      />
 
       {/* Curators for you */}
       <section className="space-y-3 px-4">

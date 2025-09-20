@@ -117,3 +117,4 @@ export function useProximityEvents<T extends { lat: number; lng: number }>(
 
   return sortedEvents;
 }
+
