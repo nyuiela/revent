@@ -24,7 +24,6 @@ import Image from "next/image";
 const CreateEventForm = () => {
   const { address, isConnected } = useAccount()
   const chainId = 84532;
-  const router = useRouter()
   const canUseTransaction = Boolean(address && chainId && eventAddress)
   const [showWalletModal, setShowWalletModal] = useState(false)
   const [formData, setFormData] = useState<EventFormData>({
@@ -80,6 +79,7 @@ const CreateEventForm = () => {
   const [checkingDomain, setCheckingDomain] = useState(false);
   const sendNotification = useNotification();
   const [, setIpfsHash] = useState<string | null>(null);
+  const router = useRouter()
 
   const handleSuccess = useCallback(async (response: TransactionResponse) => {
     const transactionHash = response.transactionReceipts[0].transactionHash;
@@ -649,6 +649,12 @@ const CreateEventForm = () => {
   console.log('isLoading: ', isLoading);
   return (
     <div className="min-h-screen text-foreground bg-background relative z-[20] pt-14 pb-28">
+      <div className="absolute top-4 left-4">
+        <Button variant="ghost" onClick={() => router.back()}>
+          <ChevronLeftIcon className="w-4 h-4" />
+          Back
+        </Button>
+      </div>
       <div className="max-w-5xl mx-auto py-6 sm:py-8 md:py-10 bg-red-00">
         {/* Progress Steps */}
         <div className="mb-6 sm:mb-8">
