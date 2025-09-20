@@ -3,6 +3,9 @@
     "EventsV1": {
       "address": "0x726420455756256f184033e60604E0FdC8243091",
       "startBlock": 31308213
+    },
+    "TicketsV1": {
+      "address": "0xAe8F01e5Eab3887DAD73b3ab87E0C91f6373e0F2"
     }
   }
 }
