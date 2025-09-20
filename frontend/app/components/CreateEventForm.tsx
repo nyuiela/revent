@@ -6,18 +6,21 @@ import { Icon } from "./DemoComponents";
 import { ChevronLeftIcon, ChevronRightIcon, Upload, X, Loader2 } from "lucide-react";
 import LocationPicker from "./LocationPicker";
 import { useAccount } from "wagmi";
-import { eventAbi, eventAddress } from "@/lib/contract";
+import { eventAbi, eventAddress, ticketAddress, ticketAbi } from "@/lib/contract";
 import { Transaction, TransactionButton, TransactionResponse, TransactionSponsor, TransactionStatus, TransactionStatusAction, TransactionStatusLabel } from "@coinbase/onchainkit/transaction";
 import { useNotification } from "@coinbase/onchainkit/minikit";
 import { WalletModal } from "@coinbase/onchainkit/wallet";
 import { useRouter } from 'next/navigation';
-import { EventFormData } from "@/utils/types";
+import { EventFormData, EventDetails } from "@/utils/types";
+import RegistrationSuccessCard from "./RegistrationSuccessCard";
 import { generateSlug } from "@/lib/slug-generator";
+import { uploadEventMetadataToIPFS, generateEventMetadataJSON, generateAndUploadTokenMetadata } from "@/lib/event-metadata";
 // import VerticalLinearStepper from "./register-stepper";
 import { useQuery } from "@tanstack/react-query";
 import { headers, namesQuery, url } from "@/utils/subgraph";
 import request from "graphql-request";
 import Image from "next/image";
+// import { stringToBytes } from "viem"; // Removed unused import
 // Removed unused import
 
 
@@ -67,8 +70,13 @@ const CreateEventForm = () => {
   const [transactionStep, setTransactionStep] = useState<'event' | 'tickets' | 'domain' | 'complete'>('event');
   const [createdEventId, setCreatedEventId] = useState<string | null>(null);
   const [transactionTimeout, setTransactionTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [useSimpleMode, setUseSimpleMode] = useState(false);
+  const [useSimpleMode] = useState(false); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const [useBatchedMode, setUseBatchedMode] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<string>('');
+  const [showSuccessCard, setShowSuccessCard] = useState(false);
+  const [createdEventDetails, setCreatedEventDetails] = useState<EventDetails | null>(null);
+  const [transactionSuccessful, setTransactionSuccessful] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [preparedContracts, setPreparedContracts] = useState<Record<string, unknown>[] | null>(null);
   const [preparedTicketContracts, setPreparedTicketContracts] = useState<Record<string, unknown>[] | null>(null);
   const [preparedDomainContracts, setPreparedDomainContracts] = useState<Record<string, unknown>[] | null>(null);
@@ -195,6 +203,69 @@ const CreateEventForm = () => {
     }
   };
 
+  // Function to generate and upload token metadata
+  const generateAndUploadEventMetadata = async (eventId: string) => {
+    try {
+      console.log('Generating token metadata for:', eventId);
+
+      // Generate and upload token metadata to IPFS
+      const result = await generateAndUploadTokenMetadata(eventId, formData);
+
+      if (result.success) {
+        console.log('✅ Token metadata uploaded successfully:');
+        console.log('  - Token ID:', result.tokenId);
+        console.log('  - Metadata URI:', result.metadataUri);
+        console.log('  - CID:', result.cid);
+        return result.metadataUri;
+      } else {
+        console.error('Failed to upload token metadata:', result.error);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error generating token metadata:', error);
+      return null;
+    }
+  };
+
+  // Function to create event details from form data
+  const createEventDetails = (eventId: string): EventDetails => {
+    const startDate = new Date(formData.startDateTime);
+
+    // Transform agenda items to include required id field
+    const transformedAgenda = formData.agenda.map((item, index) => ({
+      id: `agenda-${index}`,
+      title: item.title,
+      description: item.description,
+      startTime: item.startTime,
+      endTime: item.endTime,
+      speakers: item.speakers,
+    }));
+
+    return {
+      id: eventId,
+      title: formData.title,
+      description: formData.description,
+      date: startDate.toLocaleDateString(),
+      time: startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      location: formData.location,
+      coordinates: formData.coordinates,
+      image: formData.image,
+      category: formData.category,
+      maxParticipants: formData.maxParticipants,
+      currentParticipants: 0,
+      isLive: formData.isLive,
+      platforms: formData.platforms,
+      totalRewards: formData.totalRewards,
+      participants: [],
+      media: [],
+      rewards: [],
+      agenda: transformedAgenda,
+      hosts: formData.hosts,
+      sponsors: formData.sponsors,
+      socialLinks: formData.socialLinks,
+    };
+  };
+
   // Function to reset transaction state
   const resetTransactionState = () => {
     setIsSubmitting(false);
@@ -208,6 +279,10 @@ const CreateEventForm = () => {
     setDomainName('');
     setDomainAvailable(null);
     setCheckingDomain(false);
+    setShowSuccessCard(false);
+    setCreatedEventDetails(null);
+    setTransactionSuccessful(false);
+    setIsVerifying(false);
     if (transactionTimeout) {
       clearTimeout(transactionTimeout);
       setTransactionTimeout(null);
@@ -338,7 +413,14 @@ const CreateEventForm = () => {
       hosts: [],
       agenda: [],
       sponsors: [],
-      socialLinks: {}
+      socialLinks: {},
+      slug: randomEvent.title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim()
+        .substring(0, 20)
     });
 
     setIsAutoFilled(true);
@@ -497,7 +579,7 @@ const CreateEventForm = () => {
       // Generate a unique slug for this event
       const eventSlug = generateSlug();
       console.log('Generated event slug:', eventSlug);
-      
+
       // Store the slug in form data for reference
       setFormData(prev => ({ ...prev, slug: eventSlug }));
 
@@ -508,12 +590,13 @@ const CreateEventForm = () => {
           address: eventAddress as `0x${string}`,
           functionName: "createEvent",
           args: [
-            uri,
-            BigInt(startTime),
-            BigInt(endTime),
-            BigInt(formData.maxParticipants),
-            BigInt(0.006 * 10 ** 18),
-            eventSlug, // Add the generated slug as the last parameter
+            uri, // ipfsHash
+            BigInt(startTime), // startTime
+            BigInt(endTime), // endTime
+            BigInt(formData.maxParticipants), // maxAttendees
+            false, // isVIP (default to false, can be made configurable)
+            "0x", // data (empty bytes for now)
+            eventSlug, // slug
           ],
         },
       ];
@@ -539,23 +622,42 @@ const CreateEventForm = () => {
     if (formData.tickets.available && formData.tickets.types.length > 0) {
       for (const ticketType of formData.tickets.types) {
         ticketContracts.push({
-          abi: eventAbi.abi,
-          address: eventAddress as `0x${string}`,
-          functionName: "addTicket",
+          abi: ticketAbi.abi,
+          address: ticketAddress as `0x${string}`,
+          functionName: "createTicket",
           args: [
-            BigInt(eventId),
-            ticketType.type,
-            ticketType.type,
-            BigInt(ticketType.price * 1000000000000000000), // Convert to wei
-            ticketType.currency,
-            BigInt(ticketType.quantity),
-            ticketType.perks || []
+            BigInt(eventId), // eventId
+            ticketType.type, // name
+            ticketType.type, // ticketType
+            BigInt(ticketType.price * 1000000000000000000), // price (Convert to wei)
+            ticketType.currency, // currency
+            BigInt(ticketType.quantity), // totalQuantity
+            ticketType.perks || [] // perks
           ],
         });
       }
     }
 
     return ticketContracts;
+  };
+
+  // New function to create a batched transaction with event and tickets
+  // Note: This approach uses a placeholder event ID that will be replaced by the contract
+  // or we can use a different batching strategy
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const createBatchedEventAndTickets = async () => {
+    const contracts = [];
+
+    // First, add the createEvent call
+    const eventContract = await handleSubmit();
+    contracts.push(...eventContract);
+
+    // For batching, we need to handle the event ID differently
+    // One approach is to use a multicall or have the contract handle the batching
+    // For now, we'll return the event contract and handle tickets separately
+    // This could be enhanced with a custom contract that handles the batching
+
+    return contracts;
   };
 
   type NamesQueryResult = { names?: { items?: { name: string }[] } }
@@ -761,7 +863,8 @@ const CreateEventForm = () => {
                             hosts: [],
                             agenda: [],
                             sponsors: [],
-                            socialLinks: {}
+                            socialLinks: {},
+                            slug: ''
                           });
                           setIsAutoFilled(false);
                           setPreparedContracts(null);
@@ -833,6 +936,49 @@ const CreateEventForm = () => {
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
+              </div>
+
+              {/* Event Slug */}
+              <div className="space-y-2 sm:space-y-3">
+                <label className="text-sm sm:text-base font-medium text-foreground">
+                  Event Slug
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={formData.slug || ''}
+                    onChange={(e) => {
+                      const slug = e.target.value
+                        .toLowerCase()
+                        .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+                        .replace(/\s+/g, '-') // Replace spaces with hyphens
+                        .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+                        .trim();
+                      handleInputChange('slug', slug);
+                    }}
+                    className="flex-1 px-4 py-3 sm:py-3.5 bg-background border border-border rounded-xl text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors text-sm sm:text-base"
+                    placeholder="my-awesome-event"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const autoSlug = formData.title
+                        .toLowerCase()
+                        .replace(/[^a-z0-9\s-]/g, '')
+                        .replace(/\s+/g, '-')
+                        .replace(/-+/g, '-')
+                        .trim()
+                        .substring(0, 20) || generateSlug();
+                      handleInputChange('slug', autoSlug);
+                    }}
+                    className="px-3 py-2 text-xs bg-muted text-muted-foreground rounded-lg hover:bg-muted/80 transition-colors"
+                  >
+                    Auto
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  A unique identifier for your event URL. Only lowercase letters, numbers, and hyphens allowed.
+                </p>
               </div>
             </div>
           )}
@@ -1491,6 +1637,10 @@ const CreateEventForm = () => {
                       <span className="text-sm text-muted-foreground">Max Participants:</span>
                       <p className="font-medium text-sm sm:text-base mt-1">{formData.maxParticipants}</p>
                     </div>
+                    <div>
+                      <span className="text-sm text-muted-foreground">Event Slug:</span>
+                      <p className="font-medium text-sm sm:text-base mt-1">{formData.slug || "Not set"}</p>
+                    </div>
                   </div>
                 </div>
 
@@ -1605,6 +1755,47 @@ const CreateEventForm = () => {
               </div>
 
 
+              {/* Transaction Mode Selection */}
+              {isConnected && canUseTransaction && !preparedContracts && (
+                <div className="mb-6 p-4 bg-muted border border-border rounded-lg">
+                  <h3 className="text-lg font-medium mb-4">Transaction Mode</h3>
+                  <div className="space-y-3">
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="transactionMode"
+                        value="sequential"
+                        checked={!useBatchedMode}
+                        onChange={() => setUseBatchedMode(false)}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <div>
+                        <div className="font-medium">Sequential Mode</div>
+                        <div className="text-sm text-muted-foreground">
+                          Create event first, then add tickets in separate transactions
+                        </div>
+                      </div>
+                    </label>
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="transactionMode"
+                        value="batched"
+                        checked={useBatchedMode}
+                        onChange={() => setUseBatchedMode(true)}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <div>
+                        <div className="font-medium">Batched Mode</div>
+                        <div className="text-sm text-muted-foreground">
+                          Create event and tickets in a single transaction (requires custom contract)
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              )}
+
               {/* Simple Event Creation Transaction */}
               {isConnected && canUseTransaction && useSimpleMode && preparedContracts ? (
                 <Transaction
@@ -1620,6 +1811,11 @@ const CreateEventForm = () => {
                       if (lifecycle.statusName === 'success') {
                         console.log('Transaction successful, starting verification...');
 
+                        // Show immediate success feedback
+                        setTransactionSuccessful(true);
+                        setIsVerifying(true);
+                        setIsSubmitting(false);
+
                         // Prepare expected event data for verification
                         const expectedEventData = {
                           title: formData.title,
@@ -1634,11 +1830,23 @@ const CreateEventForm = () => {
                         if (verification.success) {
                           console.log('Event verified successfully:', verification.eventId);
                           setCreatedEventId(verification.eventId);
+
+                          // Generate and upload event metadata
+                          const metadataUrl = await generateAndUploadEventMetadata(verification.eventId);
+                          if (metadataUrl) {
+                            console.log('Event metadata available at:', metadataUrl);
+                          }
+
+                          // Create event details and show success card
+                          const eventDetails = createEventDetails(verification.eventId);
+                          setCreatedEventDetails(eventDetails);
+                          setShowSuccessCard(true);
+                          setIsVerifying(false);
+
                           setTransactionStep('domain');
-                          setIsSubmitting(false);
                         } else {
                           console.error('Event verification failed:', verification.error);
-                          setIsSubmitting(false);
+                          setIsVerifying(false);
                         }
                       } else {
                         console.log('Simple transaction failed or error');
@@ -1714,7 +1922,7 @@ const CreateEventForm = () => {
               ) : null}
 
               {/* Advanced Event Creation Transaction */}
-              {isConnected && canUseTransaction && !useSimpleMode && transactionStep === 'event' && preparedContracts ? (
+              {isConnected && canUseTransaction && !useSimpleMode && transactionStep === 'event' && preparedContracts && !useBatchedMode ? (
                 <Transaction
                   chainId={chainId}
                   calls={(preparedContracts || []) as never}
@@ -1726,6 +1934,11 @@ const CreateEventForm = () => {
                     } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
                       if (lifecycle.statusName === 'success') {
                         console.log('Transaction successful, starting verification...');
+
+                        // Show immediate success feedback
+                        setTransactionSuccessful(true);
+                        setIsVerifying(true);
+                        setIsSubmitting(false);
 
                         // Prepare expected event data for verification
                         const expectedEventData = {
@@ -1742,6 +1955,18 @@ const CreateEventForm = () => {
                           console.log('Event verified successfully:', verification.eventId);
                           setCreatedEventId(verification.eventId);
 
+                          // Generate and upload event metadata
+                          const metadataUrl = await generateAndUploadEventMetadata(verification.eventId);
+                          if (metadataUrl) {
+                            console.log('Event metadata available at:', metadataUrl);
+                          }
+
+                          // Create event details and show success card
+                          const eventDetails = createEventDetails(verification.eventId);
+                          setCreatedEventDetails(eventDetails);
+                          setShowSuccessCard(true);
+                          setIsVerifying(false);
+
                           // Check if we need to add tickets
                           if (formData.tickets.available && formData.tickets.types.length > 0) {
                             console.log('Preparing ticket contracts...');
@@ -1750,20 +1975,17 @@ const CreateEventForm = () => {
                               setPreparedTicketContracts(ticketContracts);
                               console.log('Moving to ticket creation step');
                               setTransactionStep('tickets');
-                              setIsSubmitting(false); // Reset for next transaction
                             } catch (error) {
                               console.error('Error preparing ticket contracts:', error);
-                              setIsSubmitting(false);
                             }
                           } else {
                             // No tickets to add, move to domain minting
                             console.log('No tickets to add, moving to domain minting');
                             setTransactionStep('domain');
-                            setIsSubmitting(false);
                           }
                         } else {
                           console.error('Event verification failed:', verification.error);
-                          setIsSubmitting(false);
+                          setIsVerifying(false);
                         }
                       } else {
                         // Transaction failed or error
@@ -1780,6 +2002,103 @@ const CreateEventForm = () => {
                     <TransactionStatusAction />
                   </TransactionStatus>
                 </Transaction>
+              ) : null}
+
+              {/* Batched Event and Tickets Transaction */}
+              {isConnected && canUseTransaction && !useSimpleMode && useBatchedMode && preparedContracts ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                      <div className="font-medium text-yellow-800 dark:text-yellow-200">
+                        Batched Mode
+                      </div>
+                    </div>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                      To batch createEvent and createTicket transactions, you&apos;ll need a custom contract that handles both operations.
+                      The current implementation creates the event first, then adds tickets in a separate transaction.
+                    </p>
+                  </div>
+
+                  {/* Fallback to sequential mode for now */}
+                  <Transaction
+                    chainId={chainId}
+                    calls={(preparedContracts || []) as never}
+                    onStatus={async (lifecycle) => {
+                      console.log('Batched event transaction lifecycle:', lifecycle.statusName);
+
+                      if (lifecycle.statusName === 'transactionPending' || lifecycle.statusName === 'buildingTransaction') {
+                        setIsSubmitting(true);
+                      } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
+                        if (lifecycle.statusName === 'success') {
+                          console.log('Event created successfully, preparing tickets...');
+
+                          // Show immediate success feedback
+                          setTransactionSuccessful(true);
+                          setIsVerifying(true);
+                          setIsSubmitting(false);
+
+                          // Prepare expected event data for verification
+                          const expectedEventData = {
+                            title: formData.title,
+                            creator: address,
+                            startTime: Math.floor(new Date(formData.startDateTime).getTime() / 1000).toString(),
+                            endTime: Math.floor(new Date(formData.endDateTime).getTime() / 1000).toString(),
+                          };
+
+                          // Verify event creation using The Graph Protocol
+                          const verification = await verifyEventCreation(expectedEventData);
+
+                          if (verification.success) {
+                            console.log('Event verified successfully:', verification.eventId);
+                            setCreatedEventId(verification.eventId);
+
+                            // Generate and upload event metadata
+                            const metadataUrl = await generateAndUploadEventMetadata(verification.eventId);
+                            if (metadataUrl) {
+                              console.log('Event metadata available at:', metadataUrl);
+                            }
+
+                            // Create event details and show success card
+                            const eventDetails = createEventDetails(verification.eventId);
+                            setCreatedEventDetails(eventDetails);
+                            setShowSuccessCard(true);
+                            setIsVerifying(false);
+
+                            // Check if we need to add tickets
+                            if (formData.tickets.available && formData.tickets.types.length > 0) {
+                              console.log('Preparing ticket contracts...');
+                              try {
+                                const ticketContracts = await handleTicketCreation(verification.eventId);
+                                setPreparedTicketContracts(ticketContracts);
+                                console.log('Moving to ticket creation step');
+                                setTransactionStep('tickets');
+                              } catch (error) {
+                                console.error('Error preparing ticket contracts:', error);
+                              }
+                            } else {
+                              console.log('No tickets to add, moving to domain minting');
+                              setTransactionStep('domain');
+                            }
+                          } else {
+                            console.error('Event verification failed:', verification.error);
+                            setIsVerifying(false);
+                          }
+                        } else {
+                          console.log('Batched event transaction failed or error');
+                          setIsSubmitting(false);
+                        }
+                      }
+                    }}
+                  >
+                    <TransactionButton text={isSubmitting ? "Creating Event..." : "Create Event & Tickets"} />
+                    <TransactionSponsor />
+                    <TransactionStatus>
+                      <TransactionStatusLabel />
+                      <TransactionStatusAction />
+                    </TransactionStatus>
+                  </Transaction>
+                </div>
               ) : null}
 
               {/* Advanced Ticket Creation Transaction */}
@@ -1808,7 +2127,7 @@ const CreateEventForm = () => {
                       }
                     }}
                   >
-                    <TransactionButton text={isSubmitting ? "Adding Tickets..." : "Add Tickets"} />
+                    <TransactionButton text={isSubmitting ? "Creating Tickets..." : "Create Tickets"} />
                     <TransactionSponsor />
                     <TransactionStatus>
                       <TransactionStatusLabel />
@@ -1831,7 +2150,7 @@ const CreateEventForm = () => {
                     }}
                     className="w-full px-4 py-2 text-sm text-muted-foreground hover:text-foreground underline"
                   >
-                    Skip Tickets (Complete Event Creation)
+                    Skip Ticket Creation (Complete Event Creation)
                   </button>
                 </div>
               ) : null}
@@ -1997,6 +2316,27 @@ const CreateEventForm = () => {
                   {createdEventId && (
                     <div className="mt-2 text-xs text-muted-foreground">
                       Event ID: {createdEventId}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Immediate Success Indicator */}
+              {transactionSuccessful && !showSuccessCard && (
+                <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <div className="text-sm text-green-800 dark:text-green-200 font-medium">
+                      ✅ Transaction Successful!
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-green-700 dark:text-green-300">
+                    {isVerifying ? "Verifying event creation on the blockchain..." : "Event created successfully!"}
+                  </div>
+                  {isVerifying && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-green-500"></div>
+                      <span className="text-xs text-green-600 dark:text-green-400">Please wait...</span>
                     </div>
                   )}
                 </div>
@@ -2195,6 +2535,21 @@ const CreateEventForm = () => {
         onClose={() => setShowWalletModal(false)}
         className="bg-black shadow-lg"
       />
+
+      {/* Success Card */}
+      {showSuccessCard && createdEventDetails && (
+        <RegistrationSuccessCard
+          event={createdEventDetails}
+          onClose={() => {
+            setShowSuccessCard(false);
+            setCreatedEventDetails(null);
+            // Navigate to the event page after closing
+            if (createdEventId) {
+              router.push(`/e/${createdEventId}`);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };
