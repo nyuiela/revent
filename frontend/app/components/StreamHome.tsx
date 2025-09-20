@@ -161,14 +161,14 @@ export default function StreamHome() {
             className={`absolute left-4 right-4 top-4 flex items-center gap-2 transition-all duration-300 pointer-events-none z-20 ${searchBarVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}
           >
             <div className={`${searchBarVisible ? 'pointer-events-auto' : 'pointer-events-none'} w-full`}>
-            <EventSearch
-              events={events}
-              onEventSelect={handleEventSelect}
-              onSearch={handleSearch}
-              selectedEventTitle={selectedEventTitle}
-              onClearSelectedEvent={() => setSelectedEventTitle("")}
-            />
-          </div>
+              <EventSearch
+                events={events}
+                onEventSelect={handleEventSelect}
+                onSearch={handleSearch}
+                selectedEventTitle={selectedEventTitle}
+                onClearSelectedEvent={() => setSelectedEventTitle("")}
+              />
+            </div>
           </div>
 
           {/* Location Indicator */}
@@ -251,7 +251,7 @@ export default function StreamHome() {
               {discoverEvents.map((event) => (
                 <Link
                   key={event.id}
-                         href={`/${event.slug || event.id}`}
+                  href={`/${event.slug || event.id}`}
                   className="rounded-2xl overflow-hidden border border-border bg-card-bg cursor-pointer hover:shadow-lg transition-shadow shadow-none relative h-32 block"
                 >
                   {/* Background image covering the whole card */}
@@ -310,7 +310,7 @@ export default function StreamHome() {
       {/* Curations for you */}
       <section className="space-y-3 px-4">
         <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">Events for you</h3>
+          <h3 className="text-sm font-medium">Events for you</h3>
           {location && (
             <div className="text-xs text-[var(--app-foreground-muted)] flex items-center gap-1">
               <MapPin className="w-3 h-3" />
@@ -323,13 +323,13 @@ export default function StreamHome() {
           {curations.map((c) => (
             <Link
               key={c.id}
-                     href={`/${c.slug || c.id}`}
-                     className="min-w-[72%] rounded-2xl overflow-hidden border border-border bg-card-bg shadow block relative"
+              href={`/${c.slug || c.id}`}
+              className="min-w-[72%] rounded-2xl overflow-hidden border border-border bg-card-bg shadow block relative"
             >
               <div className="relative h-32">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={c.image} alt={c.title} className="w-full h-full object-cover" />
-                
+
                 {/* Distance indicator */}
                 {c.distance !== null && (
                   <div className="absolute top-2 right-2 bg-blue-500/80 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
@@ -337,7 +337,7 @@ export default function StreamHome() {
                     <span>{c.distance < 1 ? `${Math.round(c.distance * 1000)}m` : `${c.distance.toFixed(1)}km`}</span>
                   </div>
                 )}
-                
+
                 <div className="absolute bottom-2 left-2 right-2 text-white">
                   <div className="text-xs opacity-90">
                     <OwnerDisplay
@@ -355,7 +355,7 @@ export default function StreamHome() {
       </section>
 
       {/* Discover All Events - Infinite Scroll */}
-      <InfiniteScrollEvents 
+      <InfiniteScrollEvents
         userLocation={location}
         onEventSelect={handleEventSelect}
       />

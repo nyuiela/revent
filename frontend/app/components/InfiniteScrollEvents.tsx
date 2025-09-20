@@ -14,23 +14,23 @@ interface InfiniteScrollEventsProps {
   onEventSelect?: (event: any) => void;
 }
 
-export default function InfiniteScrollEvents({ 
-  userLocation, 
-  onEventSelect 
+export default function InfiniteScrollEvents({
+  userLocation,
+  onEventSelect
 }: InfiniteScrollEventsProps) {
-  const { 
-    events, 
-    isLoading, 
-    isLoadingMore, 
-    hasMore, 
-    loadMore, 
-    totalCount, 
-    displayedCount 
+  const {
+    events,
+    isLoading,
+    isLoadingMore,
+    hasMore,
+    loadMore,
+    totalCount,
+    displayedCount
   } = useInfiniteEvents();
 
   const eventIds = events.map(event => event.id);
   const { data: viewCounts = {}, isLoading: viewsLoading } = useViewCounts(eventIds);
-  
+
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
@@ -38,13 +38,13 @@ export default function InfiniteScrollEvents({
   const lastEventElementRef = useCallback((node: HTMLDivElement | null) => {
     if (isLoading) return;
     if (observerRef.current) observerRef.current.disconnect();
-    
+
     observerRef.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
         loadMore();
       }
     });
-    
+
     if (node) observerRef.current.observe(node);
   }, [isLoading, hasMore, isLoadingMore, loadMore]);
 
@@ -79,14 +79,14 @@ export default function InfiniteScrollEvents({
           Showing {displayedCount} of {totalCount}
         </div>
       </div>
-      
+
       <div className="space-y-3">
         {events.map((event, index) => {
           const isLastEvent = index === events.length - 1;
           const distance = userLocation ? calculateDistance(
-            userLocation.lat, 
-            userLocation.lng, 
-            event.lat, 
+            userLocation.lat,
+            userLocation.lng,
+            event.lat,
             event.lng
           ) : null;
 
@@ -105,10 +105,10 @@ export default function InfiniteScrollEvents({
                   {/* Event Image */}
                   <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img 
-                      src={event.avatarUrl} 
-                      alt={event.title} 
-                      className="w-full h-full object-cover" 
+                    <img
+                      src={event.avatarUrl}
+                      alt={event.title}
+                      className="w-full h-full object-cover"
                     />
                     {/* Live indicator */}
                     {event.isLive && (
@@ -124,7 +124,7 @@ export default function InfiniteScrollEvents({
                       <h4 className="font-semibold text-sm leading-tight text-[var(--app-foreground)] truncate">
                         {event.title}
                       </h4>
-                      
+
                       {/* Distance and View count */}
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {distance !== null && (
@@ -133,7 +133,7 @@ export default function InfiniteScrollEvents({
                             <span>{distance < 1 ? `${Math.round(distance * 1000)}m` : `${distance.toFixed(1)}km`}</span>
                           </div>
                         )}
-                        
+
                         <div className="bg-gray-100 dark:bg-gray-800 text-[var(--app-foreground-muted)] text-xs px-2 py-1 rounded-full flex items-center gap-1">
                           <Eye className="w-3 h-3" />
                           <ViewCount
@@ -158,7 +158,7 @@ export default function InfiniteScrollEvents({
                     {event.platforms && event.platforms.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {event.platforms.slice(0, 3).map((platform, idx) => (
-                          <span 
+                          <span
                             key={idx}
                             className="text-xs bg-[var(--app-gray)] text-[var(--app-foreground-muted)] px-2 py-0.5 rounded-full"
                           >

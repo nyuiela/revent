@@ -51,8 +51,8 @@ export function generateEventMetadata(
   // Generate the metadata URL (for reference)
   // const metadataUrl = `${baseUrl}/metadata/${eventId}.json`;
 
-  // Generate the event page URL
-  const eventUrl = `${baseUrl}/e/${eventId}`;
+  // Generate the event page URL using slug if available, otherwise fallback to eventId
+  const eventUrl = `${baseUrl}/${formData.slug || eventId}`;
 
   // Generate attributes for the event
   const attributes = [

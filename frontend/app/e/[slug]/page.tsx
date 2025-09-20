@@ -1,5 +1,5 @@
 import React from 'react'
-import EventPage from '../components/EventPage'
+import EventPage from '../../components/EventPage'
 
 type Props = {
   params: Promise<{
