@@ -1686,7 +1686,7 @@ const CreateEventForm = () => {
                     <div className="space-y-3">
                       <h3 className="text-lg font-semibold text-black dark:text-white">Current Ticket Types</h3>
                       {formData.tickets.types.map((ticket, index) => (
-                        <div key={index} className="flex items-center justify-between p-4 bg-[var(--app-background)] border border-border rounded-xl bg-white">
+                        <div key={index} className="flex items-center justify-between p-4 border border-border rounded-xl bg-white text-black dark:text-white">
                           <div>
                             <h4 className="font-semibold text-[var(--app-foreground)] dark:text-white">{ticket.type}</h4>
                             <p className="text-sm text-[var(--app-foreground-muted)]">
