@@ -155,7 +155,30 @@ contract TicketsV1 is
         string[][] memory perks
     ) external onlyEventsCreator(eventId) {
         for (uint256 i = 0; i < name.length; i++) {
-            createTicket(eventId, name[i], ticketType[i], price[i], currency[i], totalQuantity[i], perks[i]);
+           Counters.increment(_ticketIds);
+          uint256 ticketId = Counters.current(_ticketIds);
+
+        tickets[ticketId] = EventTypes.TicketData({
+            ticketId: ticketId,
+            eventId: eventId,
+            name: name,
+            ticketType: ticketType,
+            price: price,
+            currency: currency,
+            totalQuantity: totalQuantity,
+            soldQuantity: 0,
+            perks: perks,
+            isActive: true,
+            createdAt: block.timestamp,
+            updatedAt: block.timestamp
+        });
+        eventTickets[eventId].push(ticketId);
+        bytes memory data =
+            abi.encode(ticketId, eventId, _msgSender(), name, ticketType, price, currency, totalQuantity, perks);
+        _mint(msg.sender, ticketId, 1, data);
+
+        emit TicketCreated(ticketId, eventId, _msgSender(), name, ticketType, price, currency, totalQuantity, perks);
+
         }
     }
 

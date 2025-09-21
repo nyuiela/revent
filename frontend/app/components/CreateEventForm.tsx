@@ -924,7 +924,7 @@ const CreateEventForm = () => {
     { id: 4, title: "Agenda", icon: "calendar" },
     { id: 5, title: "Tickets", icon: "plus" },
     { id: 6, title: "Review", icon: "check" },
-    { id: 7, title: "Domain", icon: "globe" },
+    // { id: 7, title: "Domain", icon: "globe" },
   ];
   const { data, error, isLoading } = useQuery<NamesQueryResult>({
     queryKey: ['domains'],
@@ -1119,7 +1119,7 @@ const CreateEventForm = () => {
                     <select
                       value={formData.category}
                       onChange={(e) => handleInputChange('category', e.target.value)}
-                      className="w-full px-4 mt-2 py-3 bg-black border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                      className="w-full px-4 mt-2 py-3 bg-background border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                       required
                     >
                       <option value="">Select a category</option>
@@ -1136,7 +1136,7 @@ const CreateEventForm = () => {
                     <select
                       value={formData.eventType}
                       onChange={(e) => handleInputChange('eventType', e.target.value)}
-                      className="w-full px-4 mt-2 py-3 bg-black border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                      className="w-full px-4 mt-2 py-3 bg-background border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                       required
                     >
                       <option value="">Select a event type</option>
@@ -1662,7 +1662,7 @@ const CreateEventForm = () => {
                   </p> */}
 
                   {/* Ticket Availability Toggle */}
-                  <div className="flex items-center justify-between p-4 bg-black border border-border rounded-xl">
+                  <div className="flex items-center justify-between p-4 bg-background border border-border rounded-xl">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
                         <Icon name="plus" size="sm" className="text-muted-foreground" />
@@ -1776,7 +1776,7 @@ const CreateEventForm = () => {
                                 tempTicket: { ...prev.tempTicket!, currency: e.target.value }
                               }));
                             }}
-                            className="w-full px-4 py-3 bg-black border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                            className="w-full px-4 py-3 bg-background border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                           >
                             <option value="USD">USD ($)</option>
                             <option value="EUR">EUR (€)</option>

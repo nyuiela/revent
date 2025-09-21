@@ -84,6 +84,17 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
   const numericEventId = eventId && typeof eventId === "string" ? Number(eventId) : eventId;
   const canTransact = Boolean(address && chainId && eventAddress);
   const canPurchaseTickets = Boolean(address && chainId && ticketAddress);
+
+  // Debug logging
+  console.log('EventPage Debug:', {
+    eventId,
+    numericEventId,
+    address,
+    chainId,
+    eventAddress,
+    canTransact,
+    canPurchaseTickets
+  });
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -682,14 +693,17 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                         abi: eventAbi.abi as Abi,
                         address: eventAddress as `0x${string}`,
                         functionName: "registerForEvent",
-                        args: [BigInt(numericEventId || 1)],
-                        // value: BigInt(Math.floor(selectedTicket.price * ticketQuantity * 1e18)), // Convert to wei
+                        args: [BigInt(numericEventId || 1), "0x"],
                       },
                     ]}
                     onStatus={(s) => {
+                      console.log('Registration transaction status:', s);
                       setIsRegistering(s.statusName === "transactionPending" || s.statusName === "buildingTransaction");
                       if (s.statusName === "success") {
                         setShowRegistrationSuccess(true);
+                      }
+                      if (s.statusName === "error") {
+                        console.error('Registration transaction error:', s);
                       }
                     }}
                   >
@@ -905,12 +919,14 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
       </div>
 
       {/* Event Management - Only show to event creator */}
-      {isEventCreator && eventId && (
-        <EventManagement
-          eventId={eventId}
-          defaultIpfsHash={ipfsHash || ""}
-        />
-      )}
+      {
+        isEventCreator && eventId && (
+          <EventManagement
+            eventId={eventId}
+            defaultIpfsHash={ipfsHash || ""}
+          />
+        )
+      }
 
       {/* Sticky Registration Button */}
       {
@@ -946,13 +962,17 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                           abi: eventAbi.abi as Abi,
                           address: eventAddress as `0x${string}`,
                           functionName: "registerForEvent",
-                          args: [eventId ? BigInt(eventId) : BigInt(1), "0x"],
+                          args: [BigInt(numericEventId || 0), "0x"],
                         },
                       ]}
                       onStatus={(s) => {
+                        console.log('Sticky registration transaction status:', s);
                         setIsRegistering(s.statusName === "transactionPending" || s.statusName === "buildingTransaction");
                         if (s.statusName === "success") {
                           setShowRegistrationSuccess(true);
+                        }
+                        if (s.statusName === "error") {
+                          console.error('Sticky registration transaction error:', s);
                         }
                       }}
                     >
