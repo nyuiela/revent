@@ -18,12 +18,14 @@ import ParticipantsGrid from "./ParticipantsGrid";
 import EventViewTracker from "../../components/EventViewTracker";
 import ViewCount from "../../components/ViewCount";
 import { useEventViews } from "../../hooks/useEventViews";
+import { useEventTickets } from "../../hooks/useEventTickets";
 import { EventDetails } from "@/utils/types";
 import RegistrationSuccessCard from "./RegistrationSuccessCard";
 import { Avatar, FollowersYouKnow, ProfileSocials } from "ethereum-identity-kit";
 import Image from "next/image";
 import { Button } from "./DemoComponents";
 import { useRouter } from "next/navigation";
+import { ticketAbi, ticketAddress } from "@/lib/contract";
 
 
 type Props = {
@@ -64,10 +66,11 @@ type Props = {
 export default function EventPage({ eventId, ipfsHash, idType, graphEventData, eventSlugData }: Props) {
   const [isScrolling, setIsScrolling] = useState(false);
   const { viewCount, isLoading: viewCountLoading } = useEventViews(eventId || '');
+  const { tickets, isLoading: ticketsLoading, hasTickets } = useEventTickets(eventId);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [ticketMode] = useState<"none" | "single" | "multiple">("single");
   const [selectedTicketIndex, setSelectedTicketIndex] = useState(0);
-  const [ticketQuantity] = useState(1);
+  const [ticketQuantity, setTicketQuantity] = useState(1);
   const [ipfsData, setIpfsData] = useState<Record<string, unknown> | null>(null);
   const [ipfsLoading, setIpfsLoading] = useState<boolean>(false);
   const [ipfsError, setIpfsError] = useState<string | null>(null);
@@ -76,14 +79,16 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
   const { address } = useAccount();
   const chainId = useChainId();
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
   const numericEventId = eventId && typeof eventId === "string" ? Number(eventId) : eventId;
   const canTransact = Boolean(address && chainId && eventAddress);
+  const canPurchaseTickets = Boolean(address && chainId && ticketAddress);
   const [isMounted, setIsMounted] = useState(false);
-  
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
-  
+
   const router = useRouter();
 
   // Only make contract calls if we have a valid eventId
@@ -409,8 +414,15 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
   //   });
   // };
 
-  // Ticket helpers
-  const ticketTypes = event.tickets?.available ? (event.tickets?.types || []) : [];
+  // Ticket helpers - use real ticket data from contract or fallback to IPFS data
+  const ticketTypes = hasTickets ? tickets.map(ticket => ({
+    type: ticket.name,
+    price: parseFloat(ticket.price) / 1e18, // Convert from wei to ETH
+    currency: ticket.currency,
+    quantity: parseInt(ticket.totalQuantity),
+    perks: ticket.perks || []
+  })) : (event.tickets?.available ? (event.tickets?.types || []) : []);
+
   const selectedTicket = ticketTypes[selectedTicketIndex];
   const effectiveQty = ticketMode === "none" ? 0 : (ticketMode === "single" ? 1 : Math.max(1, ticketQuantity));
   const totalPrice = selectedTicket ? selectedTicket.price * effectiveQty : 0;
@@ -462,7 +474,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
       {/* Hero Section */}
       <div className="relative h-[25rem] md:h-[25rem] mt-12 overflow-hidden">
         <div className="absolute top-5 left-0">
-          <Button variant="ghost" className="rounded-lg mb-6 -mt-4 bg-transparent text-white" onClick={() => router && router.back()}>
+          <Button variant="ghost" className="rounded-lg mb-6 -mt-4 bg-transparent text-white cursor-pointer" onClick={() => router && router.back()}>
             <ChevronLeft className="w-4 h-4" /> Back
           </Button>
         </div>
@@ -517,104 +529,146 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
       <div className="p-6 px-4 max-w-7xl mx-auto space-y-12">
         {/* <EventManagement eventId={eventId || "1"} defaultIpfsHash={ipfsHash || "bafkreia2uchzmzosieaj6tyim4qzq5xvxhlyapq2gzacen2tffknfeco6u"} /> */}
 
-        {/* Tickets Section */}
+        {/* Registration/Tickets Section */}
         <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
-          <h2 className="text-xl font-semibold mb-4">Register</h2>
+          <h2 className="text-xl font-semibold mb-4">
+            {hasTickets ? "Purchase Tickets" : "Register"}
+          </h2>
           {isRegistered !== undefined && isRegistered && (
             <div className="border border-[var(--events-card-border)] border-none bg-blue-500 mb-2">You are already registered for this event</div>
           )}
 
-
-
-          {ticketMode !== "none" && (
+          {/* Show tickets if available, otherwise show registration */}
+          {hasTickets ? (
             <>
               {/* Ticket types */}
               {ticketTypes.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-1 gap-1 mb-0 bg-gray-300 dark:bg-gray-900 p-4 px-[0.2rem] pb-1 rounded-xl">
-                  {ticketTypes.map((t, idx) => (
-                    <button
-                      type="button"
-                      key={t.type}
-                      onClick={() => setSelectedTicketIndex(idx)}
-                      className={`text-left p-4 rounded-2xl transition-colors bg-white dark:bg-gray-800 border-none ${selectedTicketIndex === idx
-                        ? "bg-[#edf6f9] dark:border-[var(--events-card-border)] dark:bg-gray-700 "
-                        : "dark:border-[var(--events-card-border)] bg-transparent dark:bg-gray-800 "}`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium">{t.type}</div>
-                          {t.perks && t.perks.length > 0 && (
-                            <div className="text-xs text-[var(--events-foreground-muted)] mt-1">
-                              {t.perks.join(" • ")}
-                            </div>
-                          )}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-1 gap-1 mb-0 bg-gray-300 dark:bg-gray-900 p-4 px-[0.2rem] pb-1 rounded-xl">
+                    {ticketTypes.map((t, idx) => (
+                      <button
+                        type="button"
+                        key={t.type}
+                        onClick={() => setSelectedTicketIndex(idx)}
+                        className={`text-left p-4 rounded-2xl transition-colors bg-white dark:bg-gray-800 border-none ${selectedTicketIndex === idx
+                          ? "bg-[#edf6f9] dark:border-[var(--events-card-border)] dark:bg-gray-700 "
+                          : "dark:border-[var(--events-card-border)] bg-transparent dark:bg-gray-800 "}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">{t.type}</div>
+                            {t.perks && t.perks.length > 0 && (
+                              <div className="text-xs text-[var(--events-foreground-muted)] mt-1">
+                                {t.perks.join(" • ")}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-right font-semibold">
+                            {t.currency === "USD" ? "$" : ""}{t.price.toLocaleString()}
+                          </div>
                         </div>
-                        <div className="text-right font-semibold">
-                          {t.currency === "USD" ? "$" : ""}{t.price.toLocaleString()}
-                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Quantity selector */}
+                  {ticketMode === "multiple" && selectedTicket && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-[var(--events-foreground-muted)]">Quantity</span>
+                      <div className="inline-flex items-center rounded-lg border border-[var(--events-card-border)]">
+                        <button
+                          type="button"
+                          onClick={() => setTicketQuantity((q) => Math.max(1, q - 1))}
+                          className="px-3 py-1.5 text-sm hover:bg-[var(--events-accent)]/10"
+                        >
+                          −
+                        </button>
+                        <div className="px-4 py-1.5 text-sm">{ticketQuantity}</div>
+                        <button
+                          type="button"
+                          onClick={() => setTicketQuantity((q) => Math.min(10, q + 1))}
+                          className="px-3 py-1.5 text-sm hover:bg-[var(--events-accent)]/10"
+                        >
+                          +
+                        </button>
                       </div>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="border border-[var(--events-card-border)] border-none bg-transparent mb-2">
-                  <div className="flex items-center gap-1 mb-0 bg-gray-300 p-4 px-[0.2rem] rounded-xl pb-0">
-                    {canTransact ? (
+                    </div>
+                  )}
+
+                  {/* Purchase button */}
+                  {selectedTicket && canPurchaseTickets && (
+                    <div className="flex items-center gap-1 mb-0 bg-gray-300 p-4 px-[0.2rem] rounded-xl pb-0">
                       <Transaction
                         chainId={chainId}
                         contracts={[
                           {
-                            abi: eventAbi.abi as Abi,
-                            address: eventAddress as `0x${string}`,
-                            functionName: "registerForEvent",
-                            args: [BigInt(numericEventId || 1)],
+                            abi: ticketAbi.abi as Abi,
+                            address: ticketAddress as `0x${string}`,
+                            functionName: "purchaseTicket",
+                            args: [
+                              BigInt(tickets[selectedTicketIndex].ticketId),
+                              BigInt(ticketQuantity)
+                            ],
+                            value: BigInt(Math.floor(selectedTicket.price * ticketQuantity * 1e18)), // Convert to wei
                           },
                         ]}
                         onStatus={(s) => {
-                          setIsRegistering(s.statusName === "transactionPending" || s.statusName === "buildingTransaction");
+                          setIsPurchasing(s.statusName === "transactionPending" || s.statusName === "buildingTransaction");
                           if (s.statusName === "success") {
                             setShowRegistrationSuccess(true);
                           }
                         }}
                       >
-                        <TransactionButton text={isRegistering ? "Registering..." : "Register for Event"} className="mb-0 p-2 font-medium rounded-xl" />x
+                        <TransactionButton
+                          text={isPurchasing ? "Purchasing..." : `Purchase ${ticketQuantity} Ticket${ticketQuantity > 1 ? 's' : ''}`}
+                          className="mb-0 p-2 font-medium rounded-xl"
+                        />
                         <TransactionStatus>
                           <TransactionStatusLabel />
                           <TransactionStatusAction />
                         </TransactionStatus>
                       </Transaction>
-                    ) : (
-                      <></>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
-                // < div cla ssName="text-sm text-[var(--events-foreground-muted)]">Tickets not available</div>
+              ) : (
+                <div className="text-sm text-[var(--events-foreground-muted)]">No tickets available</div>
               )}
-
-              {/* Quantity selector for multiple */}
-              {/* {ticketMode === "multiple" && selectedTicket && (
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-[var(--events-foreground-muted)]">Quantity</span>
-                  <div className="inline-flex items-center rounded-lg border border-[var(--events-card-border)]">
-                    <button
-                      type="button"
-                      onClick={() => setTicketQuantity((q) => Math.max(1, q - 1))}
-                      className="px-3 py-1.5 text-sm hover:bg-[var(--events-accent)]/10"
-                    >
-                      −
-                    </button>
-                    <div className="px-4 py-1.5 text-sm">{ticketQuantity}</div>
-                    <button
-                      type="button"
-                      onClick={() => setTicketQuantity((q) => Math.min(10, q + 1))}
-                      className="px-3 py-1.5 text-sm hover:bg-[var(--events-accent)]/10"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              )} */}
             </>
+          ) : (
+            /* Regular registration when no tickets */
+            <div className="border border-[var(--events-card-border)] border-none bg-transparent mb-2">
+              <div className="flex items-center gap-1 mb-0 bg-gray-300 p-4 px-[0.2rem] rounded-xl pb-0">
+                {canTransact ? (
+                  <Transaction
+                    chainId={chainId}
+                    contracts={[
+                      {
+                        abi: eventAbi.abi as Abi,
+                        address: eventAddress as `0x${string}`,
+                        functionName: "registerForEvent",
+                        args: [BigInt(eventId || 0), "0x"],
+                        value: BigInt(Math.floor(selectedTicket.price * ticketQuantity * 1e18)), // Convert to wei
+                      },
+                    ]}
+                    onStatus={(s) => {
+                      setIsRegistering(s.statusName === "transactionPending" || s.statusName === "buildingTransaction");
+                      if (s.statusName === "success") {
+                        setShowRegistrationSuccess(true);
+                      }
+                    }}
+                  >
+                    <TransactionButton text={isRegistering ? "Registering..." : "Register for Event"} className="mb-0 p-2 font-medium rounded-xl" />
+                    <TransactionStatus>
+                      <TransactionStatusLabel />
+                      <TransactionStatusAction />
+                    </TransactionStatus>
+                  </Transaction>
+                ) : (
+                  <></>
+                )}
+              </div>
+            </div>
           )}
 
           {/* Summary */}
@@ -849,8 +903,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                           abi: eventAbi.abi as Abi,
                           address: eventAddress as `0x${string}`,
                           functionName: "registerForEvent",
-                          value: BigInt(5000000000000000), // change to the event registration price 
-                          args: [BigInt(1)], // change to the event id
+                          args: [eventId ? BigInt(eventId) : BigInt(1), "0x"],
                         },
                       ]}
                       onStatus={(s) => {

@@ -118,14 +118,14 @@ const NotificationContainer: React.FC = () => {
   if (notifications.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
+    <div className="fixed bottom-2 right-4 z-50 space-y-2 max-w-[19rem] flex flex-col items-center">
       {notifications.map((notification) => (
         <div
           key={notification.id}
           className={`
             relative p-4 rounded-lg border shadow-lg backdrop-blur-sm
             transform transition-all duration-300 ease-in-out
-            animate-in slide-in-from-right-full
+            animate-in slide-in-from-right-full w-[80%]
             ${getNotificationStyles(notification.type)}
           `}
         >

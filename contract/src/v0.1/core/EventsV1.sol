@@ -370,6 +370,7 @@ contract EventsV1 is
     function deleteEvent(uint256 eventId) external onlyOwner {
         delete events[eventId];
         delete eventExistsMap[eventId];
+        // delete creatorEvents[_msgSender()];
         delete eventAttendees[eventId];
         delete confirmationCode[eventId];
     }

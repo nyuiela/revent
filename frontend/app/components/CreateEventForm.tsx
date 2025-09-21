@@ -207,7 +207,7 @@ const CreateEventForm = () => {
       console.error('Upload error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Upload failed';
       setUploadError(errorMessage);
-      
+
       // Show error notification
       notifyFileUploadError(uploadedFile.name, errorMessage);
     } finally {
@@ -560,7 +560,7 @@ const CreateEventForm = () => {
     } catch (error) {
       console.error('Error preparing contract calls:', error);
       setVerificationStatus('Failed to prepare contract calls');
-      
+
       // Show error notification
       notifyEventCreationError(error instanceof Error ? error.message : 'Failed to prepare contract calls');
       throw error;
