@@ -117,7 +117,7 @@ contract TicketsV1 is
         string memory currency,
         uint256 totalQuantity,
         string[] memory perks
-    ) external onlyEventsCreator(eventId) validTicketData(name, ticketType, price, totalQuantity) returns (uint256) {
+    ) public onlyEventsCreator(eventId) validTicketData(name, ticketType, price, totalQuantity) returns (uint256) {
         Counters.increment(_ticketIds);
         uint256 ticketId = Counters.current(_ticketIds);
 
@@ -144,6 +144,23 @@ contract TicketsV1 is
 
         return ticketId;
     }
+    function createTickets(
+        uint256 eventId,
+        string[] memory name,
+        string[] memory ticketType,
+        uint256[] memory price,
+        string[] memory currency,
+        uint256[] memory totalQuantity,
+        string[][] memory perks
+    ) external onlyEventsCreator(eventId) {
+
+        for (uint256 i = 0; i < name.length; i++) {
+          createTicket(eventId, name[i], ticketType[i], price[i], currency[i], totalQuantity[i], perks[i]);
+        }
+
+    }
+        
+    
 
     /**
      * @dev Purchase tickets

@@ -25,7 +25,7 @@ interface IEventsV1 {
         uint256 indexed eventId, EventTypes.EventStatus oldStatus, EventTypes.EventStatus newStatus
     );
     event EventUpdated(
-        uint256 indexed eventId, string ipfsHash, uint256 startTime, uint256 endTime, uint256 maxAttendees
+        uint256 indexed eventId, string ipfsHash, uint256 startTime, uint256 endTime, uint256 maxAttendees, string slug
     );
 
     // Attendees events
@@ -54,7 +54,8 @@ interface IEventsV1 {
         string memory ipfsHash,
         uint256 startTime,
         uint256 endTime,
-        uint256 maxAttendees
+        uint256 maxAttendees,
+        string memory slug
     ) external;
 
     function updateAttendeesCount(uint256 eventId, uint256 newCount) external;

@@ -31,7 +31,7 @@ contract DeployUpgradeable is Script {
         console.log("EventsV1 implementation deployed at:", address(eventsImpl));
 
         // Deploy EventsV1 proxy with initialization
-        bytes memory eventsInitData = abi.encodeWithSelector(EventsV1.initialize.selector, "hash");
+        bytes memory eventsInitData = abi.encodeWithSelector(EventsV1.initialize.selector, "ipfs://bafkreifpiqmmdgjsos6rrnbpq5qzywkqruvfwidh4n2idi6jyg2b2ogjkq/");
         UpgradeableProxy eventsProxy = new UpgradeableProxy(address(eventsImpl), eventsInitData);
         console.log("EventsV1 proxy deployed at:", address(eventsProxy));
 
@@ -41,7 +41,7 @@ contract DeployUpgradeable is Script {
         console.log("TicketsV1 implementation deployed at:", address(ticketsImpl));
 
         // Deploy TicketsV1 proxy with initialization
-        bytes memory ticketsInitData = abi.encodeWithSelector(TicketsV1.initialize.selector, "hash");
+        bytes memory ticketsInitData = abi.encodeWithSelector(TicketsV1.initialize.selector, "ipfs://bafkreifpiqmmdgjsos6rrnbpq5qzywkqruvfwidh4n2idi6jyg2b2ogjkq/");
         UpgradeableProxy ticketsProxy = new UpgradeableProxy(address(ticketsImpl), ticketsInitData);
         console.log("TicketsV1 proxy deployed at:", address(ticketsProxy));
 

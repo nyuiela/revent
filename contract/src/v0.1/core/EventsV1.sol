@@ -209,7 +209,8 @@ contract EventsV1 is
         string memory ipfsHash,
         uint256 startTime,
         uint256 endTime,
-        uint256 maxAttendees
+        uint256 maxAttendees,
+        string memory slug
     )
         external
         eventExists(eventId)
@@ -226,7 +227,7 @@ contract EventsV1 is
         events[eventId].maxAttendees = maxAttendees;
         events[eventId].updatedAt = block.timestamp;
 
-        emit EventUpdated(eventId, ipfsHash, startTime, endTime, maxAttendees);
+        emit EventUpdated(eventId, ipfsHash, startTime, endTime, maxAttendees, slug);
     }
 
     /**
@@ -364,6 +365,13 @@ contract EventsV1 is
 
     function getAttendeeCount(uint256 eventId) external view returns (uint256) {
         return eventAttendees[eventId].length;
+    }
+
+    function deleteEvent(uint256 eventId) external onlyOwner {
+        delete events[eventId];
+        delete eventExistsMap[eventId];
+        delete eventAttendees[eventId];
+        delete confirmationCode[eventId];
     }
 
     // Admin functions
