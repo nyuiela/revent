@@ -29,10 +29,11 @@ contract DeployUpgradeable is Script {
         console.log("\nDeploying EventsV1...");
         EventsV1 eventsImpl = new EventsV1();
         console.log("EventsV1 implementation deployed at:", address(eventsImpl));
+        string memory eventsUri = "https://coral-worrying-turtle-782.mypinata.cloud/ipfs/bafkreibyc5sznukb336vfqub76zrctxhnwqy4fyxurmbnrepzkxffqvcym";
 
         // Deploy EventsV1 proxy with initialization
         bytes memory eventsInitData = abi.encodeWithSelector(
-            EventsV1.initialize.selector, "ipfs://bafkreifpiqmmdgjsos6rrnbpq5qzywkqruvfwidh4n2idi6jyg2b2ogjkq/"
+            EventsV1.initialize.selector, eventsUri
         );
         UpgradeableProxy eventsProxy = new UpgradeableProxy(address(eventsImpl), eventsInitData);
         console.log("EventsV1 proxy deployed at:", address(eventsProxy));
@@ -44,7 +45,7 @@ contract DeployUpgradeable is Script {
 
         // Deploy TicketsV1 proxy with initialization
         bytes memory ticketsInitData = abi.encodeWithSelector(
-            TicketsV1.initialize.selector, "ipfs://bafkreifpiqmmdgjsos6rrnbpq5qzywkqruvfwidh4n2idi6jyg2b2ogjkq/"
+            TicketsV1.initialize.selector, eventsUri
         );
         UpgradeableProxy ticketsProxy = new UpgradeableProxy(address(ticketsImpl), ticketsInitData);
         console.log("TicketsV1 proxy deployed at:", address(ticketsProxy));

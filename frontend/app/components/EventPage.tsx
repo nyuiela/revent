@@ -920,7 +920,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
       {/* Event Management - Only show to event creator */}
       {
-        isEventCreator && eventId && (
+        !isEventCreator && eventId && (
           <EventManagement
             eventId={eventId}
             defaultIpfsHash={ipfsHash || ""}

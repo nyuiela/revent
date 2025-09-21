@@ -1,11 +1,11 @@
 {
   "base-sepolia": {
     "EventsV1": {
-      "address": "0x3bC5C432013FfA6E65649e29005E9DD1674B6551",
-      "startBlock": 31337344
+      "address": "0x0A46eB850A04D1B1a6A1385307a23cB9f4f08C70",
+      "startBlock": 31351954
     },
     "TicketsV1": {
-      "address": "0x5E77a8e2bA29c6554f4B1CE426C5462EB6cb610D"
+      "address": "0xE845513938a85d9d69668199925A5FD63eCa66f8"
     }
   }
 }

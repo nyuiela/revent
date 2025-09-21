@@ -78,4 +78,42 @@ const namesQuery = gql`{
   }
 }`
 
-export { namesQuery, url, headers }
+// Event subgraph configuration
+const eventUrl = 'https://api.studio.thegraph.com/query/87766/stream/version/latest';
+const eventHeaders = {
+  'Authorization': 'Bearer 6abc6de0d06cbf79f985314ef9647365',
+  'Content-Type': 'application/json'
+};
+
+// Query to get the last event ID
+const lastEventIdQuery = gql`
+  query GetLastEventId {
+    eventCreateds(first: 1, orderBy: eventId, orderDirection: desc) {
+      eventId
+    }
+  }
+`;
+
+// Function to get the last event ID from the subgraph
+export async function getLastEventId(): Promise<number> {
+  try {
+    const { request } = await import('graphql-request');
+    const client = new (await import('graphql-request')).GraphQLClient(eventUrl, { headers: eventHeaders });
+    const data = await client.request(lastEventIdQuery) as { eventCreateds: { eventId: string }[] };
+
+    if (data.eventCreateds && data.eventCreateds.length > 0) {
+      const lastEventId = parseInt(data.eventCreateds[0].eventId);
+      console.log('Last event ID from subgraph:', lastEventId);
+      return lastEventId;
+    }
+
+    console.log('No events found in subgraph, starting from 0');
+    return 0;
+  } catch (error) {
+    console.error('Error fetching last event ID from subgraph:', error);
+    // Return 0 as fallback if subgraph query fails
+    return 0;
+  }
+}
+
+export { namesQuery, url, headers, eventUrl, eventHeaders, lastEventIdQuery }
