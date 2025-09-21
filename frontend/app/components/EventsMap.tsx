@@ -265,7 +265,7 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag, userLoca
           const textColor = isDarkMode ? '#f9fafb' : '#1f2937';
           const borderColor = isDarkMode ? '#374151' : '#e5e7eb';
           const secondaryTextColor = isDarkMode ? '#9ca3af' : '#6b7280';
-          
+
           const html = `
             <div style="min-width:200px;padding:16px;background:${bgColor};color:${textColor};border-radius:8px;box-shadow:0 10px 25px rgba(0,0,0,0.15);">
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
@@ -322,7 +322,7 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag, userLoca
         console.error(`❌ Error creating marker for event ${ev.id}:`, error);
       }
     });
-  }, [events, mapboxgl]);
+  }, [events, mapboxgl, theme]);
 
   // Update markers when events change (no recentering)
   useEffect(() => {
@@ -334,7 +334,7 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag, userLoca
   useEffect(() => {
     if (mapReady && userLocation && mapRef.current) {
       console.log("📍 Centering map on user location:", userLocation);
-      
+
       // Fly to user location
       mapRef.current.flyTo({
         center: [userLocation.lng, userLocation.lat],
@@ -345,7 +345,7 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag, userLoca
       // Add user location marker if not already present
       const userMarkerId = 'user-location-marker';
       const existingUserMarker = markersRef.current.get(userMarkerId);
-      
+
       if (existingUserMarker) {
         // Update existing marker position
         (existingUserMarker as any).setLngLat([userLocation.lng, userLocation.lat]);
@@ -406,7 +406,7 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag, userLoca
           </div>
         </div>
       )}
-      
+
       {/* Add CSS for pulse animation and popup styling */}
       <style jsx>{`
         @keyframes pulse {

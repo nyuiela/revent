@@ -5,7 +5,7 @@ import Link from "next/link";
 import StreamHeader from "./StreamHeader";
 import EventsMap, { type LiveEvent, type EventsMapRef } from "./EventsMap";
 import EventSearch from "./EventSearch";
-import { Camera, ChevronUp, Monitor, Plus, Eye, MapPin, Navigation, Component } from "lucide-react";
+import { Camera, ChevronUp, Monitor, Eye, MapPin, Navigation, Component } from "lucide-react";
 import OwnerDisplay from "../../components/OwnerDisplay";
 import ViewCount from "../../components/ViewCount";
 import { useEvents } from "../../hooks/useEvents";
@@ -28,7 +28,7 @@ export default function StreamHome() {
   // const viewProfile = useViewProfile();
 
   // Location detection
-  const { location, error: locationError, isLoading: locationLoading, getCurrentLocation } = useLocation();
+  const { location, error: locationError, getCurrentLocation } = useLocation();
 
   useEffect(() => {
     setIsMounted(true);
@@ -358,7 +358,7 @@ export default function StreamHome() {
       {/* Discover All Events - Infinite Scroll */}
       <InfiniteScrollEvents
         userLocation={location}
-        onEventSelect={handleEventSelect}
+        onEventSelect={handleEventSelect as (event: unknown) => void}
       />
 
       {/* Curators for you */}

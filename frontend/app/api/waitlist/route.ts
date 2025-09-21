@@ -42,12 +42,12 @@ export async function POST(request: NextRequest) {
 
     // Check if email already exists
     const exists = await redis.sismember(WAITLIST_KEY, normalizedEmail);
-    
+
     if (exists) {
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         message: 'Email already registered',
-        alreadyExists: true 
+        alreadyExists: true
       });
     }
 
@@ -55,14 +55,14 @@ export async function POST(request: NextRequest) {
     const pipeline = redis.pipeline();
     pipeline.sadd(WAITLIST_KEY, normalizedEmail);
     pipeline.incr(WAITLIST_COUNT_KEY);
-    
+
     await pipeline.exec();
 
     // Get updated count
     const totalCount = await redis.get(WAITLIST_COUNT_KEY) as number;
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: 'Email added to waitlist',
       totalCount,
       alreadyExists: false
@@ -87,9 +87,9 @@ export async function GET(request: NextRequest) {
     const normalizedEmail = email.toLowerCase().trim();
     const exists = await redis.sismember(WAITLIST_KEY, normalizedEmail);
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       exists,
-      email: normalizedEmail 
+      email: normalizedEmail
     });
 
   } catch (error) {
@@ -104,7 +104,7 @@ export async function PUT(request: NextRequest) {
     const totalCount = await redis.get(WAITLIST_COUNT_KEY) as number || 0;
     const totalEmails = await redis.scard(WAITLIST_KEY);
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       totalCount,
       totalEmails,
       lastUpdated: new Date().toISOString()

@@ -62,9 +62,10 @@ const CreateEventForm = () => {
 
   // File upload state
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -82,6 +83,7 @@ const CreateEventForm = () => {
   const [preparedTicketContracts, setPreparedTicketContracts] = useState<Record<string, unknown>[] | null>(null);
   const [preparedDomainContracts, setPreparedDomainContracts] = useState<Record<string, unknown>[] | null>(null);
   const [isPreparing, setIsPreparing] = useState(false);
+  const [isPreparingForTransaction, setIsPreparingForTransaction] = useState(false);
   const [isAutoFilled, setIsAutoFilled] = useState(false);
   const [domainName, setDomainName] = useState<string>('');
   const [domainAvailable, setDomainAvailable] = useState<boolean | null>(null);
@@ -200,6 +202,57 @@ const CreateEventForm = () => {
     }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        handleFileSelect(file);
+      } else {
+        setUploadError('Please select a valid image file');
+      }
+    }
+  };
+
+  // Function to get the next event ID from The Graph
+  const getNextEventId = async (): Promise<string> => {
+    try {
+      const query = `{
+        eventCreateds(first: 1, orderBy: eventId, orderDirection: desc) {
+          eventId
+        }
+      }`;
+
+      const response = await request(url, query, {}, headers) as { eventCreateds?: Array<{ eventId: string }> };
+      const events = response.eventCreateds || [];
+
+      if (events.length > 0) {
+        const lastEventId = parseInt(events[0].eventId);
+        return (lastEventId + 1).toString();
+      } else {
+        return "1"; // First event
+      }
+    } catch (error) {
+      console.error('Error getting next event ID:', error);
+      // Fallback to timestamp-based ID
+      return Date.now().toString();
     }
   };
 
@@ -427,7 +480,7 @@ const CreateEventForm = () => {
     console.log('Auto-filled form with mock data:', randomEvent);
   };
 
-  // Function to prepare contract calls (upload file and prepare transaction)
+  // Function to prepare contract calls (upload file, metadata, and prepare transaction)
   const prepareContractCalls = async () => {
     try {
       setIsPreparing(true);
@@ -438,6 +491,26 @@ const CreateEventForm = () => {
         setVerificationStatus('Uploading image to IPFS...');
         await handleFileUpload();
       }
+
+      setVerificationStatus('Getting next event ID...');
+
+      // Get the next event ID from The Graph
+      const nextEventId = await getNextEventId();
+      console.log('Next event ID:', nextEventId);
+
+      setVerificationStatus('Uploading event metadata to IPFS...');
+
+      // Upload event metadata to IPFS
+      const metadataUri = await generateAndUploadEventMetadata(nextEventId);
+      if (!metadataUri) {
+        throw new Error('Failed to upload event metadata to IPFS');
+      }
+
+      // Update form data with the metadata URI
+      setFormData(prev => ({
+        ...prev,
+        metadataUri: metadataUri
+      }));
 
       setVerificationStatus('Preparing contract calls...');
 
@@ -455,6 +528,24 @@ const CreateEventForm = () => {
       throw error;
     } finally {
       setIsPreparing(false);
+    }
+  };
+
+  // Function to handle complete event creation (prepare + execute)
+  const handleCreateEvent = async () => {
+    try {
+      setIsPreparingForTransaction(true);
+      setVerificationStatus('Preparing everything for event creation...');
+
+      // First prepare all contracts (image upload, metadata upload, contract preparation)
+      await prepareContractCalls();
+
+      setVerificationStatus('Ready to create event! Click the transaction button below.');
+    } catch (error) {
+      console.error('Error preparing for event creation:', error);
+      setVerificationStatus('Failed to prepare for event creation');
+    } finally {
+      setIsPreparingForTransaction(false);
     }
   };
 
@@ -618,7 +709,9 @@ const CreateEventForm = () => {
     //     string memory currency,
     //     uint256 totalQuantity,
     //     string[] memory perks
-    // Add tickets if any are configured
+    // Add tickets if any are configured (individual createTicket calls)
+    // Note: This uses the old individual createTicket function
+    // For batched creation, use createBatchedTickets() which uses createTickets()
     if (formData.tickets.available && formData.tickets.types.length > 0) {
       for (const ticketType of formData.tickets.types) {
         ticketContracts.push({
@@ -641,10 +734,62 @@ const CreateEventForm = () => {
     return ticketContracts;
   };
 
+  // Function to create batched tickets using the new createTickets function
+  // This uses the new function signature:
+  // createTickets(uint256 eventId, string[] memory name, string[] memory ticketType, 
+  //               uint256[] memory price, string[] memory currency, uint256[] memory totalQuantity, 
+  //               string[][] memory perks)
+  const createBatchedTickets = (eventId: string) => {
+    if (!formData.tickets.available || formData.tickets.types.length === 0) {
+      return null;
+    }
+
+    // Prepare arrays for the createTickets function
+    const names: string[] = [];
+    const ticketTypes: string[] = [];
+    const prices: bigint[] = [];
+    const currencies: string[] = [];
+    const totalQuantities: bigint[] = [];
+    const perks: string[][] = [];
+
+    // Populate arrays from form data
+    for (const ticketType of formData.tickets.types) {
+      names.push(ticketType.type);
+      ticketTypes.push(ticketType.type);
+      prices.push(BigInt(ticketType.price * 1000000000000000000)); // Convert to wei
+      currencies.push(ticketType.currency);
+      totalQuantities.push(BigInt(ticketType.quantity));
+      perks.push(ticketType.perks || []);
+    }
+
+    return {
+      abi: ticketAbi.abi,
+      address: ticketAddress as `0x${string}`,
+      functionName: "createTickets",
+      args: [
+        BigInt(eventId), // eventId
+        names, // name[]
+        ticketTypes, // ticketType[]
+        prices, // price[]
+        currencies, // currency[]
+        totalQuantities, // totalQuantity[]
+        perks // perks[][]
+      ],
+    };
+  };
+
+  // Function to create tickets sequentially using the new createTickets function
+  const createTicketsSequentially = (eventId: string) => {
+    if (!formData.tickets.available || formData.tickets.types.length === 0) {
+      return [];
+    }
+
+    // Use the batched function for sequential creation too
+    const batchedContract = createBatchedTickets(eventId);
+    return batchedContract ? [batchedContract] : [];
+  };
+
   // New function to create a batched transaction with event and tickets
-  // Note: This approach uses a placeholder event ID that will be replaced by the contract
-  // or we can use a different batching strategy
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const createBatchedEventAndTickets = async () => {
     const contracts = [];
 
@@ -652,10 +797,17 @@ const CreateEventForm = () => {
     const eventContract = await handleSubmit();
     contracts.push(...eventContract);
 
-    // For batching, we need to handle the event ID differently
-    // One approach is to use a multicall or have the contract handle the batching
-    // For now, we'll return the event contract and handle tickets separately
-    // This could be enhanced with a custom contract that handles the batching
+    // Add batched tickets creation if tickets are configured
+    if (formData.tickets.available && formData.tickets.types.length > 0) {
+      // For batching, we need to get the event ID from the event creation
+      // This is a placeholder - in a real implementation, you'd need to handle
+      // the event ID from the event creation result
+      const eventId = "1"; // This should be replaced with actual event ID
+      const ticketContract = createBatchedTickets(eventId);
+      if (ticketContract) {
+        contracts.push(ticketContract);
+      }
+    }
 
     return contracts;
   };
@@ -753,7 +905,7 @@ const CreateEventForm = () => {
     <div className="min-h-screen bg-[var(--app-background)] relative z-[20] pt-14 pb-28">
       <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 md:py-10">
         {/* Progress Steps */}
-        <div className="mb-8">
+        <div className="mb-0">
           {/* Desktop Steps */}
           <div className="hidden md:block">
             <div className="flex items-center justify-between">
@@ -809,7 +961,7 @@ const CreateEventForm = () => {
         <div className="bg-[var(--app-card-bg)] rounded-2xl p-6 sm:p-8 md:p-10">
           {currentStep === 1 && (
             <div className="space-y-4 sm:space-y-6">
-              <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-10 text-[var(--app-foreground)]">Basic Event Information</h2>
+              {/* <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-10 text-[var(--app-foreground)]">Basic Event Information</h2> */}
 
               {/* Auto-fill Mock Data Button */}
               <div className="mb-6 p-4 bg-[var(--app-gray)] rounded-xl">
@@ -978,7 +1130,7 @@ const CreateEventForm = () => {
 
           {currentStep === 2 && (
             <div className="space-y-6">
-              <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-10 text-[var(--app-foreground)]">Event Details</h2>
+              {/* <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-10 text-[var(--app-foreground)]">Event Details</h2> */}
 
               {/* Event Image */}
               <div className="space-y-3">
@@ -986,39 +1138,15 @@ const CreateEventForm = () => {
                   Event Image
                 </label>
 
-                {/* File Upload Area */}
-                <div className="space-y-3">
-                  {/* Upload Button */}
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileInputChange}
-                      className="hidden"
-                    />
-                    <Button
-                      size="sm"
-                      className="px-4 py-3"
-                      icon={<Upload className="w-4 h-4" />}
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      Choose Image
-                    </Button>
-
-                    {uploadedFile && (
-                      <Button
-                        size="sm"
-                        className="px-4 py-3"
-                        icon={uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                        onClick={handleFileUpload}
-                        disabled={uploading}
-                      >
-                        {uploading ? 'Uploading...' : 'Upload to IPFS'}
-                      </Button>
-                    )}
-                  </div>
-
+                {/* Drag and Drop Upload Area */}
+                <div className="space-y-4">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileInputChange}
+                    className="hidden"
+                  />
                   {/* File Preview */}
                   {previewUrl && (
                     <div className="relative">
@@ -1042,6 +1170,15 @@ const CreateEventForm = () => {
                     </div>
                   )}
 
+                  {/* Upload Status */}
+                  {uploadedFile && !formData.image && (
+                    <div className="flex items-center justify-center gap-2 p-3 bg-[var(--app-accent)]/10 border border-[var(--app-accent)]/20 rounded-lg">
+                      <div className="w-2 h-2 bg-[var(--app-accent)] rounded-full animate-pulse"></div>
+                      <span className="text-sm text-[var(--app-accent)] font-medium">
+                        Image ready - will upload everything when preparing event
+                      </span>
+                    </div>
+                  )}
                   {/* Upload Error */}
                   {uploadError && (
                     <div className="text-red-500 text-sm">
@@ -1074,6 +1211,51 @@ const CreateEventForm = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Drag and Drop Zone */}
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 group ${isDragOver
+                      ? 'border-[var(--app-accent)] bg-[var(--app-accent)]/10'
+                      : 'border-border hover:border-[var(--app-accent)] hover:bg-[var(--app-gray)]/20'
+                      }`}
+                  >
+                    <div className="flex flex-col items-center justify-center space-y-4">
+                      <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors duration-200 ${isDragOver
+                        ? 'bg-[var(--app-accent)]'
+                        : 'bg-[var(--app-gray)] group-hover:bg-[var(--app-accent)]'
+                        }`}>
+                        <Upload className={`w-8 h-8 transition-colors duration-200 ${isDragOver
+                          ? 'text-white'
+                          : 'text-[var(--app-foreground-muted)] group-hover:text-white'
+                          }`} />
+                      </div>
+
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-semibold text-[var(--app-foreground)]">
+                          {isDragOver ? 'Drop your image here!' : 'Select Event Image'}
+                        </h3>
+                        <p className="text-sm text-[var(--app-foreground-muted)]">
+                          {isDragOver ? (
+                            <span className="text-[var(--app-accent)] font-medium">Release to select</span>
+                          ) : (
+                            <>or <span className="text-[var(--app-accent)] font-medium">click to browse</span></>
+                          )}
+                        </p>
+                        <p className="text-xs text-[var(--app-foreground-muted)]">
+                          PNG, JPG, GIF up to 10MB • Will upload everything when preparing event
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+
+
+
+
                 </div>
               </div>
 
@@ -1131,10 +1313,10 @@ const CreateEventForm = () => {
 
           {currentStep === 3 && (
             <div className="space-y-6">
-              <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-10 text-[var(--app-foreground)]">Event Hosts</h2>
-              <p className="text-center text-[var(--app-foreground-muted)] mb-6">
-                Add usernames of people who will be hosting this event
-              </p>
+              {/* <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-10 text-[var(--app-foreground)]">Event Hosts</h2> */}
+              {/* <p className="text-center text-[var(--app-foreground-muted)] mb-6">
+              Add usernames of people who will be hosting this event
+            </p> */}
 
               {/* Existing Hosts */}
               {formData.hosts.length > 0 && (
@@ -1166,7 +1348,7 @@ const CreateEventForm = () => {
               )}
 
               {/* Add Host Form */}
-              <div className="space-y-4 p-6 bg-[var(--app-gray)] border border-border rounded-xl bg-white">
+              <div className="space-y-4 p-6 px-0 rounded-xl ">
                 <h3 className="text-lg font-semibold text-[var(--app-foreground)]">Add New Host</h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1239,10 +1421,10 @@ const CreateEventForm = () => {
 
           {currentStep === 4 && (
             <div className="space-y-6">
-              <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-10 text-[var(--app-foreground)]">Event Agenda</h2>
-              <p className="text-center text-[var(--app-foreground-muted)] mb-8">
+              {/* <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-10 text-[var(--app-foreground)]">Event Agenda</h2> */}
+              {/* <p className="text-center text-[var(--app-foreground-muted)] mb-8">
                 Plan the schedule and sessions for your event
-              </p>
+              </p> */}
 
               {/* Existing Agenda Items */}
               {formData.agenda.length > 0 && (
@@ -1411,10 +1593,10 @@ const CreateEventForm = () => {
 
           {currentStep === 5 && (
             <div className="space-y-6">
-              <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-10 text-[var(--app-foreground)]">Event Tickets</h2>
+              {/* <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-10 text-[var(--app-foreground)]">Event Tickets</h2>
               <p className="text-center text-[var(--app-foreground-muted)] mb-6">
                 Configure ticketing and pricing options for your event
-              </p>
+              </p> */}
 
               {/* Ticket Availability Toggle */}
               <div className="flex items-center justify-between p-4 bg-[var(--app-background)] border border-border rounded-xl bg-white">
@@ -1596,7 +1778,7 @@ const CreateEventForm = () => {
 
           {currentStep === 6 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-center mb-8">Event Summary</h2>
+              {/* <h2 className="text-2xl font-bold text-center mb-8">Event Summary</h2> */}
 
               {/* Event Summary */}
               <div className="space-y-4 rounded-lg">
@@ -2224,29 +2406,29 @@ const CreateEventForm = () => {
                 </div>
               ) : null}
 
-              {/* Prepare Contract Calls Button */}
+              {/* Create Event Button (prepares everything) */}
               {isConnected && !preparedContracts && (
                 <div className="mt-6 p-4 px-0  rounded-lg">
                   <div className="text-center flex flex-col items-center justify-center">
 
                     <button
                       type="button"
-                      onClick={prepareContractCalls}
-                      disabled={isPreparing}
-                      className="w-full px-4 py-3 bg-muted-foreground text-primary-foreground rounded-lg hover:bg-muted-foreground/90 transition-colors"
+                      onClick={handleCreateEvent}
+                      disabled={isPreparingForTransaction || isSubmitting}
+                      className="w-full px-4 py-3 bg-muted-foreground text-primary-foreground rounded-lg hover:bg-muted-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                     >
-                      {isPreparing ? (
+                      {isPreparingForTransaction ? (
                         <div className="flex items-center justify-center gap-2">
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          Uploading...
+                          Preparing Everything...
                         </div>
                       ) : (
-                        "Upload Contract Data"
+                        "Prepare Event Creation"
                       )}
                     </button>
 
                     <p className="text-xs text-muted-foreground mb-4 pt-2 flex items-center justify-center w-[70%]">
-                      Upload your image to IPFS and prepare the contract calls for event creation.
+                      Upload image, metadata to IPFS and prepare contract calls for event creation.
                     </p>
                     {verificationStatus && (
                       <div className="mt-2 text-xs text-muted-foreground">
@@ -2351,14 +2533,14 @@ const CreateEventForm = () => {
               </p>
 
               {/* Domain Input */}
-              <div className="space-y-4 bg-background">
-                <h3 className="text-lg font-medium">Choose Your Domain</h3>
+              <div className="space-y-4">
+                {/* <h3 className="text-lg font-medium">Choose Your Domain</h3> */}
 
                 <div className="space-y-4">
                   <div className="space-y-2 sm:space-y-3 mb-5">
-                    <label className="text-sm font-medium text-foreground">
+                    {/* <label className="text-sm font-medium text-foreground">
                       Domain Name *
-                    </label>
+                    </label> */}
                     <input
                       type="text"
                       placeholder="e.g. myevent.io or myevent.core"
@@ -2526,19 +2708,21 @@ const CreateEventForm = () => {
       />
 
       {/* Success Card */}
-      {showSuccessCard && createdEventDetails && (
-        <RegistrationSuccessCard
-          event={createdEventDetails}
-          onClose={() => {
-            setShowSuccessCard(false);
-            setCreatedEventDetails(null);
-            // Navigate to the event page after closing
-            if (createdEventId) {
-              router.push(`/e/${createdEventId}`);
-            }
-          }}
-        />
-      )}
+      {
+        showSuccessCard && createdEventDetails && (
+          <RegistrationSuccessCard
+            event={createdEventDetails}
+            onClose={() => {
+              setShowSuccessCard(false);
+              setCreatedEventDetails(null);
+              // Navigate to the event page after closing
+              if (createdEventId) {
+                router.push(`/e/${createdEventId}`);
+              }
+            }}
+          />
+        )
+      }
     </div>
   );
 };
