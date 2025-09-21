@@ -283,7 +283,7 @@ export async function uploadTokenMetadataToIPFS(
     const result = await response.json();
     return {
       success: true,
-      metadataUri: result.metadataUri,
+      metadataUri: result.ipfsUri, // Use ipfsUri from the API response
       cid: result.cid
     };
   } catch (error) {
