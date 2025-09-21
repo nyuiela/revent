@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import Link from 'next/link';
 import { Eye, MapPin, Loader2 } from 'lucide-react';
 import OwnerDisplay from '../../components/OwnerDisplay';
@@ -11,13 +11,15 @@ import { calculateDistance } from '../../hooks/useLocation';
 
 interface InfiniteScrollEventsProps {
   userLocation?: { lat: number; lng: number } | null;
-  onEventSelect?: (event: any) => void;
+  onEventSelect?: (event: unknown) => void;
 }
 
 export default function InfiniteScrollEvents({
   userLocation,
   onEventSelect
 }: InfiniteScrollEventsProps) {
+  const [isAutoScroll,] = useState(false); // Default to manual mode
+
   const {
     events,
     isLoading,
@@ -25,28 +27,34 @@ export default function InfiniteScrollEvents({
     hasMore,
     loadMore,
     totalCount,
-    displayedCount
+    displayedCount,
+    error
   } = useInfiniteEvents();
 
   const eventIds = events.map(event => event.id);
   const { data: viewCounts = {}, isLoading: viewsLoading } = useViewCounts(eventIds);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  // Intersection Observer for infinite scroll
+  // Intersection Observer for infinite scroll (only when auto scroll is enabled)
   const lastEventElementRef = useCallback((node: HTMLDivElement | null) => {
-    if (isLoading) return;
+    if (isLoading || !isAutoScroll) return;
     if (observerRef.current) observerRef.current.disconnect();
 
-    observerRef.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
-        loadMore();
+    observerRef.current = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+          loadMore();
+        }
+      },
+      {
+        rootMargin: '100px', // Start loading when element is 100px away from viewport
+        threshold: 0.1
       }
-    });
+    );
 
     if (node) observerRef.current.observe(node);
-  }, [isLoading, hasMore, isLoadingMore, loadMore]);
+  }, [isLoading, hasMore, isLoadingMore, loadMore, isAutoScroll]);
 
   // Cleanup observer on unmount
   useEffect(() => {
@@ -65,6 +73,28 @@ export default function InfiniteScrollEvents({
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="w-6 h-6 animate-spin text-[var(--app-foreground-muted)]" />
             <p className="text-sm text-[var(--app-foreground-muted)]">Loading events...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="space-y-3 px-4">
+        <h3 className="text-sm font-medium">Discover All Events</h3>
+        <div className="flex items-center justify-center py-8">
+          <div className="flex flex-col items-center gap-3">
+            <div className="text-red-500 text-4xl">⚠️</div>
+            <p className="text-sm text-[var(--app-foreground-muted)] text-center">
+              Failed to load events. Please try again.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-[var(--app-accent)] text-white rounded-lg hover:bg-[var(--app-accent-hover)] transition-colors text-sm"
+            >
+              Retry
+            </button>
           </div>
         </div>
       </section>
@@ -181,11 +211,23 @@ export default function InfiniteScrollEvents({
 
         {/* Loading More Indicator */}
         {isLoadingMore && (
-          <div className="flex items-center justify-center py-4">
-            <div className="flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-[var(--app-foreground-muted)]" />
+          <div className="flex items-center justify-center py-6">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="w-6 h-6 animate-spin text-[var(--app-accent)]" />
               <span className="text-sm text-[var(--app-foreground-muted)]">Loading more events...</span>
             </div>
+          </div>
+        )}
+
+        {/* Load More Button - shown in manual mode or as fallback */}
+        {hasMore && !isLoadingMore && events.length > 0 && (
+          <div className="flex items-center justify-center py-4">
+            <button
+              onClick={loadMore}
+              className="px-6 py-2 bg-[var(--app-accent)] text-white rounded-lg hover:bg-[var(--app-accent-hover)] transition-colors text-sm font-medium"
+            >
+              {isAutoScroll ? 'Load More Events (Auto)' : 'Load More Events'}
+            </button>
           </div>
         )}
 
@@ -193,7 +235,7 @@ export default function InfiniteScrollEvents({
         {!hasMore && events.length > 0 && (
           <div className="flex items-center justify-center py-4">
             <div className="text-sm text-[var(--app-foreground-muted)]">
-              You've reached the end! 🎉
+              We have more events coming soon!
             </div>
           </div>
         )}
