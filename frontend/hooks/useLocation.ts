@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNotificationHelpers } from './useNotifications';
 
 export interface UserLocation {
   lat: number;
@@ -33,6 +34,7 @@ export function useLocation() {
   const [location, setLocation] = useState<UserLocation | null>(null);
   const [error, setError] = useState<LocationError | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { notifyLocationDetected, notifyLocationError } = useNotificationHelpers();
 
   const getCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -54,6 +56,9 @@ export function useLocation() {
           accuracy: position.coords.accuracy
         });
         setIsLoading(false);
+        
+        // Show success notification
+        notifyLocationDetected();
       },
       (error) => {
         setError({
@@ -61,6 +66,9 @@ export function useLocation() {
           message: error.message
         });
         setIsLoading(false);
+        
+        // Show error notification
+        notifyLocationError();
       },
       {
         enableHighAccuracy: true,
@@ -68,7 +76,7 @@ export function useLocation() {
         maximumAge: 300000 // 5 minutes
       }
     );
-  }, []);
+  }, [notifyLocationDetected, notifyLocationError]);
 
   useEffect(() => {
     // Auto-request location on mount

@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useNotificationHelpers } from './useNotifications';
 
 export interface WaitlistResponse {
   success: boolean;
@@ -16,6 +17,7 @@ export interface WaitlistStats {
 export function useWaitlist() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { notifyWaitlistJoined, notifyWaitlistDuplicate, notifyWaitlistError } = useNotificationHelpers();
 
   // Add email to waitlist
   const addToWaitlist = useCallback(async (email: string): Promise<WaitlistResponse> => {
@@ -37,15 +39,23 @@ export function useWaitlist() {
         throw new Error(data.error || 'Failed to add email to waitlist');
       }
 
+      // Show appropriate notification based on response
+      if (data.alreadyExists) {
+        notifyWaitlistDuplicate();
+      } else if (data.success && data.totalCount) {
+        notifyWaitlistJoined(data.totalCount);
+      }
+
       return data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
       setError(errorMessage);
+      notifyWaitlistError(errorMessage);
       throw err;
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [notifyWaitlistJoined, notifyWaitlistDuplicate, notifyWaitlistError]);
 
   // Check if email exists in waitlist
   const checkEmail = useCallback(async (email: string): Promise<boolean> => {

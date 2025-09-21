@@ -20,6 +20,7 @@ import { useQuery } from "@tanstack/react-query";
 import { headers, namesQuery, url } from "@/utils/subgraph";
 import request from "graphql-request";
 import Image from "next/image";
+import { useNotificationHelpers } from "@/hooks/useNotifications";
 // import { stringToBytes } from "viem"; // Removed unused import
 // Removed unused import
 
@@ -29,6 +30,20 @@ const CreateEventForm = () => {
   const chainId = 84532;
   const canUseTransaction = Boolean(address && chainId && eventAddress)
   const [showWalletModal, setShowWalletModal] = useState(false)
+  const {
+    notifyEventCreationStarted,
+    notifyEventCreationSuccess,
+    notifyEventCreationError,
+    notifyFileUploadStarted,
+    notifyFileUploadSuccess,
+    notifyFileUploadError,
+    notifyIpfsUploadStarted,
+    notifyIpfsUploadSuccess,
+    notifyIpfsUploadError,
+    notifyContractTransactionStarted,
+    notifyContractTransactionSuccess,
+    notifyContractTransactionError
+  } = useNotificationHelpers();
   const [formData, setFormData] = useState<EventFormData>({
     title: "",
     description: "",
@@ -94,11 +109,17 @@ const CreateEventForm = () => {
 
     console.log(`Transaction successful: ${transactionHash}`);
 
+    // Show contract transaction success notification
+    notifyContractTransactionSuccess(transactionHash);
+
+    // Show event creation success notification
+    notifyEventCreationSuccess(formData.title || 'Untitled Event');
+
     await sendNotification({
       title: "Congratulations!",
       body: `You sent your a transaction, ${transactionHash}!`,
     });
-  }, [sendNotification]);
+  }, [sendNotification, notifyContractTransactionSuccess, notifyEventCreationSuccess, formData.title]);
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -152,6 +173,9 @@ const CreateEventForm = () => {
     setUploading(true);
     setUploadError(null);
 
+    // Show upload started notification
+    notifyFileUploadStarted(uploadedFile.name);
+
     try {
       const formData = new FormData();
       formData.append('file', uploadedFile);
@@ -170,6 +194,9 @@ const CreateEventForm = () => {
       // Update form data with IPFS URL
       setFormData(prev => ({ ...prev, image: result.ipfsUrl }));
 
+      // Show success notification
+      notifyFileUploadSuccess(uploadedFile.name, result.cid);
+
       // Clean up preview URL
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
@@ -178,7 +205,11 @@ const CreateEventForm = () => {
 
     } catch (error) {
       console.error('Upload error:', error);
-      setUploadError(error instanceof Error ? error.message : 'Upload failed');
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+      setUploadError(errorMessage);
+      
+      // Show error notification
+      notifyFileUploadError(uploadedFile.name, errorMessage);
     } finally {
       setUploading(false);
     }
@@ -433,6 +464,9 @@ const CreateEventForm = () => {
       setIsPreparing(true);
       setVerificationStatus('Preparing event data...');
 
+      // Show event creation started notification
+      notifyEventCreationStarted();
+
       // First, upload the image if one is selected
       if (uploadedFile && !formData.image) {
         setVerificationStatus('Uploading image to IPFS...');
@@ -440,6 +474,9 @@ const CreateEventForm = () => {
       }
 
       setVerificationStatus('Preparing contract calls...');
+
+      // Show IPFS upload started notification
+      notifyIpfsUploadStarted();
 
       // Prepare the contract calls using the existing handleSubmit logic
       const contracts = await handleSubmit();
@@ -452,6 +489,9 @@ const CreateEventForm = () => {
     } catch (error) {
       console.error('Error preparing contract calls:', error);
       setVerificationStatus('Failed to prepare contract calls');
+      
+      // Show error notification
+      notifyEventCreationError(error instanceof Error ? error.message : 'Failed to prepare contract calls');
       throw error;
     } finally {
       setIsPreparing(false);

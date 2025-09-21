@@ -9,6 +9,7 @@ import { ThemeProvider } from "next-themes";
 import QueryProvider from "@/context/queryProvider";
 import { TransactionProvider } from 'ethereum-identity-kit'
 import config from '@/lib/wagmi';
+import { NotificationsProvider } from '@/contexts/NotificationsContext';
 
 // Create a client for wagmi
 const queryClient = new QueryClient();
@@ -37,7 +38,9 @@ export function Providers(props: { children: ReactNode }) {
               }}
             >
               <TransactionProvider>
-                {props.children}
+                <NotificationsProvider>
+                  {props.children}
+                </NotificationsProvider>
               </TransactionProvider>
             </MiniKitProvider>
           </QueryProvider>
