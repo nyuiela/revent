@@ -2028,7 +2028,7 @@ const CreateEventForm = () => {
                   )}
 
                   {/* Simple Event Creation Transaction - REMOVED - Using single batched transaction instead */}
-                  {false && isConnected && canUseTransaction && useSimpleMode && preparedContracts ? (
+                  {isConnected && canUseTransaction && useSimpleMode && preparedContracts ? (
                     <Transaction
                       chainId={chainId}
                       calls={(preparedContracts || []) as never}
@@ -2164,7 +2164,7 @@ const CreateEventForm = () => {
                   ) : null}
 
                   {/* Single Batched Event and Ticket Creation Transaction */}
-                  {isConnected && canUseTransaction && preparedContracts ? (
+                  {isConnected && canUseTransaction ? (
                     <Transaction
                       chainId={chainId}
                       calls={async (): Promise<Call[]> => {
