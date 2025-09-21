@@ -511,8 +511,8 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
       {/* Hero Section */}
       <div className="relative h-[25rem] md:h-[25rem] mt-12 overflow-hidden">
-        <div className="absolute top-5 left-0">
-          <Button variant="ghost" className="rounded-lg mb-6 -mt-4 bg-transparent text-white cursor-pointer" onClick={() => router && router.back()}>
+        <div className="absolute mt-2 left-0">
+          <Button variant="ghost" className="rounded-lg bg-transparent text-white cursor-pointer" onClick={() => router && router.back()}>
             <ChevronLeft className="w-4 h-4" /> Back
           </Button>
         </div>
