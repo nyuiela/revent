@@ -23,7 +23,7 @@ import RegistrationSuccessCard from "./RegistrationSuccessCard";
 import { Avatar, FollowersYouKnow, ProfileSocials } from "ethereum-identity-kit";
 import Image from "next/image";
 import { Button } from "./DemoComponents";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 
 type Props = {
@@ -78,6 +78,12 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
   const [isRegistering, setIsRegistering] = useState(false);
   const numericEventId = eventId && typeof eventId === "string" ? Number(eventId) : eventId;
   const canTransact = Boolean(address && chainId && eventAddress);
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  
   const router = useRouter();
 
   // Only make contract calls if we have a valid eventId
@@ -456,7 +462,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
       {/* Hero Section */}
       <div className="relative h-[25rem] md:h-[25rem] mt-12 overflow-hidden">
         <div className="absolute top-5 left-0">
-          <Button variant="ghost" className="rounded-lg mb-6 -mt-4 bg-transparent text-white" onClick={() => router.back()}>
+          <Button variant="ghost" className="rounded-lg mb-6 -mt-4 bg-transparent text-white" onClick={() => router && router.back()}>
             <ChevronLeft className="w-4 h-4" /> Back
           </Button>
         </div>
