@@ -14,7 +14,7 @@ type EventFormData = {
   isLive: boolean;
   platforms: string[];
   totalRewards: number;
-  eventType: "online" | "offline";
+  eventType: "online" | "in-person" | "hybrid";
   slug?: string;
   hosts: {
     name: string;
