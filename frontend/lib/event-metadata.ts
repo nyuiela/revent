@@ -1,5 +1,5 @@
 import { EventFormData } from "@/utils/types";
-import { generateTokenId, generateTokenIdFromEventId } from "./token-id-generator";
+import { generateTokenIdFromEventId } from "./token-id-generator";
 
 /**
  * ERC1155 Token Metadata Standard

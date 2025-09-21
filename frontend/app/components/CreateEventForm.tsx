@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import { EventFormData, EventDetails } from "@/utils/types";
 import RegistrationSuccessCard from "./RegistrationSuccessCard";
 import { generateSlug } from "@/lib/slug-generator";
-import { uploadEventMetadataToIPFS, generateEventMetadataJSON, generateAndUploadTokenMetadata } from "@/lib/event-metadata";
+import { generateAndUploadTokenMetadata } from "@/lib/event-metadata";
 // import VerticalLinearStepper from "./register-stepper";
 import { useQuery } from "@tanstack/react-query";
 import { headers, namesQuery, url } from "@/utils/subgraph";
@@ -76,9 +76,10 @@ const CreateEventForm = () => {
 
   // File upload state
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -96,6 +97,7 @@ const CreateEventForm = () => {
   const [preparedTicketContracts, setPreparedTicketContracts] = useState<Record<string, unknown>[] | null>(null);
   const [preparedDomainContracts, setPreparedDomainContracts] = useState<Record<string, unknown>[] | null>(null);
   const [isPreparing, setIsPreparing] = useState(false);
+  const [isPreparingForTransaction, setIsPreparingForTransaction] = useState(false);
   const [isAutoFilled, setIsAutoFilled] = useState(false);
   const [domainName, setDomainName] = useState<string>('');
   const [domainAvailable, setDomainAvailable] = useState<boolean | null>(null);
@@ -231,6 +233,57 @@ const CreateEventForm = () => {
     }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        handleFileSelect(file);
+      } else {
+        setUploadError('Please select a valid image file');
+      }
+    }
+  };
+
+  // Function to get the next event ID from The Graph
+  const getNextEventId = async (): Promise<string> => {
+    try {
+      const query = `{
+        eventCreateds(first: 1, orderBy: eventId, orderDirection: desc) {
+          eventId
+        }
+      }`;
+
+      const response = await request(url, query, {}, headers) as { eventCreateds?: Array<{ eventId: string }> };
+      const events = response.eventCreateds || [];
+
+      if (events.length > 0) {
+        const lastEventId = parseInt(events[0].eventId);
+        return (lastEventId + 1).toString();
+      } else {
+        return "1"; // First event
+      }
+    } catch (error) {
+      console.error('Error getting next event ID:', error);
+      // Fallback to timestamp-based ID
+      return Date.now().toString();
     }
   };
 
@@ -458,7 +511,7 @@ const CreateEventForm = () => {
     console.log('Auto-filled form with mock data:', randomEvent);
   };
 
-  // Function to prepare contract calls (upload file and prepare transaction)
+  // Function to prepare contract calls (upload file, metadata, and prepare transaction)
   const prepareContractCalls = async () => {
     try {
       setIsPreparing(true);
@@ -472,6 +525,26 @@ const CreateEventForm = () => {
         setVerificationStatus('Uploading image to IPFS...');
         await handleFileUpload();
       }
+
+      setVerificationStatus('Getting next event ID...');
+
+      // Get the next event ID from The Graph
+      const nextEventId = await getNextEventId();
+      console.log('Next event ID:', nextEventId);
+
+      setVerificationStatus('Uploading event metadata to IPFS...');
+
+      // Upload event metadata to IPFS
+      const metadataUri = await generateAndUploadEventMetadata(nextEventId);
+      if (!metadataUri) {
+        throw new Error('Failed to upload event metadata to IPFS');
+      }
+
+      // Update form data with the metadata URI
+      setFormData(prev => ({
+        ...prev,
+        metadataUri: metadataUri
+      }));
 
       setVerificationStatus('Preparing contract calls...');
 
@@ -495,6 +568,24 @@ const CreateEventForm = () => {
       throw error;
     } finally {
       setIsPreparing(false);
+    }
+  };
+
+  // Function to handle complete event creation (prepare + execute)
+  const handleCreateEvent = async () => {
+    try {
+      setIsPreparingForTransaction(true);
+      setVerificationStatus('Preparing everything for event creation...');
+
+      // First prepare all contracts (image upload, metadata upload, contract preparation)
+      await prepareContractCalls();
+
+      setVerificationStatus('Ready to create event! Click the transaction button below.');
+    } catch (error) {
+      console.error('Error preparing for event creation:', error);
+      setVerificationStatus('Failed to prepare for event creation');
+    } finally {
+      setIsPreparingForTransaction(false);
     }
   };
 
@@ -658,7 +749,9 @@ const CreateEventForm = () => {
     //     string memory currency,
     //     uint256 totalQuantity,
     //     string[] memory perks
-    // Add tickets if any are configured
+    // Add tickets if any are configured (individual createTicket calls)
+    // Note: This uses the old individual createTicket function
+    // For batched creation, use createBatchedTickets() which uses createTickets()
     if (formData.tickets.available && formData.tickets.types.length > 0) {
       for (const ticketType of formData.tickets.types) {
         ticketContracts.push({
@@ -681,10 +774,62 @@ const CreateEventForm = () => {
     return ticketContracts;
   };
 
+  // Function to create batched tickets using the new createTickets function
+  // This uses the new function signature:
+  // createTickets(uint256 eventId, string[] memory name, string[] memory ticketType, 
+  //               uint256[] memory price, string[] memory currency, uint256[] memory totalQuantity, 
+  //               string[][] memory perks)
+  const createBatchedTickets = (eventId: string) => {
+    if (!formData.tickets.available || formData.tickets.types.length === 0) {
+      return null;
+    }
+
+    // Prepare arrays for the createTickets function
+    const names: string[] = [];
+    const ticketTypes: string[] = [];
+    const prices: bigint[] = [];
+    const currencies: string[] = [];
+    const totalQuantities: bigint[] = [];
+    const perks: string[][] = [];
+
+    // Populate arrays from form data
+    for (const ticketType of formData.tickets.types) {
+      names.push(ticketType.type);
+      ticketTypes.push(ticketType.type);
+      prices.push(BigInt(ticketType.price * 1000000000000000000)); // Convert to wei
+      currencies.push(ticketType.currency);
+      totalQuantities.push(BigInt(ticketType.quantity));
+      perks.push(ticketType.perks || []);
+    }
+
+    return {
+      abi: ticketAbi.abi,
+      address: ticketAddress as `0x${string}`,
+      functionName: "createTickets",
+      args: [
+        BigInt(eventId), // eventId
+        names, // name[]
+        ticketTypes, // ticketType[]
+        prices, // price[]
+        currencies, // currency[]
+        totalQuantities, // totalQuantity[]
+        perks // perks[][]
+      ],
+    };
+  };
+
+  // Function to create tickets sequentially using the new createTickets function
+  const createTicketsSequentially = (eventId: string) => {
+    if (!formData.tickets.available || formData.tickets.types.length === 0) {
+      return [];
+    }
+
+    // Use the batched function for sequential creation too
+    const batchedContract = createBatchedTickets(eventId);
+    return batchedContract ? [batchedContract] : [];
+  };
+
   // New function to create a batched transaction with event and tickets
-  // Note: This approach uses a placeholder event ID that will be replaced by the contract
-  // or we can use a different batching strategy
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const createBatchedEventAndTickets = async () => {
     const contracts = [];
 
@@ -692,10 +837,17 @@ const CreateEventForm = () => {
     const eventContract = await handleSubmit();
     contracts.push(...eventContract);
 
-    // For batching, we need to handle the event ID differently
-    // One approach is to use a multicall or have the contract handle the batching
-    // For now, we'll return the event contract and handle tickets separately
-    // This could be enhanced with a custom contract that handles the batching
+    // Add batched tickets creation if tickets are configured
+    if (formData.tickets.available && formData.tickets.types.length > 0) {
+      // For batching, we need to get the event ID from the event creation
+      // This is a placeholder - in a real implementation, you'd need to handle
+      // the event ID from the event creation result
+      const eventId = "1"; // This should be replaced with actual event ID
+      const ticketContract = createBatchedTickets(eventId);
+      if (ticketContract) {
+        contracts.push(ticketContract);
+      }
+    }
 
     return contracts;
   };
@@ -798,24 +950,26 @@ const CreateEventForm = () => {
         </Button>
       </div>
       <div className="max-w-5xl mx-auto py-6 sm:py-8 md:py-10 bg-red-00">
+    <div className="min-h-screen bg-[var(--app-background)] relative z-[20] pt-14 pb-28">
+      <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 md:py-10">
         {/* Progress Steps */}
-        <div className="mb-6 sm:mb-8">
+        <div className="mb-0">
           {/* Desktop Steps */}
           <div className="hidden md:block">
             <div className="flex items-center justify-between">
               {steps.map((step, index) => (
                 <div key={step.id} className="flex items-center">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all ${currentStep >= step.id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-background border border-border text-muted-foreground"
+                    className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${currentStep >= step.id
+                      ? "bg-[var(--app-accent)] text-white shadow-lg"
+                      : "bg-[var(--app-gray)] text-[var(--app-foreground-muted)]"
                       }`}
                   >
                     <Icon name={step.icon as "home" | "share" | "users" | "calendar" | "star" | "plus" | "check"} size="sm" />
                   </div>
                   {index < steps.length - 1 && (
                     <div
-                      className={`w-16 h-0.5 mx-4 transition-all ${currentStep > step.id ? "bg-primary" : "bg-border"
+                      className={`w-20 h-1 mx-4 rounded-full transition-all duration-300 ${currentStep > step.id ? "bg-[var(--app-accent)]" : "bg-[var(--app-gray)]"
                         }`}
                     />
                   )}
@@ -823,13 +977,13 @@ const CreateEventForm = () => {
               ))}
             </div>
 
-            <div className="flex justify-between mt-4">
+            <div className="flex justify-between mt-6">
               {steps.map((step) => (
                 <span
                   key={step.id}
-                  className={`text-xs transition-colors ${currentStep >= step.id
-                    ? "text-primary font-medium"
-                    : "text-muted-foreground"
+                  className={`text-sm font-medium transition-colors ${currentStep >= step.id
+                    ? "text-[var(--app-accent)]"
+                    : "text-[var(--app-foreground-muted)]"
                     }`}
                 >
                   {step.title}
@@ -840,12 +994,11 @@ const CreateEventForm = () => {
 
           {/* Mobile Steps */}
           <div className="md:hidden">
-
             <div className="text-center">
-              <span className="text-sm font-medium text-primary">
+              <span className="text-lg font-semibold text-[var(--app-accent)]">
                 Step {currentStep} of {steps.length}
               </span>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-sm text-[var(--app-foreground-muted)] mt-2">
                 {steps[currentStep - 1]?.title}
               </p>
             </div>
@@ -853,25 +1006,25 @@ const CreateEventForm = () => {
         </div>
 
         {/* Form Content */}
-        <div className="bg-card rounded-2xl p-4 sm:p-6 md:p-8 lg:p-10 mx-2 sm:mx-0">
+        <div className="bg-[var(--app-card-bg)] rounded-2xl p-6 sm:p-8 md:p-10">
           {currentStep === 1 && (
             <div className="space-y-4 sm:space-y-6">
-              <h2 className="text-2xl sm:text-3xl font-semibold text-center mb-6 sm:mb-8 md:mb-10 tracking-tight text-foreground">Basic Event Information</h2>
+              {/* <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-10 text-[var(--app-foreground)]">Basic Event Information</h2> */}
 
               {/* Auto-fill Mock Data Button */}
-              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-muted border border-border rounded-lg">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="mb-6 p-4 bg-[var(--app-gray)] rounded-xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <h3 className="text-sm font-medium text-foreground">Quick Start</h3>
-                    <p className="text-xs text-muted-foreground">
+                    <h3 className="text-sm font-semibold text-[var(--app-foreground)]">Quick Start</h3>
+                    <p className="text-xs text-[var(--app-foreground-muted)] mt-1">
                       Fill the form with realistic mock data for testing
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <button
                       type="button"
                       onClick={autoFillMockData}
-                      className="px-2 py-2 bg-primary text-primary-foreground text-sm rounded-lg hover:bg-primary/90 transition-colors min-h-[44px] text-nowrap"
+                      className="px-4 py-2 bg-[var(--app-accent)] text-white text-sm font-medium rounded-lg hover:bg-[var(--app-accent-hover)] transition-colors min-h-[44px] text-nowrap"
                     >
                       {isAutoFilled ? "✓ Auto-filled" : "Auto-fill"}
                     </button>
@@ -911,7 +1064,7 @@ const CreateEventForm = () => {
                           setPreparedTicketContracts(null);
                           setVerificationStatus('');
                         }}
-                        className="px-4 py-3 bg-secondary text-secondary-foreground text-sm rounded-lg hover:bg-secondary/90 transition-colors min-h-[44px]"
+                        className="px-4 py-2 bg-[var(--app-gray)] text-[var(--app-foreground)] text-sm font-medium rounded-lg hover:bg-[var(--app-gray-hover)] transition-colors min-h-[44px]"
                       >
                         Clear Form
                       </button>
@@ -931,44 +1084,44 @@ const CreateEventForm = () => {
               </div>
 
               {/* Event Title */}
-              <div className="space-y-2 sm:space-y-3">
-                <label className="text-sm sm:text-base font-medium text-foreground">
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-[var(--app-foreground)]">
                   Event Title *
                 </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
-                  className="w-full px-4 py-3 sm:py-3.5 bg-background border border-border rounded-xl text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors text-sm sm:text-base"
+                  className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                   placeholder="Enter event title"
                   required
                 />
               </div>
 
               {/* Event Description */}
-              <div className="space-y-2 sm:space-y-3">
-                <label className="text-sm sm:text-base font-medium text-foreground">
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-[var(--app-foreground)]">
                   Description *
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   rows={4}
-                  className="w-full px-4 py-3 sm:py-3.5 bg-background border border-border rounded-xl text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors resize-none text-sm sm:text-base"
+                  className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors resize-none text-sm"
                   placeholder="Describe your event..."
                   required
                 />
               </div>
 
               {/* Category */}
-              <div className="space-y-2 sm:space-y-3">
-                <label className="text-sm sm:text-base font-medium text-foreground">
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-[var(--app-foreground)]">
                   Category *
                 </label>
                 <select
                   value={formData.category}
                   onChange={(e) => handleInputChange('category', e.target.value)}
-                  className="w-full px-4 py-3 sm:py-3.5 bg-background border border-border rounded-xl text-foreground focus:border-primary focus:outline-none transition-colors text-sm sm:text-base"
+                  className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                   required
                 >
                   <option value="">Select a category</option>
@@ -979,11 +1132,11 @@ const CreateEventForm = () => {
               </div>
 
               {/* Event Slug */}
-              <div className="space-y-2 sm:space-y-3">
-                <label className="text-sm sm:text-base font-medium text-foreground">
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-[var(--app-foreground)]">
                   Event Slug
                 </label>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <input
                     type="text"
                     value={formData.slug || ''}
@@ -996,7 +1149,7 @@ const CreateEventForm = () => {
                         .trim();
                       handleInputChange('slug', slug);
                     }}
-                    className="flex-1 px-4 py-3 sm:py-3.5 bg-background border border-border rounded-xl text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors text-sm sm:text-base"
+                    className="flex-1 px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                     placeholder="my-awesome-event"
                   />
                   <button
@@ -1011,12 +1164,12 @@ const CreateEventForm = () => {
                         .substring(0, 20) || generateSlug();
                       handleInputChange('slug', autoSlug);
                     }}
-                    className="px-3 py-2 text-xs bg-muted text-muted-foreground rounded-lg hover:bg-muted/80 transition-colors"
+                    className="px-4 py-3 text-sm bg-[var(--app-gray)] text-[var(--app-foreground)] rounded-lg hover:bg-[var(--app-gray-hover)] transition-colors font-medium"
                   >
                     Auto
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-[var(--app-foreground-muted)]">
                   A unique identifier for your event URL. Only lowercase letters, numbers, and hyphens allowed.
                 </p>
               </div>
@@ -1025,51 +1178,27 @@ const CreateEventForm = () => {
 
           {currentStep === 2 && (
             <div className="space-y-6">
-              <h2 className="text-2xl sm:text-3xl font-semibold text-center mb-6 sm:mb-8 md:mb-10 tracking-tight text-foreground">Event Details</h2>
+              {/* <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-10 text-[var(--app-foreground)]">Event Details</h2> */}
 
               {/* Event Image */}
-              <div className="space-y-2 sm:space-y-3">
-                <label className="text-base font-medium text-foreground">
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-[var(--app-foreground)]">
                   Event Image
                 </label>
 
-                {/* File Upload Area */}
-                <div className="space-y-3">
-                  {/* Upload Button */}
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileInputChange}
-                      className="hidden"
-                    />
-                    <Button
-                      size="sm"
-                      className="px-4 py-3"
-                      icon={<Upload className="w-4 h-4" />}
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      Choose Image
-                    </Button>
-
-                    {uploadedFile && (
-                      <Button
-                        size="sm"
-                        className="px-4 py-3"
-                        icon={uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                        onClick={handleFileUpload}
-                        disabled={uploading}
-                      >
-                        {uploading ? 'Uploading...' : 'Upload to IPFS'}
-                      </Button>
-                    )}
-                  </div>
-
+                {/* Drag and Drop Upload Area */}
+                <div className="space-y-4">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileInputChange}
+                    className="hidden"
+                  />
                   {/* File Preview */}
                   {previewUrl && (
                     <div className="relative">
-                      <div className="relative w-full h-52 rounded-xl overflow-hidden border border-border">
+                      <div className="relative w-full h-52 rounded-xl overflow-hidden border border-[var(--app-border)] bg-[var(--app-background)]">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={previewUrl}
@@ -1083,12 +1212,21 @@ const CreateEventForm = () => {
                           <X className="w-4 h-4" />
                         </button>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-xs text-[var(--app-foreground-muted)] mt-1">
                         {uploadedFile?.name} ({(uploadedFile?.size ? (uploadedFile.size / 1024 / 1024).toFixed(2) : '0')} MB)
                       </p>
                     </div>
                   )}
 
+                  {/* Upload Status */}
+                  {uploadedFile && !formData.image && (
+                    <div className="flex items-center justify-center gap-2 p-3 bg-[var(--app-accent)]/10 border border-[var(--app-accent)]/20 rounded-lg">
+                      <div className="w-2 h-2 bg-[var(--app-accent)] rounded-full animate-pulse"></div>
+                      <span className="text-sm text-[var(--app-accent)] font-medium">
+                        Image ready - will upload everything when preparing event
+                      </span>
+                    </div>
+                  )}
                   {/* Upload Error */}
                   {uploadError && (
                     <div className="text-red-500 text-sm">
@@ -1098,8 +1236,8 @@ const CreateEventForm = () => {
 
                   {/* Current Image URL */}
                   {formData.image && (
-                    <div className="space-y-2 sm:space-y-3">
-                      <label className="text-xs text-muted-foreground">
+                    <div className="space-y-3">
+                      <label className="text-xs text-[var(--app-foreground-muted)]">
                         Current Image URL:
                       </label>
                       <div className="flex flex-col sm:flex-row gap-3">
@@ -1107,7 +1245,7 @@ const CreateEventForm = () => {
                           type="text"
                           value={formData.image}
                           onChange={(e) => handleInputChange('image', e.target.value)}
-                          className="flex-1 px-4 py-3.5 bg-background border border-border rounded-xl text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors text-sm"
+                          className="flex-1 px-4 py-3 bg-[var(--app-background)] border border-[var(--app-border)] rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                           placeholder="https://example.com/image.jpg"
                         />
                         <Button
@@ -1121,32 +1259,77 @@ const CreateEventForm = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Drag and Drop Zone */}
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 group ${isDragOver
+                      ? 'border-[var(--app-accent)] bg-[var(--app-accent)]/10'
+                      : 'border-border hover:border-[var(--app-accent)] hover:bg-[var(--app-gray)]/20'
+                      }`}
+                  >
+                    <div className="flex flex-col items-center justify-center space-y-4">
+                      <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors duration-200 ${isDragOver
+                        ? 'bg-[var(--app-accent)]'
+                        : 'bg-[var(--app-gray)] group-hover:bg-[var(--app-accent)]'
+                        }`}>
+                        <Upload className={`w-8 h-8 transition-colors duration-200 ${isDragOver
+                          ? 'text-white'
+                          : 'text-[var(--app-foreground-muted)] group-hover:text-white'
+                          }`} />
+                      </div>
+
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-semibold text-[var(--app-foreground)]">
+                          {isDragOver ? 'Drop your image here!' : 'Select Event Image'}
+                        </h3>
+                        <p className="text-sm text-[var(--app-foreground-muted)]">
+                          {isDragOver ? (
+                            <span className="text-[var(--app-accent)] font-medium">Release to select</span>
+                          ) : (
+                            <>or <span className="text-[var(--app-accent)] font-medium">click to browse</span></>
+                          )}
+                        </p>
+                        <p className="text-xs text-[var(--app-foreground-muted)]">
+                          PNG, JPG, GIF up to 10MB • Will upload everything when preparing event
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+
+
+
+
                 </div>
               </div>
 
               {/* Start and End DateTime */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div className="space-y-2 sm:space-y-3">
-                  <label className="text-sm font-medium text-foreground">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold text-[var(--app-foreground)]">
                     Start Date & Time *
                   </label>
                   <input
                     type="datetime-local"
                     value={formData.startDateTime}
                     onChange={(e) => handleInputChange('startDateTime', e.target.value)}
-                    className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors"
+                    className="w-[90%] px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                     required
                   />
                 </div>
-                <div className="space-y-2 sm:space-y-3">
-                  <label className="text-sm font-medium text-foreground">
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold text-[var(--app-foreground)]">
                     End Date & Time *
                   </label>
                   <input
                     type="datetime-local"
                     value={formData.endDateTime}
                     onChange={(e) => handleInputChange('endDateTime', e.target.value)}
-                    className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors"
+                    className="w-[90%] px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                     required
                   />
                 </div>
@@ -1161,8 +1344,8 @@ const CreateEventForm = () => {
               />
 
               {/* Max Participants */}
-              <div className="space-y-2 sm:space-y-3">
-                <label className="text-sm font-medium text-foreground">
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-[var(--app-foreground)]">
                   Maximum Participants
                 </label>
                 <input
@@ -1170,7 +1353,7 @@ const CreateEventForm = () => {
                   value={formData.maxParticipants}
                   onChange={(e) => handleInputChange('maxParticipants', parseInt(e.target.value))}
                   min="1"
-                  className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors"
+                  className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                 />
               </div>
             </div>
@@ -1178,24 +1361,24 @@ const CreateEventForm = () => {
 
           {currentStep === 3 && (
             <div className="space-y-6">
-              <h2 className="text-xl sm:text-2xl font-bold text-center mb-6 sm:mb-8 text-foreground">Event Hosts</h2>
-              <p className="text-center text-muted-foreground mb-6">
-                Add usernames of people who will be hosting this event
-              </p>
+              {/* <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-10 text-[var(--app-foreground)]">Event Hosts</h2> */}
+              {/* <p className="text-center text-[var(--app-foreground-muted)] mb-6">
+              Add usernames of people who will be hosting this event
+            </p> */}
 
               {/* Existing Hosts */}
               {formData.hosts.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="text-base sm:text-lg font-medium text-foreground">Current Hosts</h3>
+                  <h3 className="text-lg font-semibold text-[var(--app-foreground)]">Current Hosts</h3>
                   {formData.hosts.map((host, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-background border border-border rounded-lg">
+                    <div key={index} className="flex items-center justify-between p-4 bg-[var(--app-background)] border border-border rounded-xl bg-white">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                        <div className="w-10 h-10 bg-[var(--app-accent)] rounded-full flex items-center justify-center">
                           <Icon name="users" size="sm" className="text-white" />
                         </div>
                         <div>
-                          <h4 className="font-medium">@{host.name}</h4>
-                          <p className="text-sm text-muted-foreground">{host.role}</p>
+                          <h4 className="font-semibold text-[var(--app-foreground)]">@{host.name}</h4>
+                          <p className="text-sm text-[var(--app-foreground-muted)]">{host.role}</p>
                         </div>
                       </div>
                       <button
@@ -1203,7 +1386,7 @@ const CreateEventForm = () => {
                           const newHosts = formData.hosts.filter((_, i) => i !== index);
                           setFormData(prev => ({ ...prev, hosts: newHosts }));
                         }}
-                        className="p-3 text-muted-foreground hover:text-red-500 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                        className="p-3 text-[var(--app-foreground-muted)] hover:text-red-500 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-red-50"
                       >
                         <Icon name="x" size="sm" />
                       </button>
@@ -1213,12 +1396,12 @@ const CreateEventForm = () => {
               )}
 
               {/* Add Host Form */}
-              <div className="space-y-4 p-4 bg-background border border-border rounded-lg border-none">
-                <h3 className="text-base sm:text-lg font-medium text-foreground">Add New Host</h3>
+              <div className="space-y-4 p-6 px-0 rounded-xl ">
+                <h3 className="text-lg font-semibold text-[var(--app-foreground)]">Add New Host</h3>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <div className="space-y-2 sm:space-y-3">
-                    <label className="text-sm font-medium text-foreground">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-[var(--app-foreground)]">
                       Address *
                     </label>
                     <input
@@ -1232,12 +1415,12 @@ const CreateEventForm = () => {
                           tempHost: { ...prev.tempHost!, name: username }
                         }));
                       }}
-                      className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
+                      className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                     />
                   </div>
 
-                  <div className="space-y-2 sm:space-y-3">
-                    <label className="text-sm font-medium text-foreground">
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-[var(--app-foreground)]">
                       Role
                     </label>
                     <input
@@ -1250,7 +1433,7 @@ const CreateEventForm = () => {
                           tempHost: { ...prev.tempHost!, role: e.target.value }
                         }));
                       }}
-                      className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
+                      className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                     />
                   </div>
                 </div>
@@ -1285,32 +1468,32 @@ const CreateEventForm = () => {
           )}
 
           {currentStep === 4 && (
-            <div className="space-y-2">
-              <h2 className="text-xl sm:text-2xl font-bold text-center mb-6 sm:mb-8 text-foreground">Event Agenda</h2>
-              <p className="text-center text-muted-foreground mb-8">
+            <div className="space-y-6">
+              {/* <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-10 text-[var(--app-foreground)]">Event Agenda</h2> */}
+              {/* <p className="text-center text-[var(--app-foreground-muted)] mb-8">
                 Plan the schedule and sessions for your event
-              </p>
+              </p> */}
 
               {/* Existing Agenda Items */}
               {formData.agenda.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="text-base sm:text-lg font-medium text-foreground">Current Agenda</h3>
+                  <h3 className="text-lg font-semibold text-[var(--app-foreground)]">Current Agenda</h3>
                   {formData.agenda.map((item, index) => (
-                    <div key={index} className="p-4 bg-background border border-border rounded-lg">
+                    <div key={index} className="p-4 bg-[var(--app-background)] border border-[var(--app-border)] rounded-xl">
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-medium text-lg">{item.title}</h4>
+                        <h4 className="font-semibold text-lg text-[var(--app-foreground)]">{item.title}</h4>
                         <button
                           onClick={() => {
                             const newAgenda = formData.agenda.filter((_, i) => i !== index);
                             setFormData(prev => ({ ...prev, agenda: newAgenda }));
                           }}
-                          className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
+                          className="p-2 text-[var(--app-foreground-muted)] hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
                         >
                           <Icon name="x" size="sm" />
                         </button>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-3">{item.description}</p>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <p className="text-sm text-[var(--app-foreground-muted)] mb-3">{item.description}</p>
+                      <div className="flex items-center gap-4 text-xs text-[var(--app-foreground-muted)]">
                         <span className="flex items-center gap-1">
                           <Icon name="calendar" size="sm" />
                           {item.startTime} - {item.endTime}
@@ -1328,12 +1511,12 @@ const CreateEventForm = () => {
               )}
 
               {/* Add Agenda Item Form */}
-              <div className="space-y-4 p-4 px-0 bg-background border border-border rounded-lg border-none">
-                <h3 className="text-lg font-medium">Add New Agenda Item</h3>
+              <div className="space-y-4 p-6 px-0 bg-[var(--app-gray)] rounded-xl">
+                <h3 className="text-lg font-semibold text-[var(--app-foreground)]">Add New Agenda Item</h3>
 
                 <div className="space-y-4">
-                  <div className="space-y-2 sm:space-y-3">
-                    <label className="text-sm font-medium text-foreground">
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-[var(--app-foreground)]">
                       Session Title *
                     </label>
                     <input
@@ -1346,12 +1529,12 @@ const CreateEventForm = () => {
                           tempAgenda: { ...prev.tempAgenda!, title: e.target.value }
                         }));
                       }}
-                      className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
+                      className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                     />
                   </div>
 
-                  <div className="space-y-2 sm:space-y-3">
-                    <label className="text-sm font-medium text-foreground">
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-[var(--app-foreground)]">
                       Description
                     </label>
                     <textarea
@@ -1364,13 +1547,13 @@ const CreateEventForm = () => {
                         }));
                       }}
                       rows={3}
-                      className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors resize-none"
+                      className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors resize-none text-sm"
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div className="space-y-2 sm:space-y-3">
-                      <label className="text-sm font-medium text-foreground">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-[var(--app-foreground)]">
                         Start Time *
                       </label>
                       <input
@@ -1383,13 +1566,13 @@ const CreateEventForm = () => {
                           }));
 
                         }}
-                        className="w-[80%] px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors "
+                        className="w-[80%] px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                         required
                       />
                     </div>
 
-                    <div className="space-y-2 sm:space-y-3">
-                      <label className="text-sm font-medium text-foreground">
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-[var(--app-foreground)]">
                         End Time *
                       </label>
                       <input
@@ -1401,14 +1584,14 @@ const CreateEventForm = () => {
                             tempAgenda: { ...prev.tempAgenda!, endTime: e.target.value }
                           }));
                         }}
-                        className="w-[80%] px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors"
+                        className="w-[80%] px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                         required
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-2 sm:space-y-3">
-                    <label className="text-sm font-medium text-foreground">
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-[var(--app-foreground)]">
                       Speakers (optional)
                     </label>
                     <input
@@ -1422,7 +1605,7 @@ const CreateEventForm = () => {
                           tempAgenda: { ...prev.tempAgenda!, speakers }
                         }));
                       }}
-                      className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
+                      className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                     />
                   </div>
                 </div>
@@ -1458,20 +1641,20 @@ const CreateEventForm = () => {
 
           {currentStep === 5 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-center mb-8">Event Tickets</h2>
-              <p className="text-center text-muted-foreground mb-6">
+              {/* <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-10 text-[var(--app-foreground)]">Event Tickets</h2>
+              <p className="text-center text-[var(--app-foreground-muted)] mb-6">
                 Configure ticketing and pricing options for your event
-              </p>
+              </p> */}
 
               {/* Ticket Availability Toggle */}
-              <div className="flex items-center justify-between p-4 bg-background border border-border rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-[var(--app-background)] border border-border rounded-xl bg-white">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                    <Icon name="plus" size="sm" className="text-white" />
+                  <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
+                    <Icon name="plus" size="sm" className="text-muted-foreground" />
                   </div>
                   <div>
-                    <h3 className="font-medium">Tickets Available</h3>
-                    <p className="text-sm text-muted-foreground">Sell tickets for this event</p>
+                    <h3 className="font-semibold text-[var(--app-foreground)]">Tickets Available</h3>
+                    <p className="text-sm text-[var(--app-foreground-muted)]">Sell tickets for this event</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -1486,19 +1669,19 @@ const CreateEventForm = () => {
                     }}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-app-card-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-[var(--app-background)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-muted-foreground after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-muted"></div>
                 </label>
               </div>
 
               {/* Existing Ticket Types */}
               {formData.tickets.available && formData.tickets.types.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="text-lg font-medium">Current Ticket Types</h3>
+                  <h3 className="text-lg font-semibold text-[var(--app-foreground)]">Current Ticket Types</h3>
                   {formData.tickets.types.map((ticket, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-background border border-border rounded-lg">
+                    <div key={index} className="flex items-center justify-between p-4 bg-[var(--app-background)] border border-border rounded-xl bg-white">
                       <div>
-                        <h4 className="font-medium">{ticket.type}</h4>
-                        <p className="text-sm text-muted-foreground">
+                        <h4 className="font-semibold text-[var(--app-foreground)]">{ticket.type}</h4>
+                        <p className="text-sm text-[var(--app-foreground-muted)]">
                           ${ticket.price} {ticket.currency} • {ticket.quantity} available
                         </p>
                       </div>
@@ -1510,7 +1693,7 @@ const CreateEventForm = () => {
                             tickets: { ...prev.tickets, types: newTickets }
                           }));
                         }}
-                        className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
+                        className="p-2 text-[var(--app-foreground-muted)] hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
                       >
                         <Icon name="x" size="sm" />
                       </button>
@@ -1521,12 +1704,12 @@ const CreateEventForm = () => {
 
               {/* Add Ticket Type Form */}
               {formData.tickets.available && (
-                <div className="space-y-4 bg-background border border-border rounded-lg border-none">
-                  <h3 className="text-lg font-medium">Add New Ticket Type</h3>
+                <div className="space-y-4 bg-[var(--app-gray)] rounded-xl">
+                  <h3 className="text-lg font-semibold text-[var(--app-foreground)]">Add New Ticket Type</h3>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div className="space-y-2 sm:space-y-3">
-                      <label className="text-sm font-medium text-foreground">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-[var(--app-foreground)]">
                         Ticket Type *
                       </label>
                       <input
@@ -1539,12 +1722,12 @@ const CreateEventForm = () => {
                             tempTicket: { ...prev.tempTicket!, type: e.target.value }
                           }));
                         }}
-                        className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
+                        className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                       />
                     </div>
 
-                    <div className="space-y-2 sm:space-y-3">
-                      <label className="text-sm font-medium text-foreground">
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-[var(--app-foreground)]">
                         Price *
                       </label>
                       <input
@@ -1559,15 +1742,15 @@ const CreateEventForm = () => {
                         }}
                         min="0"
                         step="0.01"
-                        className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors"
+                        className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                         required
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div className="space-y-2 sm:space-y-3">
-                      <label className="text-sm font-medium text-foreground">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-[var(--app-foreground)]">
                         Currency
                       </label>
                       <select
@@ -1578,7 +1761,7 @@ const CreateEventForm = () => {
                             tempTicket: { ...prev.tempTicket!, currency: e.target.value }
                           }));
                         }}
-                        className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors"
+                        className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                       >
                         <option value="USD">USD ($)</option>
                         <option value="EUR">EUR (€)</option>
@@ -1587,8 +1770,8 @@ const CreateEventForm = () => {
                       </select>
                     </div>
 
-                    <div className="space-y-2 sm:space-y-3">
-                      <label className="text-sm font-medium text-foreground">
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-[var(--app-foreground)]">
                         Quantity Available *
                       </label>
                       <input
@@ -1602,7 +1785,7 @@ const CreateEventForm = () => {
                           }));
                         }}
                         min="1"
-                        className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors"
+                        className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                         required
                       />
                     </div>
@@ -1643,10 +1826,10 @@ const CreateEventForm = () => {
 
           {currentStep === 6 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-center mb-8">Event Summary</h2>
+              {/* <h2 className="text-2xl font-bold text-center mb-8">Event Summary</h2> */}
 
               {/* Event Summary */}
-              <div className="space-y-4 bg-background rounded-lg">
+              <div className="space-y-4 rounded-lg">
                 {/* <h3 className="text-xl sm:text-2xl font-bold text-center mb-6 text-foreground">Event Summary</h3> */}
 
                 {/* Basic Information */}
@@ -2256,49 +2439,45 @@ const CreateEventForm = () => {
 
               {/* Connect Wallet */}
               {!isConnected ? (
-                <div className="mt-6 p-4 bg-app-card-bg border border-border rounded-lg">
-                  <div className="text-center">
-                    <h4 className="text-sm font-medium text-foreground mb-2">
-                      Connect Your Wallet
-                    </h4>
-                    <p className="text-xs text-muted-foreground mb-4">
-                      Connect your wallet to create events on the blockchain.
-                    </p>
+                <div className="mt-6 p-4 px-0 rounded-lg w-full flex flex-col items-center justify-center">
+                  <div className="text-center w-full flex flex-col items-center justify-center">
                     <button
                       onClick={() => setShowWalletModal(true)}
-                      className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                      className="px-4 py-3 bg-muted-foreground text-primary-foreground rounded-lg hover:bg-muted-foreground/90 transition-colors w-full"
                     >
                       Connect Wallet
                     </button>
+                    <p className="text-xs text-muted-foreground mb-4 pt-2 text-center w-[70%]">
+                      Connect your wallet to create events on the blockchain.
+                    </p>
                   </div>
                 </div>
               ) : null}
 
-              {/* Prepare Contract Calls Button */}
+              {/* Create Event Button (prepares everything) */}
               {isConnected && !preparedContracts && (
-                <div className="mt-6 p-4 bg-app-card-bg border border-border rounded-lg">
-                  <div className="text-center">
-                    <h4 className="text-sm font-medium text-foreground mb-2">
-                      Upload Event Data
-                    </h4>
-                    <p className="text-xs text-muted-foreground mb-4">
-                      Upload your image to IPFS and prepare the contract calls for event creation.
-                    </p>
+                <div className="mt-6 p-4 px-0  rounded-lg">
+                  <div className="text-center flex flex-col items-center justify-center">
+
                     <button
                       type="button"
-                      onClick={prepareContractCalls}
-                      disabled={isPreparing}
-                      className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      onClick={handleCreateEvent}
+                      disabled={isPreparingForTransaction || isSubmitting}
+                      className="w-full px-4 py-3 bg-muted-foreground text-primary-foreground rounded-lg hover:bg-muted-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                     >
-                      {isPreparing ? (
+                      {isPreparingForTransaction ? (
                         <div className="flex items-center justify-center gap-2">
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          Uploading...
+                          Preparing Everything...
                         </div>
                       ) : (
-                        "Upload Contract Data"
+                        "Prepare Event Creation"
                       )}
                     </button>
+
+                    <p className="text-xs text-muted-foreground mb-4 pt-2 flex items-center justify-center w-[70%]">
+                      Upload image, metadata to IPFS and prepare contract calls for event creation.
+                    </p>
                     {verificationStatus && (
                       <div className="mt-2 text-xs text-muted-foreground">
                         {verificationStatus}
@@ -2367,7 +2546,7 @@ const CreateEventForm = () => {
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <div className="text-sm text-green-800 dark:text-green-200 font-medium">
-                      ✅ Transaction Successful!
+                      Transaction Successful!
                     </div>
                   </div>
                   <div className="mt-2 text-xs text-green-700 dark:text-green-300">
@@ -2402,14 +2581,14 @@ const CreateEventForm = () => {
               </p>
 
               {/* Domain Input */}
-              <div className="space-y-4 bg-background">
-                <h3 className="text-lg font-medium">Choose Your Domain</h3>
+              <div className="space-y-4">
+                {/* <h3 className="text-lg font-medium">Choose Your Domain</h3> */}
 
                 <div className="space-y-4">
                   <div className="space-y-2 sm:space-y-3 mb-5">
-                    <label className="text-sm font-medium text-foreground">
+                    {/* <label className="text-sm font-medium text-foreground">
                       Domain Name *
-                    </label>
+                    </label> */}
                     <input
                       type="text"
                       placeholder="e.g. myevent.io or myevent.core"
@@ -2547,23 +2726,23 @@ const CreateEventForm = () => {
       </div>
 
       {/* Static Navigation Buttons at Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-app-background border-t border-border p-4 z-50">
+      <div className="fixed bottom-0 left-0 right-0  border-t border-border p-4 z-50 bg-app-card-bg">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <Button
             onClick={handlePrevStep}
             disabled={currentStep === 1}
             variant="outline"
-            className="px-4 py-3 border-none bg-background hover:bg-black/10"
+            className="px-6 py-3 border-none text-background-foreground hover:bg-background-hover transition-colors"
           >
-            <ChevronLeftIcon className="w-5 h-5" />
+            <ChevronLeftIcon className="w-6 h-6" />
           </Button>
 
           {currentStep < steps.length ? (
             <Button
               onClick={handleNextStep}
-              className="px-4 py-3 border-none bg-background text-foreground hover:bg-black/10"
+              className="px-6 py-3 bg-[var(--app-accent)] text-background-foreground hover:bg-[var(--app-accent-hover)] transition-colors"
             >
-              <ChevronRightIcon className="w-5 h-5" />
+              <ChevronRightIcon className="w-6 h-6" />
             </Button>
           ) : null}
         </div>
@@ -2577,19 +2756,21 @@ const CreateEventForm = () => {
       />
 
       {/* Success Card */}
-      {showSuccessCard && createdEventDetails && (
-        <RegistrationSuccessCard
-          event={createdEventDetails}
-          onClose={() => {
-            setShowSuccessCard(false);
-            setCreatedEventDetails(null);
-            // Navigate to the event page after closing
-            if (createdEventId) {
-              router.push(`/e/${createdEventId}`);
-            }
-          }}
-        />
-      )}
+      {
+        showSuccessCard && createdEventDetails && (
+          <RegistrationSuccessCard
+            event={createdEventDetails}
+            onClose={() => {
+              setShowSuccessCard(false);
+              setCreatedEventDetails(null);
+              // Navigate to the event page after closing
+              if (createdEventId) {
+                router.push(`/e/${createdEventId}`);
+              }
+            }}
+          />
+        )
+      }
     </div>
   );
 };

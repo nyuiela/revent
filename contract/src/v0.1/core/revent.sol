@@ -91,10 +91,11 @@ contract Revent is
         uint256 endTime,
         uint256 maxAttendees,
         bool isVIP,
-        bytes memory data
+        bytes memory data,
+        string memory slug
     ) external whenNotPaused returns (uint256) {
         require(address(eventsModule) != address(0), "Events module not set");
-        return eventsModule.createEvent(ipfsHash, startTime, endTime, maxAttendees, isVIP, data, "EVENT123");
+        return eventsModule.createEvent(ipfsHash, startTime, endTime, maxAttendees, isVIP, data, slug);
     }
 
     function publishEvent(uint256 eventId) external whenNotPaused {
@@ -122,10 +123,11 @@ contract Revent is
         string memory ipfsHash,
         uint256 startTime,
         uint256 endTime,
-        uint256 maxAttendees
+        uint256 maxAttendees,
+        string memory slug
     ) external whenNotPaused {
         require(address(eventsModule) != address(0), "Events module not set");
-        eventsModule.updateEvent(eventId, ipfsHash, startTime, endTime, maxAttendees);
+        eventsModule.updateEvent(eventId, ipfsHash, startTime, endTime, maxAttendees, slug);
     }
 
     // Ticket management functions (delegated to TicketsV1)

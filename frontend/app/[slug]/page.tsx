@@ -133,7 +133,7 @@ const EventDetailPage = async ({ params }: Props) => {
             Event Not Found
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            The event with slug "{slug}" could not be found.
+            The event with slug &quot;{slug}&quot; could not be found.
           </p>
         </div>
       </div>

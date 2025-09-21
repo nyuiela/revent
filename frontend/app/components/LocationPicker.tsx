@@ -156,7 +156,7 @@ const LocationPicker: React.FC<Props> = ({ value, onChange, label = "Location", 
     } catch {
       // noop
     }
-  }, [center, mapboxgl]);
+  }, [center, mapboxgl, onChange, query, value.location]);
 
   const handleSelect = useCallback((s: { name: string; center: [number, number] }) => {
     setQuery(s.name);
@@ -185,7 +185,7 @@ const LocationPicker: React.FC<Props> = ({ value, onChange, label = "Location", 
         markerRef.current = M as unknown as mapboxgl.Marker;
       }
     }
-  }, [onChange]);
+  }, [onChange, mapboxgl]);
 
   return (
     <div className="space-y-2">

@@ -100,13 +100,18 @@ function generateFallbackEvent(graphEvent: GraphEvent): {
   };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    console.log("Fetching events from The Graph Protocol...");
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const skip = (page - 1) * limit;
+
+    console.log(`Fetching events from The Graph Protocol - Page: ${page}, Limit: ${limit}, Skip: ${skip}`);
 
     // Define the query as a string to avoid gql template literal issues
     const query = `{
-      eventCreateds(first: 100, orderBy: blockTimestamp, orderDirection: desc) {
+      eventCreateds(first: ${limit}, skip: ${skip}, orderBy: blockTimestamp, orderDirection: desc) {
         id
         eventId
         creator
@@ -175,9 +180,17 @@ export async function GET() {
 
     console.log(`Successfully processed ${validEvents.length} events`);
 
+    // Check if there are more events (if we got less than requested, we're at the end)
+    const hasMore = validEvents.length === limit;
+
     return NextResponse.json({
       events: validEvents,
-      total: validEvents.length,
+      pagination: {
+        page,
+        limit,
+        hasMore,
+        total: validEvents.length
+      },
       source: "graph_protocol"
     });
 
@@ -187,7 +200,12 @@ export async function GET() {
     // Return detailed error information for debugging
     return NextResponse.json({
       events: [],
-      total: 0,
+      pagination: {
+        page: 1,
+        limit: 20,
+        hasMore: false,
+        total: 0
+      },
       source: "error",
       error: error instanceof Error ? error.message : "Unknown error",
       stack: error instanceof Error ? error.stack : undefined,

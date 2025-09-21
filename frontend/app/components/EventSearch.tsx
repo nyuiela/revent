@@ -66,8 +66,8 @@ export default function EventSearch({ events, onEventSelect, onSearch, selectedE
   return (
     <div ref={searchRef} className="relative flex-1">
       <form onSubmit={handleSearch} className="flex items-center gap-2">
-        <div className="flex-1 flex items-center bg-black/70 text-white rounded-full px-4 py-2.5">
-          <Search className="w-4 h-4 mr-2 text-white/80" />
+        <div className="flex-1 flex items-center bg-muted text-muted-foreground rounded-full px-4 py-2.5  shadow-sm">
+          <Search className="w-4 h-4 mr-2 text-muted-foreground" />
           <input
             value={query}
             onChange={(e) => {
@@ -78,13 +78,13 @@ export default function EventSearch({ events, onEventSelect, onSearch, selectedE
               }
             }}
             placeholder="search for something"
-            className="bg-transparent placeholder-white/80 text-sm w-full focus:outline-none"
+            className="bg-transparent placeholder-muted-foreground text-sm w-full focus:outline-none"
             onFocus={() => query.trim() !== "" && setIsOpen(true)}
           />
         </div>
         <button
           type="submit"
-          className="w-10 h-10 rounded-full bg-black/80 text-white grid place-items-center hover:bg-black/90 transition-colors"
+          className="w-10 h-10 rounded-full bg-muted text-muted-foreground grid place-items-center hover:bg-muted-hover transition-colors shadow-sm"
           aria-label="search"
         >
           <Send className="w-4 h-4" />

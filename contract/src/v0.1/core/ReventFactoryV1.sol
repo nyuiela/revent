@@ -130,9 +130,10 @@ contract ReventFactoryV1 is
         string memory ipfsHash,
         uint256 startTime,
         uint256 endTime,
-        uint256 maxAttendees
+        uint256 maxAttendees,
+        string memory slug
     ) external whenNotPaused {
-        eventsModule.updateEvent(eventId, ipfsHash, startTime, endTime, maxAttendees);
+        eventsModule.updateEvent(eventId, ipfsHash, startTime, endTime, maxAttendees, slug);
     }
 
     // Ticket management functions (delegated to TicketsV1)

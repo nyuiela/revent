@@ -3,11 +3,11 @@ import React, { useMemo } from 'react'
 import Link from 'next/link'
 import { MapPin, Users, Calendar, Loader2, RefreshCw } from "lucide-react"
 import Footer from '../components/footer'
-import OwnerDisplay from '../../components/OwnerDisplay'
+// import OwnerDisplay from '../../components/OwnerDisplay'
 import ViewCount from '../../components/ViewCount'
 import { useEvents } from '../../hooks/useEvents'
 import { useViewCounts } from '../../hooks/useViewCounts'
-import StreamHeader from '../components/StreamHeader'
+// import StreamHeader from '../components/StreamHeader'
 
 
 // Function to format timestamp to readable date
@@ -84,7 +84,7 @@ const EventsPage = () => {
     <div className="min-h-screen text-[var(--events-foreground)] bg-events-background relative z-[20] pt-10 bg-[#F2F4F3]">
       {/* Header */}
       <div className="top-0 z-40 bg-transparent border-none">
-        <StreamHeader />
+        {/* <StreamHeader /> */}
         <div className="flex items-center justify-between p-4">
           <div>
             <h1 className="text-xl font-bold text-[var(--events-foreground)]">Events</h1>
@@ -96,14 +96,14 @@ const EventsPage = () => {
             <button
               onClick={() => refetch()}
               disabled={loading}
-              className="px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50 rounded-lg transition-colors flex items-center gap-2 bg-primary"
+              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-gray-700 disabled:opacity-50 rounded-lg transition-colors flex items-center gap-2 bg-[var(--events-accent)]"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </button>
             <Link
               href="/events/create"
-              className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-muted-foreground bg-muted hover:bg-muted-hover rounded-lg transition-colors"
             >
               Create Event
             </Link>
@@ -130,9 +130,9 @@ const EventsPage = () => {
               href={`/${event.slug || event.id}`} // Use slug if available, fallback to ID
               className="block border-b-[1px] border-border rounded-xl p-4 bg-events-card-bg hover:bg-events-card-bg transition-colors"
             >
-              <div className="flex gap-4">
+              <div className="flex gap-4 items-center justify-between">
                 {/* Event Image */}
-                <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                <div className="relative w-[7rem] h-[7rem] rounded-lg overflow-hidden flex-shrink-0 bg-red-400">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={event.avatarUrl}
@@ -150,7 +150,7 @@ const EventsPage = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="text-lg font-semibold truncate">{event.title}</h3>
-                    <span className="px-2 py-1 bg-events-accent text-white text-[10px] rounded-full ml-2 flex-shrink-0">
+                    <span className="px-2 py-1 bg-muted text-muted-foreground text-[10px] rounded-full ml-2 flex-shrink-0">
                       {event.category || 'Event'}
                     </span>
                   </div>
@@ -186,13 +186,13 @@ const EventsPage = () => {
                   </div>
 
                   {/* Creator info */}
-                  <div className="mt-2">
+                  {/* <div className="mt-2">
                     <OwnerDisplay
                       address={event.creator || ''}
                       className="text-[var(--events-foreground-muted)]"
                       showIcon={true}
                     />
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </Link>

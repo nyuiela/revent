@@ -5,7 +5,7 @@ import Link from "next/link";
 import StreamHeader from "./StreamHeader";
 import EventsMap, { type LiveEvent, type EventsMapRef } from "./EventsMap";
 import EventSearch from "./EventSearch";
-import { Camera, ChevronUp, Monitor, Plus, Eye, MapPin, Navigation } from "lucide-react";
+import { Camera, ChevronUp, Monitor, Eye, MapPin, Navigation, Component } from "lucide-react";
 import OwnerDisplay from "../../components/OwnerDisplay";
 import ViewCount from "../../components/ViewCount";
 import { useEvents } from "../../hooks/useEvents";
@@ -28,7 +28,7 @@ export default function StreamHome() {
   // const viewProfile = useViewProfile();
 
   // Location detection
-  const { location, error: locationError, isLoading: locationLoading, getCurrentLocation } = useLocation();
+  const { location, error: locationError, getCurrentLocation } = useLocation();
 
   useEffect(() => {
     setIsMounted(true);
@@ -44,7 +44,7 @@ export default function StreamHome() {
   // Sort events by proximity to user location
   const proximityEvents = useProximityEvents(events, location);
 
-  const filters = ["all", "eat", "café", "bar"]; // exact labels per screenshot
+  const filters = ["all", "tech", "gaming", "music"]; // exact labels per screenshot
 
   // Use proximity-sorted events for discover section
   // Take the first 4 closest events and add viewer count simulation
@@ -173,7 +173,7 @@ export default function StreamHome() {
 
           {/* Location Indicator */}
           {location && (
-            <div className="absolute top-16 right-4 bg-black/70 text-white rounded-full px-3 py-2 text-xs flex items-center gap-2 pointer-events-none z-20">
+            <div className="absolute bottom-32 right-4 bg-black/70 text-white rounded-full px-3 py-2 text-xs flex items-center gap-2 pointer-events-none z-20">
               <Navigation className="w-3 h-3" />
               <span>Your location detected</span>
             </div>
@@ -181,7 +181,7 @@ export default function StreamHome() {
 
           {/* Location Error/Retry */}
           {locationError && (
-            <div className="absolute top-16 right-4 bg-red-500/80 text-white rounded-full px-3 py-2 text-xs flex items-center gap-2 pointer-events-auto z-20">
+            <div className="absolute bottom-16 right-4 bg-red-500/80 text-white rounded-full px-3 py-2 text-xs flex items-center gap-2 pointer-events-auto z-20">
               <button
                 onClick={getCurrentLocation}
                 className="flex items-center gap-1 hover:underline"
@@ -225,7 +225,8 @@ export default function StreamHome() {
                 className="w-8 h-8 rounded-full bg-white/90 text-black grid place-items-center hover:bg-white transition-colors"
                 aria-label="more"
               >
-                <Plus className="w-4 h-4" />
+                {/* <Plus className="w-4 h-4" /> */}
+                <Component className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -357,7 +358,7 @@ export default function StreamHome() {
       {/* Discover All Events - Infinite Scroll */}
       <InfiniteScrollEvents
         userLocation={location}
-        onEventSelect={handleEventSelect}
+        onEventSelect={handleEventSelect as (event: unknown) => void}
       />
 
       {/* Curators for you */}

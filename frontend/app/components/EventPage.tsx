@@ -4,6 +4,7 @@ import {
   Calendar,
   MapPin,
   Clock,
+  ChevronLeft,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAccount, useChainId, useReadContract } from "wagmi";
@@ -22,7 +23,7 @@ import RegistrationSuccessCard from "./RegistrationSuccessCard";
 import { Avatar, FollowersYouKnow, ProfileSocials } from "ethereum-identity-kit";
 import Image from "next/image";
 import { Button } from "./DemoComponents";
-import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/router";
 
 
 type Props = {
@@ -77,6 +78,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
   const [isRegistering, setIsRegistering] = useState(false);
   const numericEventId = eventId && typeof eventId === "string" ? Number(eventId) : eventId;
   const canTransact = Boolean(address && chainId && eventAddress);
+  const router = useRouter();
 
   // Only make contract calls if we have a valid eventId
   const { data: eventData } = useReadContract({
@@ -203,7 +205,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
   const endISO: string | undefined = ipfsData?.endISO as string | undefined;
 
   // Show loading state if we're fetching data
-  if (ipfsLoading || (eventId && !eventData && !ipfsData)) {
+  if (ipfsLoading || (eventId && !eventData && !ipfsData && !graphEventData)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -217,14 +219,14 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
   }
 
   // Show error state if we have an error and no data
-  if (ipfsError && !ipfsData) {
+  if (ipfsError && !ipfsData && !graphEventData && !eventSlugData) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
           <h1 className="text-2xl font-bold text-[var(--app-foreground)] mb-2">Event Not Found</h1>
           <p className="text-[var(--app-foreground-muted)] mb-4">
-            {ipfsError}
+            {ipfsError || "Unable to load event data. The event may not exist or the data may be unavailable."}
           </p>
           <button
             onClick={() => window.history.back()}
@@ -268,24 +270,40 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
       </div>
     );
   }
-  // Mock data - merged with IPFS data when available
+  // Use real data from various sources, with IPFS data taking priority
   const event: EventDetails = {
     id: eventId || 'unknown',
-    title: (ipfsData?.title as string) || "Crypto Gaming Championship 2024",
+    title: (ipfsData?.title as string) ||
+      (eventSlugData?.title as string) ||
+      (graphEventData?.eventId ? `Event #${graphEventData.eventId}` : "Event Details"),
     description:
       (ipfsData?.description as string) ||
-      "The Crypto Gaming Championship 2024 is the premier global esports event powered by blockchain. Join pro gamers, streamers, and fans for an action-packed day of gameplay, NFT collectibles, and decentralized rewards. Watch live streams across Twitch, YouTube, and Farcaster, with real-time prize distribution via smart contracts. Compete, collect, and connect with the future of gaming!",
+      (eventSlugData?.description as string) ||
+      "Event details will be available soon.",
     date: formattedDate,
     time: formattedTime,
-    location: (ipfsData?.location as string) || "Miami Beach Convention Center, FL",
-    coordinates: { lat: 25.7617, lng: -80.1918 },
-    image: (ipfsData?.image as string) || "/hero.png",
-    category: (ipfsData?.category as string) || "Gaming & Esports",
-    maxParticipants: (ipfsData?.maxParticipants as number) ?? 500,
-    currentParticipants: 342,
-    isLive: true,
-    platforms: (ipfsData?.platforms as string[]) || ["Twitch", "YouTube", "Farcaster"],
-    totalRewards: (ipfsData?.totalRewards as number) ?? 25000,
+    location: (ipfsData?.location as string) ||
+      "Location TBD",
+    coordinates: (ipfsData?.coordinates as { lat: number; lng: number }) ||
+      (eventSlugData?.lat && eventSlugData?.lng ? { lat: eventSlugData.lat, lng: eventSlugData.lng } : { lat: 0, lng: 0 }),
+    image: (ipfsData?.image as string) ||
+      (eventSlugData?.avatarUrl as string) ||
+      "/hero.png",
+    category: (ipfsData?.category as string) ||
+      (eventSlugData?.category as string) ||
+      "General",
+    maxParticipants: (ipfsData?.maxParticipants as number) ??
+      (eventSlugData?.maxAttendees ? parseInt(eventSlugData.maxAttendees) : undefined) ??
+      (graphEventData?.maxParticipants ? parseInt(graphEventData.maxParticipants) : undefined) ??
+      100,
+    currentParticipants: attendeesData ? (attendeesData as string[]).length : 0,
+    isLive: (ipfsData?.isLive as boolean) ??
+      (eventSlugData?.isLive as boolean) ??
+      false,
+    platforms: (ipfsData?.platforms as string[]) ||
+      (eventSlugData?.platforms as string[]) ||
+      ["Farcaster"],
+    totalRewards: (ipfsData?.totalRewards as number) ?? 0,
 
     // ✅ Sessions & Agenda
     agenda: (ipfsData?.agenda as Record<string, unknown>[])?.map((a, idx) => ({
@@ -295,230 +313,69 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
       startTime: a.startTime as string,
       endTime: a.endTime as string,
       speakers: a.speakers as string[],
-    })) || [
-        {
-          id: "session1",
-          title: "Opening Ceremony & Keynote",
-          description: "Kick-off with keynote from Blockchain Pro on the future of crypto gaming.",
-          startTime: "2:00 PM",
-          endTime: "3:00 PM",
-          speakers: ["Blockchain Pro"]
-        },
-        {
-          id: "session2",
-          title: "Qualifier Matches",
-          description: "Streamers face off in elimination rounds streamed live with interactive polls.",
-          startTime: "3:00 PM",
-          endTime: "6:00 PM",
-          speakers: ["Alex Gaming", "Crypto Queen"]
-        },
-        {
-          id: "session3",
-          title: "Community Challenge",
-          description: "Fans compete in live mini-games for on-chain rewards and NFTs.",
-          startTime: "6:00 PM",
-          endTime: "7:30 PM"
-        },
-        {
-          id: "session4",
-          title: "Grand Finals & Award Ceremony",
-          description: "Final showdown of the top 2 teams, followed by prize distribution.",
-          startTime: "8:00 PM",
-          endTime: "10:00 PM"
-        }
-      ],
+    })) || [],
 
-    // ✅ Participants
-    participants: [
-      {
-        id: "1",
-        name: "Alex Gaming",
-        avatar: "/hero.png",
-        role: "streamer",
-        bio: "Top Twitch streamer known for strategy-based crypto games.",
-        contribution: 1500,
-        isLive: true,
-        platform: "Twitch",
-        tokenName: "lofi_deep_sleep",
-        tokenTicker: "LOFI",
-        tokenContract: "0x1234567890123456789012345678901234567890",
-        marketCap: 1000000,
-        volume: 12000,
-        earnings: 500,
-        volume24h: 8000,
-        earnings24h: 300,
-        social: {
-          twitter: "https://x.com/alexgaming",
-          twitch: "https://twitch.tv/alexgaming"
-        }
-      },
-      {
-        id: "2",
-        name: "Crypto Queen",
-        avatar: "/hero.png",
-        role: "streamer",
-        bio: "YouTube personality bringing crypto insights and esports commentary.",
-        contribution: 1200,
-        isLive: true,
-        platform: "YouTube",
-        tokenName: "crypto_queen_token",
-        tokenTicker: "CQ",
-        tokenContract: "0x9876543210987654321098765432109876543210",
-        marketCap: 500000,
-        volume: 5000,
-        earnings: 200,
-        volume24h: 3000,
-        earnings24h: 100,
-        social: {
-          twitter: "https://x.com/cryptoqueen",
-          youtube: "https://youtube.com/cryptoqueen"
-        }
-      },
-      {
-        id: "3",
-        name: "Blockchain Pro",
-        avatar: "/hero.png",
-        role: "organizer",
-        bio: "Industry veteran and co-founder of the Crypto Gaming Alliance.",
-        contribution: 800
-      },
-      {
-        id: "4",
-        name: "Gamer123",
-        avatar: "/hero.png",
-        role: "viewer",
-        bio: "Longtime esports fan and active NFT collector.",
-        contribution: 450
-      }
-    ],
+    // ✅ Participants - use real attendees data
+    participants: attendeesData ? (attendeesData as string[]).map((address, index) => ({
+      id: address,
+      name: `Participant ${index + 1}`,
+      avatar: "/hero.png",
+      role: "viewer" as const,
+      bio: `Event participant with address ${address.slice(0, 6)}...${address.slice(-4)}`,
+      contribution: 0
+    })) : [],
 
-    // ✅ Media
-    media: [
-      {
-        id: "1",
-        type: "image",
-        url: "/hero.png",
-        title: "Event Setup",
-        uploadedBy: "Event Team",
-        uploadedAt: "2 hours ago",
-        likes: 24
-      },
-      {
-        id: "2",
-        type: "video",
-        url: "/hero.png",
-        thumbnail: "/hero.png",
-        title: "Opening Ceremony",
-        uploadedBy: "Live Stream",
-        uploadedAt: "1 hour ago",
-        likes: 156
-      }
-    ],
+    // ✅ Media - use real media data from IPFS if available
+    media: (ipfsData?.media as Record<string, unknown>[])?.map((m, idx) => ({
+      id: (m.id as string) || `media-${idx}`,
+      type: ((m.type as string) === "video" ? "video" : "image") as "image" | "video",
+      url: (m.url as string) || "/hero.png",
+      title: (m.title as string) || "Event Media",
+      uploadedBy: (m.uploadedBy as string) || "Event Team",
+      uploadedAt: (m.uploadedAt as string) || "Recently",
+      likes: (m.likes as number) || 0
+    })) || [],
 
-    // ✅ Rewards
-    rewards: [
-      {
-        id: "1",
-        name: "Grand Prize",
-        description: "First place in the championship",
-        value: 10000,
-        currency: "USD",
-        totalPool: 10000,
-        distributed: 0,
-        icon: "🏆"
-      },
-      {
-        id: "2",
-        name: "Streamer Rewards",
-        description: "Top performing streamers",
-        value: 5000,
-        currency: "USD",
-        totalPool: 10000,
-        distributed: 2500,
-        icon: "🎥"
-      },
-      {
-        id: "3",
-        name: "Community Rewards",
-        description: "Most engaged participants",
-        value: 2500,
-        currency: "USD",
-        totalPool: 5000,
-        distributed: 1200,
-        icon: "👥"
-      }
-    ],
+    // ✅ Rewards - use real rewards data from IPFS if available
+    rewards: (ipfsData?.rewards as Record<string, unknown>[])?.map((r, idx) => ({
+      id: (r.id as string) || `reward-${idx}`,
+      name: (r.name as string) || "Event Reward",
+      description: (r.description as string) || "Reward for participation",
+      value: (r.value as number) || 0,
+      currency: (r.currency as string) || "USD",
+      totalPool: (r.totalPool as number) || 0,
+      distributed: (r.distributed as number) || 0,
+      icon: (r.icon as string) || "🎁"
+    })) || [],
 
-    // ✅ Sponsors & Partners (prefer IPFS if provided)
-    sponsors: Array.isArray(ipfsData?.sponsors) ? ipfsData?.sponsors : [
-      {
-        name: "Yield Finance",
-        logo: "/yield.png",
-        link: "https://yield.xyz"
-      },
-      {
-        name: "Polygon Labs",
-        logo: "/polygon.png",
-        link: "https://polygon.technology"
-      }
-    ],
+    // ✅ Sponsors & Partners - use real sponsors data from IPFS if available
+    sponsors: (ipfsData?.sponsors as Record<string, unknown>[])?.map((s, idx) => ({
+      name: (s.name as string) || `Sponsor ${idx + 1}`,
+      logo: (s.logo as string) || "/hero.png",
+      link: (s.link as string) || "#"
+    })) || [],
 
-    // ✅ Ticket Info (prefer IPFS metadata if present)
+    // ✅ Ticket Info - use real ticket data from IPFS or contract
     tickets: (ipfsData?.tickets as { available: boolean; types: { type: string; price: number; currency: string; perks?: string[] }[] }) ?? {
-      available: true,
-      types: [
-        { type: "General Admission", price: 50, currency: "USD" },
-        { type: "VIP", price: 200, currency: "USD", perks: ["Backstage access", "Exclusive NFT"] }
-      ]
+      available: graphEventData?.registrationFee ? parseFloat(graphEventData.registrationFee) > 0 : false,
+      types: graphEventData?.registrationFee ? [{
+        type: "Event Registration",
+        price: parseFloat(graphEventData.registrationFee),
+        currency: "ETH"
+      }] : []
     },
 
-    // ✅ Hosts (if ipfsHash present, only render IPFS hosts; else fallback to mock)
-    hosts: ipfsHash && ipfsData && Array.isArray(ipfsData.hosts)
-      ? ipfsData.hosts.map((h: Record<string, unknown>) => ({
-        name: h.name as string,
-        avatar: (h.avatar as string) || "/hero.png",
-        role: (h.role as string) || "Host",
-        bio: h.bio as string,
-        social: h.social as Record<string, string> || {},
-      }))
-      : ipfsHash
-        ? []
-        : [
-          {
-            name: "Sarah Chen",
-            avatar: "/hero.png",
-            role: "Event Director & Co-Founder",
-            bio: "Blockchain gaming enthusiast with 8+ years in esports. Former professional gamer and current advocate for Web3 gaming adoption.",
-            social: {
-              twitter: "https://x.com/sarahchen",
-              linkedin: "https://linkedin.com/in/sarahchen",
-              website: "https://sarahchen.dev"
-            }
-          },
-          {
-            name: "Marcus Rodriguez",
-            avatar: "/hero.png",
-            role: "Technical Lead",
-            bio: "Full-stack developer specializing in blockchain integration and smart contract development for gaming platforms.",
-            social: {
-              twitter: "https://x.com/marcusrodriguez",
-              linkedin: "https://linkedin.com/in/marcusrodriguez"
-            }
-          },
-          {
-            name: "Crypto Gaming Alliance",
-            avatar: "/hero.png",
-            role: "Organizing Partner",
-            bio: "Leading organization dedicated to advancing blockchain gaming and fostering community growth in the Web3 gaming space."
-          }
-        ],
+    // ✅ Hosts - use real hosts data from IPFS if available
+    hosts: (ipfsData?.hosts as Record<string, unknown>[])?.map((h: Record<string, unknown>) => ({
+      name: h.name as string,
+      avatar: (h.avatar as string) || "/hero.png",
+      role: (h.role as string) || "Host",
+      bio: h.bio as string,
+      social: h.social as Record<string, string> || {},
+    })) || [],
 
-    // ✅ Social Links (prefer IPFS)
-    socialLinks: ipfsData?.socialLinks || {
-      twitter: "https://x.com/cryptogamingchamps",
-      discord: "https://discord.gg/cryptogaming",
-      website: "https://cryptogamingchampionship.com"
-    }
+    // ✅ Social Links - use real social links from IPFS if available
+    socialLinks: (ipfsData?.socialLinks as Record<string, string>) || {}
   };
 
 
@@ -557,9 +414,9 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
 
 
-  function onBack(): void {
-    window.history.back();
-  }
+  //  function onBack(): void {
+  //   window.history.back();
+  // }
 
   // Prepare map data for EventsMap
   // Mapbox EventsMap dataset kept for future multi-event contexts if needed
@@ -598,9 +455,9 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
       {/* Hero Section */}
       <div className="relative h-[25rem] md:h-[25rem] mt-12 overflow-hidden">
-        <div className="absolute bottom-6 left-0">
-          <Button variant="ghost" className="rounded-lg mb-6 -mt-4 bg-white dark:bg-gray-800" onClick={onBack}>
-            <ArrowLeft className="w-4 h-4" /> Back
+        <div className="absolute top-5 left-0">
+          <Button variant="ghost" className="rounded-lg mb-6 -mt-4 bg-transparent text-white" onClick={() => router.back()}>
+            <ChevronLeft className="w-4 h-4" /> Back
           </Button>
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
