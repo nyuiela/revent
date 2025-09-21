@@ -53,7 +53,7 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ ch
     // Auto-remove notification after duration
     if (newNotification.duration && newNotification.duration > 0) {
       setTimeout(() => {
-        removeNotification(id);
+        setNotifications(current => current.filter(n => n.id !== id));
       }, newNotification.duration);
     }
 

@@ -34,6 +34,7 @@ export function useLocation() {
   const [location, setLocation] = useState<UserLocation | null>(null);
   const [error, setError] = useState<LocationError | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasShownNotification, setHasShownNotification] = useState(false);
   const { notifyLocationDetected, notifyLocationError } = useNotificationHelpers();
 
   const getCurrentLocation = useCallback(() => {
@@ -57,8 +58,11 @@ export function useLocation() {
         });
         setIsLoading(false);
         
-        // Show success notification
-        notifyLocationDetected();
+        // Show success notification only once
+        if (!hasShownNotification) {
+          notifyLocationDetected();
+          setHasShownNotification(true);
+        }
       },
       (error) => {
         setError({
@@ -67,8 +71,11 @@ export function useLocation() {
         });
         setIsLoading(false);
         
-        // Show error notification
-        notifyLocationError();
+        // Show error notification only once
+        if (!hasShownNotification) {
+          notifyLocationError();
+          setHasShownNotification(true);
+        }
       },
       {
         enableHighAccuracy: true,
@@ -79,9 +86,9 @@ export function useLocation() {
   }, [notifyLocationDetected, notifyLocationError]);
 
   useEffect(() => {
-    // Auto-request location on mount
+    // Auto-request location on mount only once
     getCurrentLocation();
-  }, [getCurrentLocation]);
+  }, []); // Remove getCurrentLocation from dependencies to prevent infinite loop
 
   return {
     location,

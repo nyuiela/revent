@@ -1,4 +1,5 @@
 import { useNotifications as useNotificationsContext, notificationHelpers } from '../contexts/NotificationsContext';
+import { useCallback } from 'react';
 
 // Re-export the main hook
 export const useNotifications = useNotificationsContext;
@@ -10,111 +11,144 @@ export { notificationHelpers };
 export const useNotificationHelpers = () => {
   const { addNotification } = useNotifications();
 
+  // Memoize all notification functions to prevent infinite re-renders
+  const notifyEventCreationStarted = useCallback(() => {
+    return addNotification(notificationHelpers.eventCreationStarted());
+  }, [addNotification]);
+
+  const notifyEventCreationSuccess = useCallback((eventTitle: string) => {
+    return addNotification(notificationHelpers.eventCreationSuccess(eventTitle));
+  }, [addNotification]);
+
+  const notifyEventCreationError = useCallback((error: string) => {
+    return addNotification(notificationHelpers.eventCreationError(error));
+  }, [addNotification]);
+
+  const notifyFileUploadStarted = useCallback((fileName: string) => {
+    return addNotification(notificationHelpers.fileUploadStarted(fileName));
+  }, [addNotification]);
+
+  const notifyFileUploadSuccess = useCallback((fileName: string, ipfsHash?: string) => {
+    return addNotification(notificationHelpers.fileUploadSuccess(fileName, ipfsHash));
+  }, [addNotification]);
+
+  const notifyFileUploadError = useCallback((fileName: string, error: string) => {
+    return addNotification(notificationHelpers.fileUploadError(fileName, error));
+  }, [addNotification]);
+
+  const notifyIpfsUploadStarted = useCallback(() => {
+    return addNotification(notificationHelpers.ipfsUploadStarted());
+  }, [addNotification]);
+
+  const notifyIpfsUploadSuccess = useCallback((ipfsHash: string) => {
+    return addNotification(notificationHelpers.ipfsUploadSuccess(ipfsHash));
+  }, [addNotification]);
+
+  const notifyIpfsUploadError = useCallback((error: string) => {
+    return addNotification(notificationHelpers.ipfsUploadError(error));
+  }, [addNotification]);
+
+  const notifyContractTransactionStarted = useCallback(() => {
+    return addNotification(notificationHelpers.contractTransactionStarted());
+  }, [addNotification]);
+
+  const notifyContractTransactionSuccess = useCallback((txHash: string) => {
+    return addNotification(notificationHelpers.contractTransactionSuccess(txHash));
+  }, [addNotification]);
+
+  const notifyContractTransactionError = useCallback((error: string) => {
+    return addNotification(notificationHelpers.contractTransactionError(error));
+  }, [addNotification]);
+
+  const notifyWaitlistJoined = useCallback((position: number) => {
+    return addNotification(notificationHelpers.waitlistJoined(position));
+  }, [addNotification]);
+
+  const notifyWaitlistDuplicate = useCallback(() => {
+    return addNotification(notificationHelpers.waitlistDuplicate());
+  }, [addNotification]);
+
+  const notifyWaitlistError = useCallback((error: string) => {
+    return addNotification(notificationHelpers.waitlistError(error));
+  }, [addNotification]);
+
+  const notifyLocationDetected = useCallback(() => {
+    return addNotification(notificationHelpers.locationDetected());
+  }, [addNotification]);
+
+  const notifyLocationError = useCallback(() => {
+    return addNotification(notificationHelpers.locationError());
+  }, [addNotification]);
+
+  const notifyEventSelected = useCallback((eventTitle: string) => {
+    return addNotification(notificationHelpers.eventSelected(eventTitle));
+  }, [addNotification]);
+
+  const notifySuccess = useCallback((title: string, message: string) => {
+    return addNotification(notificationHelpers.genericSuccess(title, message));
+  }, [addNotification]);
+
+  const notifyError = useCallback((title: string, message: string) => {
+    return addNotification(notificationHelpers.genericError(title, message));
+  }, [addNotification]);
+
+  const notifyInfo = useCallback((title: string, message: string) => {
+    return addNotification(notificationHelpers.genericInfo(title, message));
+  }, [addNotification]);
+
+  const notify = useCallback((notification: Parameters<typeof addNotification>[0]) => {
+    return addNotification(notification);
+  }, [addNotification]);
+
   return {
     // Event Creation Helpers
-    notifyEventCreationStarted: () => {
-      return addNotification(notificationHelpers.eventCreationStarted());
-    },
-
-    notifyEventCreationSuccess: (eventTitle: string) => {
-      return addNotification(notificationHelpers.eventCreationSuccess(eventTitle));
-    },
-
-    notifyEventCreationError: (error: string) => {
-      return addNotification(notificationHelpers.eventCreationError(error));
-    },
+    notifyEventCreationStarted,
+    notifyEventCreationSuccess,
+    notifyEventCreationError,
 
     // File Upload Helpers
-    notifyFileUploadStarted: (fileName: string) => {
-      return addNotification(notificationHelpers.fileUploadStarted(fileName));
-    },
-
-    notifyFileUploadSuccess: (fileName: string, ipfsHash?: string) => {
-      return addNotification(notificationHelpers.fileUploadSuccess(fileName, ipfsHash));
-    },
-
-    notifyFileUploadError: (fileName: string, error: string) => {
-      return addNotification(notificationHelpers.fileUploadError(fileName, error));
-    },
+    notifyFileUploadStarted,
+    notifyFileUploadSuccess,
+    notifyFileUploadError,
 
     // IPFS Helpers
-    notifyIpfsUploadStarted: () => {
-      return addNotification(notificationHelpers.ipfsUploadStarted());
-    },
-
-    notifyIpfsUploadSuccess: (ipfsHash: string) => {
-      return addNotification(notificationHelpers.ipfsUploadSuccess(ipfsHash));
-    },
-
-    notifyIpfsUploadError: (error: string) => {
-      return addNotification(notificationHelpers.ipfsUploadError(error));
-    },
+    notifyIpfsUploadStarted,
+    notifyIpfsUploadSuccess,
+    notifyIpfsUploadError,
 
     // Contract Interaction Helpers
-    notifyContractTransactionStarted: () => {
-      return addNotification(notificationHelpers.contractTransactionStarted());
-    },
-
-    notifyContractTransactionSuccess: (txHash: string) => {
-      return addNotification(notificationHelpers.contractTransactionSuccess(txHash));
-    },
-
-    notifyContractTransactionError: (error: string) => {
-      return addNotification(notificationHelpers.contractTransactionError(error));
-    },
+    notifyContractTransactionStarted,
+    notifyContractTransactionSuccess,
+    notifyContractTransactionError,
 
     // Waitlist Helpers
-    notifyWaitlistJoined: (position: number) => {
-      return addNotification(notificationHelpers.waitlistJoined(position));
-    },
-
-    notifyWaitlistDuplicate: () => {
-      return addNotification(notificationHelpers.waitlistDuplicate());
-    },
-
-    notifyWaitlistError: (error: string) => {
-      return addNotification(notificationHelpers.waitlistError(error));
-    },
+    notifyWaitlistJoined,
+    notifyWaitlistDuplicate,
+    notifyWaitlistError,
 
     // Location Helpers
-    notifyLocationDetected: () => {
-      return addNotification(notificationHelpers.locationDetected());
-    },
-
-    notifyLocationError: () => {
-      return addNotification(notificationHelpers.locationError());
-    },
+    notifyLocationDetected,
+    notifyLocationError,
 
     // Map Interaction Helpers
-    notifyEventSelected: (eventTitle: string) => {
-      return addNotification(notificationHelpers.eventSelected(eventTitle));
-    },
+    notifyEventSelected,
 
     // Generic Helpers
-    notifySuccess: (title: string, message: string) => {
-      return addNotification(notificationHelpers.genericSuccess(title, message));
-    },
-
-    notifyError: (title: string, message: string) => {
-      return addNotification(notificationHelpers.genericError(title, message));
-    },
-
-    notifyInfo: (title: string, message: string) => {
-      return addNotification(notificationHelpers.genericInfo(title, message));
-    },
+    notifySuccess,
+    notifyError,
+    notifyInfo,
 
     // Custom notification helper
-    notify: (notification: Parameters<typeof addNotification>[0]) => {
-      return addNotification(notification);
-    },
+    notify,
   };
 };
 
 // Hook for handling async operations with notifications
 export const useAsyncNotification = () => {
+  const { addNotification, removeNotification } = useNotifications();
   const { notifySuccess, notifyError } = useNotificationHelpers();
 
-  const executeWithNotification = async <T>(
+  const executeWithNotification = useCallback(async <T>(
     operation: () => Promise<T>,
     options: {
       loadingTitle?: string;
@@ -134,9 +168,11 @@ export const useAsyncNotification = () => {
       errorMessage = (error: Error) => error.message,
     } = options;
 
+    let loadingId: string | undefined;
+
     try {
       // Show loading notification
-      const loadingId = addNotification({
+      loadingId = addNotification({
         type: 'info',
         title: loadingTitle,
         message: loadingMessage,
@@ -146,7 +182,9 @@ export const useAsyncNotification = () => {
       const result = await operation();
 
       // Remove loading notification
-      removeNotification(loadingId);
+      if (loadingId) {
+        removeNotification(loadingId);
+      }
 
       // Show success notification
       notifySuccess(successTitle, successMessage(result));
@@ -163,7 +201,7 @@ export const useAsyncNotification = () => {
 
       return null;
     }
-  };
+  }, [addNotification, removeNotification, notifySuccess, notifyError]);
 
   return { executeWithNotification };
 };
