@@ -17,10 +17,11 @@ import { generateSlug } from "@/lib/slug-generator";
 import { generateAndUploadTokenMetadata, uploadTokenImageToIPFS } from "@/lib/event-metadata";
 // import VerticalLinearStepper from "./register-stepper";
 import { useQuery } from "@tanstack/react-query";
-import { headers, namesQuery, url } from "@/utils/subgraph";
+import { headers, namesQuery, url, getLastEventId } from "@/utils/subgraph";
 import request from "graphql-request";
 import Image from "next/image";
 import { useNotificationHelpers } from "@/hooks/useNotifications";
+import { Call } from "viem";
 // import { stringToBytes } from "viem"; // Removed unused import
 // Removed unused import
 
@@ -85,6 +86,7 @@ const CreateEventForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [transactionStep, setTransactionStep] = useState<'event' | 'tickets' | 'domain' | 'complete'>('event');
   const [createdEventId, setCreatedEventId] = useState<string | null>(null);
+  const [preGeneratedEventId, setPreGeneratedEventId] = useState<string | null>(null);
   const [transactionTimeout, setTransactionTimeout] = useState<NodeJS.Timeout | null>(null);
   const [useSimpleMode] = useState(false); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [useBatchedMode, setUseBatchedMode] = useState(false);
@@ -107,20 +109,25 @@ const CreateEventForm = () => {
   const router = useRouter()
 
   const handleSuccess = useCallback(async (response: TransactionResponse) => {
-    const transactionHash = response.transactionReceipts[0].transactionHash;
+    try {
+      const transactionHash = response.transactionReceipts[0].transactionHash;
 
-    console.log(`Transaction successful: ${transactionHash}`);
+      console.log(`Transaction successful: ${transactionHash}`);
 
-    // Show contract transaction success notification
-    notifyContractTransactionSuccess(transactionHash);
+      // Show contract transaction success notification
+      notifyContractTransactionSuccess(transactionHash);
 
-    // Show event creation success notification
-    notifyEventCreationSuccess(formData.title || 'Untitled Event');
+      // Show event creation success notification
+      notifyEventCreationSuccess(formData.title || 'Untitled Event');
 
-    await sendNotification({
-      title: "Congratulations!",
-      body: `You sent your a transaction, ${transactionHash}!`,
-    });
+      await sendNotification({
+        title: "Congratulations!",
+        body: `You sent your a transaction, ${transactionHash}!`,
+      });
+    } catch (error) {
+      console.error('Error in handleSuccess:', error);
+      // Don't throw the error to prevent unhandled promise rejection
+    }
   }, [sendNotification, notifyContractTransactionSuccess, notifyEventCreationSuccess, formData.title]);
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -263,21 +270,10 @@ const CreateEventForm = () => {
   // Function to get the next event ID from The Graph
   const getNextEventId = async (): Promise<string> => {
     try {
-      const query = `{
-        eventCreateds(first: 1, orderBy: eventId, orderDirection: desc) {
-          eventId
-        }
-      }`;
-
-      const response = await request(url, query, {}, headers) as { eventCreateds?: Array<{ eventId: string }> };
-      const events = response.eventCreateds || [];
-
-      if (events.length > 0) {
-        const lastEventId = parseInt(events[0].eventId);
-        return (lastEventId + 1).toString();
-      } else {
-        return "1"; // First event
-      }
+      const lastEventId = await getLastEventId();
+      const nextEventId = lastEventId + 1;
+      console.log('Next event ID will be:', nextEventId);
+      return nextEventId.toString();
     } catch (error) {
       console.error('Error getting next event ID:', error);
       // Fallback to timestamp-based ID
@@ -529,6 +525,7 @@ const CreateEventForm = () => {
       // Get the next event ID from The Graph
       const nextEventId = await getNextEventId();
       console.log('Next event ID:', nextEventId);
+      setPreGeneratedEventId(nextEventId);
 
       setVerificationStatus('Uploading event metadata to IPFS...');
 
@@ -549,10 +546,10 @@ const CreateEventForm = () => {
       // Show IPFS upload started notification
       notifyIpfsUploadStarted();
 
-      // Prepare the contract calls using the existing handleSubmit logic
-      const contracts = await handleSubmit();
+      // Prepare both event and ticket contracts in one go
+      const contracts = await createBatchedEventAndTickets(nextEventId);
 
-      console.log('Prepared contract calls:', contracts);
+      console.log('Prepared batched contract calls:', contracts);
       setPreparedContracts(contracts);
       setVerificationStatus('Contract calls prepared successfully!');
 
@@ -723,7 +720,7 @@ const CreateEventForm = () => {
             BigInt(startTime), // startTime
             BigInt(endTime), // endTime
             BigInt(formData.maxParticipants), // maxAttendees
-            false, // isVIP (default to false, can be made configurable)
+            formData.tickets.available ? true : false, // isVIP (default to false, can be made configurable)
             "0x", // data (empty bytes for now)
             eventSlug, // slug
           ],
@@ -827,8 +824,8 @@ const CreateEventForm = () => {
     return batchedContract ? [batchedContract] : [];
   };
 
-  // New function to create a batched transaction with event and tickets
-  const createBatchedEventAndTickets = async () => {
+  // New function to create a single batched transaction with event and tickets
+  const createBatchedEventAndTickets = async (eventId: string) => {
     const contracts = [];
 
     // First, add the createEvent call
@@ -837,10 +834,6 @@ const CreateEventForm = () => {
 
     // Add batched tickets creation if tickets are configured
     if (formData.tickets.available && formData.tickets.types.length > 0) {
-      // For batching, we need to get the event ID from the event creation
-      // This is a placeholder - in a real implementation, you'd need to handle
-      // the event ID from the event creation result
-      const eventId = "1"; // This should be replaced with actual event ID
       const ticketContract = createBatchedTickets(eventId);
       if (ticketContract) {
         contracts.push(ticketContract);
@@ -2034,62 +2027,68 @@ const CreateEventForm = () => {
                     </div>
                   )}
 
-                  {/* Simple Event Creation Transaction */}
-                  {isConnected && canUseTransaction && useSimpleMode && preparedContracts ? (
+                  {/* Simple Event Creation Transaction - REMOVED - Using single batched transaction instead */}
+                  {false && isConnected && canUseTransaction && useSimpleMode && preparedContracts ? (
                     <Transaction
                       chainId={chainId}
                       calls={(preparedContracts || []) as never}
                       onSuccess={handleSuccess}
                       onStatus={async (lifecycle) => {
-                        console.log('Simple transaction lifecycle:', lifecycle.statusName);
+                        try {
+                          console.log('Simple transaction lifecycle:', lifecycle.statusName);
 
-                        if (lifecycle.statusName === 'transactionPending' || lifecycle.statusName === 'buildingTransaction') {
-                          setIsSubmitting(true);
-                        } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
-                          if (lifecycle.statusName === 'success') {
-                            console.log('Transaction successful, starting verification...');
+                          if (lifecycle.statusName === 'transactionPending' || lifecycle.statusName === 'buildingTransaction') {
+                            setIsSubmitting(true);
+                          } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
+                            if (lifecycle.statusName === 'success') {
+                              console.log('Transaction successful, starting verification...');
 
-                            // Show immediate success feedback
-                            setTransactionSuccessful(true);
-                            setIsVerifying(true);
-                            setIsSubmitting(false);
+                              // Show immediate success feedback
+                              setTransactionSuccessful(true);
+                              setIsVerifying(true);
+                              setIsSubmitting(false);
 
-                            // Prepare expected event data for verification
-                            const expectedEventData = {
-                              title: formData.title,
-                              creator: address, // Use the connected wallet address
-                              startTime: Math.floor(new Date(formData.startDateTime).getTime() / 1000).toString(),
-                              endTime: Math.floor(new Date(formData.endDateTime).getTime() / 1000).toString(),
-                            };
+                              // Prepare expected event data for verification
+                              const expectedEventData = {
+                                title: formData.title,
+                                creator: address, // Use the connected wallet address
+                                startTime: Math.floor(new Date(formData.startDateTime).getTime() / 1000).toString(),
+                                endTime: Math.floor(new Date(formData.endDateTime).getTime() / 1000).toString(),
+                              };
 
-                            // Verify event creation using The Graph Protocol
-                            const verification = await verifyEventCreation(expectedEventData);
+                              // Verify event creation using The Graph Protocol
+                              const verification = await verifyEventCreation(expectedEventData);
 
-                            if (verification.success) {
-                              console.log('Event verified successfully:', verification.eventId);
-                              setCreatedEventId(verification.eventId);
+                              if (verification.success) {
+                                console.log('Event verified successfully:', verification.eventId);
+                                setCreatedEventId(verification.eventId);
 
-                              // Generate and upload event metadata
-                              const metadataUrl = await generateAndUploadEventMetadata(verification.eventId);
-                              if (metadataUrl) {
-                                console.log('Event metadata available at:', metadataUrl);
+                                // Generate and upload event metadata
+                                const metadataUrl = await generateAndUploadEventMetadata(verification.eventId);
+                                if (metadataUrl) {
+                                  console.log('Event metadata available at:', metadataUrl);
+                                }
+
+                                // Create event details and show success card
+                                const eventDetails = createEventDetails(verification.eventId);
+                                setCreatedEventDetails(eventDetails);
+                                setShowSuccessCard(true);
+                                setIsVerifying(false);
+
+                                setTransactionStep('domain');
+                              } else {
+                                console.error('Event verification failed:', verification.error);
+                                setIsVerifying(false);
                               }
-
-                              // Create event details and show success card
-                              const eventDetails = createEventDetails(verification.eventId);
-                              setCreatedEventDetails(eventDetails);
-                              setShowSuccessCard(true);
-                              setIsVerifying(false);
-
-                              setTransactionStep('domain');
                             } else {
-                              console.error('Event verification failed:', verification.error);
-                              setIsVerifying(false);
+                              console.log('Simple transaction failed or error');
+                              setIsSubmitting(false);
                             }
-                          } else {
-                            console.log('Simple transaction failed or error');
-                            setIsSubmitting(false);
                           }
+                        } catch (error) {
+                          console.error('Error in simple transaction onStatus:', error);
+                          setIsSubmitting(false);
+                          setIsVerifying(false);
                         }
                       }}
                     >
@@ -2110,24 +2109,29 @@ const CreateEventForm = () => {
                         calls={(preparedDomainContracts || []) as never}
                         onSuccess={handleSuccess}
                         onStatus={async (lifecycle) => {
-                          console.log('Simple domain transaction lifecycle:', lifecycle.statusName);
+                          try {
+                            console.log('Simple domain transaction lifecycle:', lifecycle.statusName);
 
-                          if (lifecycle.statusName === 'transactionPending' || lifecycle.statusName === 'buildingTransaction') {
-                            setIsSubmitting(true);
-                          } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
-                            if (lifecycle.statusName === 'success') {
-                              console.log('Domain minted successfully');
-                              setTransactionStep('complete');
-                              setIsSubmitting(false);
-                              if (transactionTimeout) {
-                                clearTimeout(transactionTimeout);
-                                setTransactionTimeout(null);
+                            if (lifecycle.statusName === 'transactionPending' || lifecycle.statusName === 'buildingTransaction') {
+                              setIsSubmitting(true);
+                            } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
+                              if (lifecycle.statusName === 'success') {
+                                console.log('Domain minted successfully');
+                                setTransactionStep('complete');
+                                setIsSubmitting(false);
+                                if (transactionTimeout) {
+                                  clearTimeout(transactionTimeout);
+                                  setTransactionTimeout(null);
+                                }
+                                router.push(`/${formData.slug || createdEventId}`);
+                              } else {
+                                console.log('Domain transaction failed or error');
+                                setIsSubmitting(false);
                               }
-                              router.push(`/${formData.slug || createdEventId}`);
-                            } else {
-                              console.log('Domain transaction failed or error');
-                              setIsSubmitting(false);
                             }
+                          } catch (error) {
+                            console.error('Error in domain transaction onStatus:', error);
+                            setIsSubmitting(false);
                           }
                         }}
                       >
@@ -2159,81 +2163,59 @@ const CreateEventForm = () => {
                     </div>
                   ) : null}
 
-                  {/* Advanced Event Creation Transaction */}
-                  {isConnected && canUseTransaction && !useSimpleMode && transactionStep === 'event' && preparedContracts && !useBatchedMode ? (
+                  {/* Single Batched Event and Ticket Creation Transaction */}
+                  {isConnected && canUseTransaction ? (
                     <Transaction
                       chainId={chainId}
-                      calls={(preparedContracts || []) as never}
+                      calls={async (): Promise<Call[]> => {
+                        await handleCreateEvent();
+                        await prepareContractCalls();
+                        return preparedContracts || [] as never;
+                      }}
+                      // {(preparedContracts || []) as never}
+                      onSuccess={handleSuccess}
                       onStatus={async (lifecycle) => {
-                        console.log('Event transaction lifecycle:', lifecycle.statusName);
+                        try {
+                          console.log('Batched transaction lifecycle:', lifecycle.statusName);
 
-                        if (lifecycle.statusName === 'transactionPending' || lifecycle.statusName === 'buildingTransaction') {
-                          setIsSubmitting(true);
-                        } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
-                          if (lifecycle.statusName === 'success') {
-                            console.log('Transaction successful, starting verification...');
+                          if (lifecycle.statusName === 'transactionPending' || lifecycle.statusName === 'buildingTransaction') {
+                            setIsSubmitting(true);
+                          } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
+                            if (lifecycle.statusName === 'success') {
+                              console.log('Event and tickets created successfully!');
 
-                            // Show immediate success feedback
-                            setTransactionSuccessful(true);
-                            setIsVerifying(true);
-                            setIsSubmitting(false);
+                              // Show immediate success feedback
+                              setTransactionSuccessful(true);
+                              setIsSubmitting(false);
 
-                            // Prepare expected event data for verification
-                            const expectedEventData = {
-                              title: formData.title,
-                              creator: address, // Use the connected wallet address
-                              startTime: Math.floor(new Date(formData.startDateTime).getTime() / 1000).toString(),
-                              endTime: Math.floor(new Date(formData.endDateTime).getTime() / 1000).toString(),
-                            };
-
-                            // Verify event creation using The Graph Protocol
-                            const verification = await verifyEventCreation(expectedEventData);
-
-                            if (verification.success) {
-                              console.log('Event verified successfully:', verification.eventId);
-                              setCreatedEventId(verification.eventId);
+                              // Use the pre-generated event ID
+                              const eventId = preGeneratedEventId || '1';
+                              setCreatedEventId(eventId);
 
                               // Generate and upload event metadata
-                              const metadataUrl = await generateAndUploadEventMetadata(verification.eventId);
+                              const metadataUrl = await generateAndUploadEventMetadata(eventId);
                               if (metadataUrl) {
                                 console.log('Event metadata available at:', metadataUrl);
                               }
 
                               // Create event details and show success card
-                              const eventDetails = createEventDetails(verification.eventId);
+                              const eventDetails = createEventDetails(eventId);
                               setCreatedEventDetails(eventDetails);
                               setShowSuccessCard(true);
-                              setIsVerifying(false);
-
-                              // Check if we need to add tickets
-                              if (formData.tickets.available && formData.tickets.types.length > 0) {
-                                console.log('Preparing ticket contracts...');
-                                try {
-                                  const ticketContracts = await handleTicketCreation(verification.eventId);
-                                  setPreparedTicketContracts(ticketContracts);
-                                  console.log('Moving to ticket creation step');
-                                  setTransactionStep('tickets');
-                                } catch (error) {
-                                  console.error('Error preparing ticket contracts:', error);
-                                }
-                              } else {
-                                // No tickets to add, move to domain minting
-                                console.log('No tickets to add, moving to domain minting');
-                                setTransactionStep('domain');
-                              }
+                              setTransactionStep('complete');
                             } else {
-                              console.error('Event verification failed:', verification.error);
-                              setIsVerifying(false);
+                              // Transaction failed or error
+                              console.log('Batched transaction failed or error');
+                              setIsSubmitting(false);
                             }
-                          } else {
-                            // Transaction failed or error
-                            console.log('Event transaction failed or error');
-                            setIsSubmitting(false);
                           }
+                        } catch (error) {
+                          console.error('Error in batched transaction onStatus:', error);
+                          setIsSubmitting(false);
                         }
                       }}
                     >
-                      <TransactionButton text={isSubmitting ? "Creating Event..." : "Create Event"} />
+                      <TransactionButton text={isSubmitting ? "Creating Event & Tickets..." : "Create Event & Tickets"} />
                       <TransactionSponsor />
                       <TransactionStatus>
                         <TransactionStatusLabel />
@@ -2242,156 +2224,7 @@ const CreateEventForm = () => {
                     </Transaction>
                   ) : null}
 
-                  {/* Batched Event and Tickets Transaction */}
-                  {isConnected && canUseTransaction && !useSimpleMode && useBatchedMode && preparedContracts ? (
-                    <div className="space-y-4">
-                      <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                          <div className="font-medium text-yellow-800 dark:text-yellow-200">
-                            Batched Mode
-                          </div>
-                        </div>
-                        <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                          To batch createEvent and createTicket transactions, you&apos;ll need a custom contract that handles both operations.
-                          The current implementation creates the event first, then adds tickets in a separate transaction.
-                        </p>
-                      </div>
 
-                      {/* Fallback to sequential mode for now */}
-                      <Transaction
-                        chainId={chainId}
-                        calls={(preparedContracts || []) as never}
-                        onStatus={async (lifecycle) => {
-                          console.log('Batched event transaction lifecycle:', lifecycle.statusName);
-
-                          if (lifecycle.statusName === 'transactionPending' || lifecycle.statusName === 'buildingTransaction') {
-                            setIsSubmitting(true);
-                          } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
-                            if (lifecycle.statusName === 'success') {
-                              console.log('Event created successfully, preparing tickets...');
-
-                              // Show immediate success feedback
-                              setTransactionSuccessful(true);
-                              setIsVerifying(true);
-                              setIsSubmitting(false);
-
-                              // Prepare expected event data for verification
-                              const expectedEventData = {
-                                title: formData.title,
-                                creator: address,
-                                startTime: Math.floor(new Date(formData.startDateTime).getTime() / 1000).toString(),
-                                endTime: Math.floor(new Date(formData.endDateTime).getTime() / 1000).toString(),
-                              };
-
-                              // Verify event creation using The Graph Protocol
-                              const verification = await verifyEventCreation(expectedEventData);
-
-                              if (verification.success) {
-                                console.log('Event verified successfully:', verification.eventId);
-                                setCreatedEventId(verification.eventId);
-
-                                // Generate and upload event metadata
-                                const metadataUrl = await generateAndUploadEventMetadata(verification.eventId);
-                                if (metadataUrl) {
-                                  console.log('Event metadata available at:', metadataUrl);
-                                }
-
-                                // Create event details and show success card
-                                const eventDetails = createEventDetails(verification.eventId);
-                                setCreatedEventDetails(eventDetails);
-                                setShowSuccessCard(true);
-                                setIsVerifying(false);
-
-                                // Check if we need to add tickets
-                                if (formData.tickets.available && formData.tickets.types.length > 0) {
-                                  console.log('Preparing ticket contracts...');
-                                  try {
-                                    const ticketContracts = await handleTicketCreation(verification.eventId);
-                                    setPreparedTicketContracts(ticketContracts);
-                                    console.log('Moving to ticket creation step');
-                                    setTransactionStep('tickets');
-                                  } catch (error) {
-                                    console.error('Error preparing ticket contracts:', error);
-                                  }
-                                } else {
-                                  console.log('No tickets to add, moving to domain minting');
-                                  setTransactionStep('domain');
-                                }
-                              } else {
-                                console.error('Event verification failed:', verification.error);
-                                setIsVerifying(false);
-                              }
-                            } else {
-                              console.log('Batched event transaction failed or error');
-                              setIsSubmitting(false);
-                            }
-                          }
-                        }}
-                      >
-                        <TransactionButton text={isSubmitting ? "Creating Event..." : "Create Event & Tickets"} />
-                        <TransactionSponsor />
-                        <TransactionStatus>
-                          <TransactionStatusLabel />
-                          <TransactionStatusAction />
-                        </TransactionStatus>
-                      </Transaction>
-                    </div>
-                  ) : null}
-
-                  {/* Advanced Ticket Creation Transaction */}
-                  {address && isConnected && canUseTransaction && !useSimpleMode && transactionStep === 'tickets' && createdEventId && preparedTicketContracts ? (
-                    <div className="space-y-3">
-                      <Transaction
-                        chainId={chainId}
-                        onSuccess={handleSuccess}
-                        calls={(preparedTicketContracts || []) as never}
-                        onStatus={async (lifecycle) => {
-                          console.log('Ticket transaction lifecycle:', lifecycle.statusName);
-
-                          if (lifecycle.statusName === 'transactionPending' || lifecycle.statusName === 'buildingTransaction') {
-                            setIsSubmitting(true);
-                          } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
-                            if (lifecycle.statusName === 'success') {
-                              // Tickets added successfully, move to domain minting
-                              console.log('Tickets added successfully, moving to domain minting');
-                              setTransactionStep('domain');
-                              setIsSubmitting(false);
-                            } else {
-                              // Transaction failed or error
-                              console.log('Ticket transaction failed or error: ', lifecycle.statusData);
-                              setIsSubmitting(false);
-                            }
-                          }
-                        }}
-                      >
-                        <TransactionButton text={isSubmitting ? "Creating Tickets..." : "Create Tickets"} />
-                        <TransactionSponsor />
-                        <TransactionStatus>
-                          <TransactionStatusLabel />
-                          <TransactionStatusAction />
-                        </TransactionStatus>
-                      </Transaction>
-
-                      {/* Skip Tickets Button */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          console.log('Skipping ticket creation');
-                          setTransactionStep('complete');
-                          setIsSubmitting(false);
-                          if (transactionTimeout) {
-                            clearTimeout(transactionTimeout);
-                            setTransactionTimeout(null);
-                          }
-                          router.push(`/events/${createdEventId}`);
-                        }}
-                        className="w-full px-4 py-2 text-sm text-muted-foreground hover:text-foreground underline"
-                      >
-                        Skip Ticket Creation (Complete Event Creation)
-                      </button>
-                    </div>
-                  ) : null}
 
                   {/* Domain Minting Transaction */}
                   {address && isConnected && canUseTransaction && !useSimpleMode && transactionStep === 'domain' && createdEventId && preparedDomainContracts ? (
@@ -2401,26 +2234,31 @@ const CreateEventForm = () => {
                         onSuccess={handleSuccess}
                         calls={(preparedDomainContracts || []) as never}
                         onStatus={async (lifecycle) => {
-                          console.log('Domain transaction lifecycle:', lifecycle.statusName);
+                          try {
+                            console.log('Domain transaction lifecycle:', lifecycle.statusName);
 
-                          if (lifecycle.statusName === 'transactionPending' || lifecycle.statusName === 'buildingTransaction') {
-                            setIsSubmitting(true);
-                          } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
-                            if (lifecycle.statusName === 'success') {
-                              // Domain minted successfully
-                              console.log('Domain minted successfully');
-                              setTransactionStep('complete');
-                              setIsSubmitting(false);
-                              if (transactionTimeout) {
-                                clearTimeout(transactionTimeout);
-                                setTransactionTimeout(null);
+                            if (lifecycle.statusName === 'transactionPending' || lifecycle.statusName === 'buildingTransaction') {
+                              setIsSubmitting(true);
+                            } else if (lifecycle.statusName === 'success' || lifecycle.statusName === 'error' || lifecycle.statusName === 'transactionLegacyExecuted') {
+                              if (lifecycle.statusName === 'success') {
+                                // Domain minted successfully
+                                console.log('Domain minted successfully');
+                                setTransactionStep('complete');
+                                setIsSubmitting(false);
+                                if (transactionTimeout) {
+                                  clearTimeout(transactionTimeout);
+                                  setTransactionTimeout(null);
+                                }
+                                router.push(`/${formData.slug || createdEventId}`);
+                              } else {
+                                // Transaction failed or error
+                                console.log('Domain transaction failed or error: ', lifecycle.statusData);
+                                setIsSubmitting(false);
                               }
-                              router.push(`/${formData.slug || createdEventId}`);
-                            } else {
-                              // Transaction failed or error
-                              console.log('Domain transaction failed or error: ', lifecycle.statusData);
-                              setIsSubmitting(false);
                             }
+                          } catch (error) {
+                            console.error('Error in domain transaction onStatus:', error);
+                            setIsSubmitting(false);
                           }
                         }}
                       >
@@ -2470,7 +2308,7 @@ const CreateEventForm = () => {
                   ) : null}
 
                   {/* Create Event Button (prepares everything) */}
-                  {isConnected && !preparedContracts && (
+                  {/* {isConnected && !preparedContracts && (
                     <div className="mt-6 p-4 px-0  rounded-lg">
                       <div className="text-center flex flex-col items-center justify-center">
 
@@ -2500,7 +2338,7 @@ const CreateEventForm = () => {
                         )}
                       </div>
                     </div>
-                  )}
+                  )} */}
 
                   {/* Prepared Contracts Status */}
                   {/*               

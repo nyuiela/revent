@@ -25,7 +25,7 @@ export async function GET(
       const port = process.env.PORT || '3000';
       baseUrl = `http://localhost:${port}`;
     } else {
-      baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://revent.com';
+      baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://revent.io';
     }
 
     // Placeholder event data - replace with actual database query

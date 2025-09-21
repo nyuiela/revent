@@ -6,6 +6,8 @@ import { Transaction, TransactionStatus, TransactionStatusAction, TransactionSta
 import { eventAbi, eventAddress } from "@/lib/contract";
 import type { Abi } from "viem";
 import { ConnectWallet } from "@coinbase/onchainkit/wallet";
+import QRCodeBottomSheet from "./QRCodeBottomSheet";
+import { QrCode } from "lucide-react";
 
 type Props = {
   eventId: number | string;
@@ -25,6 +27,7 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
   const [attendee, setAttendee] = useState<string>("");
   const [confirmationCode, setConfirmationCode] = useState<string>("");
   const [activeTab, setActiveTab] = useState("overview");
+  const [isQRCodeOpen, setIsQRCodeOpen] = useState(false);
 
   const numericEventId = typeof eventId === "string" ? Number(eventId) || 1 : eventId || 1;
   const canTransact = Boolean(address && chainId && eventAddress);
@@ -107,7 +110,7 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
         {activeTab === "overview" && (
           <div>
             {/* Quick Actions Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
               {/* Publish Event Card */}
               <div className="group relative overflow-hidden rounded-2xl bg-[var(--events-card-bg)] p-2 px-4 hover:bg-[var(--events-accent)]/10 transition-all duration-300">
                 <div className="relative">
@@ -222,6 +225,24 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
                     className="w-full px-4 py-2 bg-none border-2 border-gray-600 text-white rounded-xl font-medium transition-all duration-200 transform hover:scale-105"
                   >
                     Manage
+                  </button>
+                </div>
+              </div>
+
+              {/* QR Code Generation Card */}
+              <div className="group relative overflow-hidden rounded-2xl bg-[var(--events-card-bg)] p-2 px-4 hover:bg-[var(--events-accent)]/10 transition-all duration-300">
+                <div className="relative">
+                  <div className="flex items-center gap-3 mb-4">
+                    <QrCode className="w-5 h-5 text-[var(--events-accent)]" />
+                    <h3 className="font-semibold text-[var(--events-foreground)]">QR Code</h3>
+                  </div>
+                  <p className="text-[var(--events-foreground-muted)] text-sm mb-4">Generate verification QR</p>
+                  <button
+                    onClick={() => setIsQRCodeOpen(true)}
+                    className="w-full px-4 py-2 bg-[var(--events-accent)] text-white rounded-xl font-medium transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2"
+                  >
+                    <QrCode className="w-4 h-4" />
+                    Generate QR
                   </button>
                 </div>
               </div>
@@ -430,6 +451,14 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
                       </TransactionStatus>
                     </Transaction>
                   ) : null}
+
+                  <button
+                    onClick={() => setIsQRCodeOpen(true)}
+                    className="px-6 py-3 bg-[var(--events-accent)] text-white rounded-xl font-medium transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+                  >
+                    <QrCode className="w-4 h-4" />
+                    Generate QR Code
+                  </button>
                 </div>
               </div>
             </div>
@@ -500,6 +529,14 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
           </div>
         )}
       </div>
+
+      {/* QR Code Bottom Sheet */}
+      <QRCodeBottomSheet
+        isOpen={isQRCodeOpen}
+        onClose={() => setIsQRCodeOpen(false)}
+        eventId={numericEventId}
+        eventTitle="Event Verification"
+      />
     </div>
   );
 }
