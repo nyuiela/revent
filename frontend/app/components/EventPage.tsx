@@ -24,6 +24,7 @@ import { Avatar, FollowersYouKnow, ProfileSocials } from "ethereum-identity-kit"
 import Image from "next/image";
 import { Button } from "./DemoComponents";
 import { useRouter } from "next/navigation";
+import EventManagement from "./EventManagement";
 
 
 type Props = {
@@ -121,6 +122,14 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
     },
   });
 
+  // Check if connected user is the event creator using Graph data
+  const eventCreator = graphEventData?.creator;
+  const isEventCreator = Boolean(
+    address && 
+    eventCreator && 
+    address.toLowerCase() === eventCreator.toLowerCase()
+  );
+
   console.log('EventPage Debug:', {
     eventId,
     ipfsHash,
@@ -129,7 +138,10 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
     eventData,
     attendeesData,
     isRegistered,
-    graphEventData
+    graphEventData,
+    address,
+    eventCreator,
+    isEventCreator
   });
 
   // Scroll detection logic
@@ -461,8 +473,8 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
       {/* Hero Section */}
       <div className="relative h-[25rem] md:h-[25rem] mt-12 overflow-hidden">
-        <div className="absolute top-5 left-0">
-          <Button variant="ghost" className="rounded-lg mb-6 -mt-4 bg-transparent text-white" onClick={() => router && router.back()}>
+        <div className="absolute bottom-5 left-0">
+          <Button variant="ghost" className="rounded-lg -mt-8 bg-transparent text-white" onClick={() => router && router.back()}>
             <ChevronLeft className="w-4 h-4" /> Back
           </Button>
         </div>
@@ -515,7 +527,6 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
       {/* Content */}
       <div className="p-6 px-4 max-w-7xl mx-auto space-y-12">
-        {/* <EventManagement eventId={eventId || "1"} defaultIpfsHash={ipfsHash || "bafkreia2uchzmzosieaj6tyim4qzq5xvxhlyapq2gzacen2tffknfeco6u"} /> */}
 
         {/* Tickets Section */}
         <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
@@ -559,7 +570,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
               ) : (
                 <div className="border border-[var(--events-card-border)] border-none bg-transparent mb-2">
                   <div className="flex items-center gap-1 mb-0 bg-gray-300 p-4 px-[0.2rem] rounded-xl pb-0">
-                    {canTransact ? (
+                    {isMounted && canTransact ? (
                       <Transaction
                         chainId={chainId}
                         contracts={[
@@ -577,7 +588,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                           }
                         }}
                       >
-                        <TransactionButton text={isRegistering ? "Registering..." : "Register for Event"} className="mb-0 p-2 font-medium rounded-xl" />x
+                        <TransactionButton text={isRegistering ? "Registering..." : "Register for Event"} className="mb-0 p-2 font-medium rounded-xl" />
                         <TransactionStatus>
                           <TransactionStatusLabel />
                           <TransactionStatusAction />
@@ -778,7 +789,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-block px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-                    >
+                      >
                       Join Online Event
                     </a>
                     <div className="text-xs text-muted-foreground break-all">
@@ -815,6 +826,14 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
         </div>
       </div>
 
+      {/* Event Management - Only show to event creator */}
+      {isEventCreator && eventId && (
+        <EventManagement 
+          eventId={eventId} 
+          defaultIpfsHash={ipfsHash || ""} 
+        />
+      )}
+
       {/* Sticky Registration Button */}
       {
         !isRegistered &&
@@ -841,7 +860,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                   {/* <button className="px-4 py-2 text-sm font-medium text-[var(--events-foreground)] border border-[var(--events-card-border)] rounded-lg hover:bg-[var(--events-accent)]/10 transition-colors">
                   Share
                 </button> */}
-                  {canTransact ? (
+                  {isMounted && canTransact ? (
                     <Transaction
                       chainId={chainId}
                       contracts={[
