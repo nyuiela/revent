@@ -137,6 +137,7 @@ export function handleEventUpdated(event: EventUpdatedEvent): void {
   entity.startTime = event.params.startTime
   entity.endTime = event.params.endTime
   entity.maxAttendees = event.params.maxAttendees
+  entity.slug = event.params.slug
 
   entity.blockNumber = event.block.number
   entity.blockTimestamp = event.block.timestamp

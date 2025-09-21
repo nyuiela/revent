@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import { EventFormData, EventDetails } from "@/utils/types";
 import RegistrationSuccessCard from "./RegistrationSuccessCard";
 import { generateSlug } from "@/lib/slug-generator";
-import { generateAndUploadTokenMetadata } from "@/lib/event-metadata";
+import { generateAndUploadTokenMetadata, uploadTokenImageToIPFS } from "@/lib/event-metadata";
 // import VerticalLinearStepper from "./register-stepper";
 import { useQuery } from "@tanstack/react-query";
 import { headers, namesQuery, url } from "@/utils/subgraph";
@@ -155,22 +155,15 @@ const CreateEventForm = () => {
     setUploadError(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', uploadedFile);
+      // Use the new token image upload function
+      const result = await uploadTokenImageToIPFS(uploadedFile);
 
-      const response = await fetch('/api/ipfs/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
+      if (!result.success) {
         throw new Error(result.error || 'Upload failed');
       }
 
       // Update form data with IPFS URL
-      setFormData(prev => ({ ...prev, image: result.ipfsUrl }));
+      setFormData(prev => ({ ...prev, image: result.uri || '' }));
 
       // Clean up preview URL
       if (previewUrl) {

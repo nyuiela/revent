@@ -3,24 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { tokenId, metadata } = body;
-
-    // Validate tokenId is 64-char hex
-    if (!tokenId || typeof tokenId !== 'string' || !/^[0-9a-fA-F]{64}$/.test(tokenId)) {
-      return NextResponse.json(
-        { error: "Token ID must be a 64-character hexadecimal string" },
-        { status: 400 }
-      );
-    }
-
-    // Validate metadata exists
-    if (!metadata) {
-      return NextResponse.json(
-        { error: "Metadata is required" },
-        { status: 400 }
-      );
-    }
-
     const pinataJwt = process.env.PINATA_JWT;
 
     if (!pinataJwt) {
@@ -30,10 +12,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create the folder structure: token-metadata/{tokenId}.json
-    const fileName = `${tokenId}.json`;
-    const folderPath = "token-metadata";
-
+    // Use a specific group for token metadata
     const res = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
       method: "POST",
       headers: {
@@ -43,35 +22,29 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         pinataOptions: {
           cidVersion: 1,
-          wrapWithDirectory: true,
-          customPinPolicy: {
-            regions: [
-              {
-                id: "FRA1",
-                desiredReplicationCount: 1
-              },
-              {
-                id: "NYC1",
-                desiredReplicationCount: 1
-              }
-            ]
-          }
+          // You can specify a custom group here if you have one set up in Pinata
+          // customPinPolicy: {
+          //   regions: [
+          //     {
+          //       id: "FRA1",
+          //       desiredReplicationCount: 1
+          //     }
+          //   ]
+          // }
         },
         pinataMetadata: {
-          name: `token-metadata-${tokenId}`,
+          name: body?.name || "token-metadata",
           keyvalues: {
             type: "token-metadata",
-            tokenId: tokenId,
-            folder: folderPath
+            project: "revents"
           }
         },
-        pinataContent: metadata,
+        pinataContent: body?.content ?? body,
       }),
     });
 
     if (!res.ok) {
       const err = await res.text();
-      console.error("Pinata upload failed:", err);
       return NextResponse.json(
         { error: "Pinata upload failed", details: err },
         { status: 502 }
@@ -81,19 +54,19 @@ export async function POST(req: NextRequest) {
     const json = await res.json();
     const cid: string = json.IpfsHash;
 
-    // The metadata is stored directly at the CID (no subfolder structure)
-    const metadataUri = `ipfs://${cid}`;
+    // Use your custom domain for the IPFS gateway
+    const uri = `https://revents.io/ipfs/${cid}`;
+    const ipfsUri = `ipfs://${cid}`;
 
     return NextResponse.json({
       cid,
-      metadataUri,
-      fileName,
-      tokenId
+      uri, // Your custom domain URL
+      ipfsUri, // Standard IPFS URI
+      gateway: "https://revents.io/ipfs/"
     });
   } catch (e: unknown) {
-    console.error("Token metadata upload error:", e);
     return NextResponse.json(
-      { error: "Unexpected error uploading token metadata to IPFS", details: e instanceof Error ? e.message : "Unknown error" },
+      { error: "Unexpected error uploading to IPFS", details: e instanceof Error ? e.message : "Unknown error" },
       { status: 500 }
     );
   }

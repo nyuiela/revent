@@ -41,8 +41,8 @@ export function generateEventMetadata(
       const port = process.env.PORT || '3000';
       baseUrl = `http://localhost:${port}`;
     } else {
-      // Production
-      baseUrl = 'https://revent.com';
+      // Production - use your custom domain
+      baseUrl = 'https://revents.io';
     }
   }
   const startDate = new Date(formData.startDateTime);
@@ -222,8 +222,8 @@ export async function uploadEventMetadataToIPFS(
     const metadata = generateEventMetadata(eventId, formData, baseUrl);
     // const metadataJSON = JSON.stringify(metadata, null, 2);
 
-    // Upload to IPFS
-    const response = await fetch('/api/ipfs', {
+    // Upload to IPFS using token metadata group
+    const response = await fetch('/api/ipfs/token-metadata', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -330,5 +330,42 @@ export async function generateAndUploadTokenMetadata(
   } catch (error) {
     console.error('Error generating and uploading token metadata:', error);
     return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+/**
+ * Upload token image to IPFS using the token metadata group
+ */
+export async function uploadTokenImageToIPFS(
+  file: File
+): Promise<{ success: boolean; cid?: string; uri?: string; error?: string }> {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('/api/ipfs/token-images', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return {
+        success: false,
+        error: `Failed to upload image: ${errorData.error || 'Unknown error'}`
+      };
+    }
+
+    const result = await response.json();
+    return {
+      success: true,
+      cid: result.cid,
+      uri: result.uri
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }

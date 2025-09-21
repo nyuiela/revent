@@ -214,7 +214,8 @@ export function createEventUpdatedEvent(
   ipfsHash: string,
   startTime: BigInt,
   endTime: BigInt,
-  maxAttendees: BigInt
+  maxAttendees: BigInt,
+  slug: string
 ): EventUpdated {
   let eventUpdatedEvent = changetype<EventUpdated>(newMockEvent())
 
@@ -246,6 +247,9 @@ export function createEventUpdatedEvent(
       "maxAttendees",
       ethereum.Value.fromUnsignedBigInt(maxAttendees)
     )
+  )
+  eventUpdatedEvent.parameters.push(
+    new ethereum.EventParam("slug", ethereum.Value.fromString(slug))
   )
 
   return eventUpdatedEvent
