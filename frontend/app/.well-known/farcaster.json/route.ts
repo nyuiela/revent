@@ -30,8 +30,8 @@ function withValidProperties(
 //       iconUrl: process.env.NEXT_PUBLIC_APP_ICON,
 //       splashImageUrl: process.env.NEXT_PUBLIC_APP_SPLASH_IMAGE,
 //       splashBackgroundColor: process.env.NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR,
-//       homeUrl: URL,
-//       webhookUrl: `${URL}/api/webhook`,
+//       homeUrl: process.env.NEXT_PUBLIC_URL as string,
+//       webhookUrl: `${process.env.NEXT_PUBLIC_URL}/api/webhook`,
 //       primaryCategory: process.env.NEXT_PUBLIC_APP_PRIMARY_CATEGORY,
 //       tags: [],
 //       heroImageUrl: process.env.NEXT_PUBLIC_APP_HERO_IMAGE,
@@ -54,7 +54,8 @@ function withValidProperties(
 
 export async function GET() {
   // Temporary redirect to Farcaster Hosted Manifest
-  const hostedManifestUrl = "https://api.farcaster.xyz/miniapps/hosted-manifest/0198f492-50fa-8ec5-436d-4d7c1783c395";
+  // const hostedManifestUrl = "https://api.farcaster.xyz/miniapps/hosted-manifest/0198f492-50fa-8ec5-436d-4d7c1783c395";
+  const hostedManifestUrl = "https://api.farcaster.xyz/miniapps/hosted-manifest/01996da9-99c8-5bf4-0195-4a05a5483dfc";
 
   return Response.redirect(hostedManifestUrl, 307);
 }

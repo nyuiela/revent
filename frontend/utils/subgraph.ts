@@ -94,25 +94,65 @@ const lastEventIdQuery = gql`
   }
 `;
 
-// Function to get the last event ID from the subgraph
+// Function to get the last event ID from the subgraph with fallback
 export async function getLastEventId(): Promise<number> {
+  // First try to get from localStorage to avoid repeated Graph API calls
+  if (typeof window !== 'undefined') {
+    const cachedId = localStorage.getItem('lastEventId');
+    if (cachedId) {
+      const cached = parseInt(cachedId);
+      console.log('Using cached event ID:', cached);
+      return cached;
+    }
+  }
+
   try {
     const { request } = await import('graphql-request');
     const client = new (await import('graphql-request')).GraphQLClient(eventUrl, { headers: eventHeaders });
-    const data = await client.request(lastEventIdQuery) as { eventCreateds: { eventId: string }[] };
+
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Graph API timeout')), 3000)
+    );
+
+    const dataPromise = client.request(lastEventIdQuery) as Promise<{ eventCreateds: { eventId: string }[] }>;
+
+    const data = await Promise.race([dataPromise, timeoutPromise]) as { eventCreateds: { eventId: string }[] };
 
     if (data.eventCreateds && data.eventCreateds.length > 0) {
       const lastEventId = parseInt(data.eventCreateds[0].eventId);
       console.log('Last event ID from subgraph:', lastEventId);
+
+      // Cache the result
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('lastEventId', lastEventId.toString());
+      }
+
       return lastEventId;
     }
 
     console.log('No events found in subgraph, starting from 0');
     return 0;
   } catch (error) {
-    console.error('Error fetching last event ID from subgraph:', error);
-    // Return 0 as fallback if subgraph query fails
-    return 0;
+    console.error('Error fetching last event ID from subgraph, using fallback:', error);
+    // Return a timestamp-based fallback to avoid conflicts
+    const fallbackId = Math.floor(Date.now() / 1000) % 1000000; // Use last 6 digits of timestamp
+    console.log('Using fallback event ID:', fallbackId);
+
+    // Cache the fallback
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lastEventId', fallbackId.toString());
+    }
+
+    return fallbackId;
+  }
+}
+
+// Function to update the cached last event ID
+export function updateLastEventId(eventId: number) {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('lastEventId', eventId.toString());
+    console.log('Updated cached event ID to:', eventId);
   }
 }
 

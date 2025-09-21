@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { GraphQLClient } from "graphql-request";
 
 // Define Graph Protocol configuration for server-side use
-const url = 'https://api.studio.thegraph.com/query/87766/stream/version/latest';
+// const url = 'https://api.studio.thegraph.com/query/87766/stream/version/latest';
+const url = "https://api.studio.thegraph.com/query/87766/revent/version/latest";
 const headers = { Authorization: 'Bearer 6abc6de0d06cbf79f985314ef9647365' };
 
 // Type definitions for Graph Protocol data
