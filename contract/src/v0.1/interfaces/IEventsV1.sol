@@ -82,6 +82,9 @@ interface IEventsV1 {
     function getEventAttendees(uint256 eventId) external view returns (address[] memory);
     function getAttendeeCount(uint256 eventId) external view returns (uint256);
 
+    // delete functions
+    function deleteEvent(uint256 eventId) external;
+
     // Admin functions
     function pause() external;
     function unpause() external;

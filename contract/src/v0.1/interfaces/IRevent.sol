@@ -28,7 +28,8 @@ interface IRevent {
         uint256 endTime,
         uint256 maxAttendees,
         bool isVIP,
-        bytes memory data
+        bytes memory data,
+        string memory slug
     ) external returns (uint256);
 
     function publishEvent(uint256 eventId) external;
@@ -41,7 +42,8 @@ interface IRevent {
         string memory ipfsHash,
         uint256 startTime,
         uint256 endTime,
-        uint256 maxAttendees
+        uint256 maxAttendees,
+        string memory slug
     ) external;
 
     // Ticket management functions (delegated to TicketsV1)

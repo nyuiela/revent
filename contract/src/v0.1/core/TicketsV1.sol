@@ -144,6 +144,7 @@ contract TicketsV1 is
 
         return ticketId;
     }
+
     function createTickets(
         uint256 eventId,
         string[] memory name,
@@ -153,14 +154,10 @@ contract TicketsV1 is
         uint256[] memory totalQuantity,
         string[][] memory perks
     ) external onlyEventsCreator(eventId) {
-
         for (uint256 i = 0; i < name.length; i++) {
-          createTicket(eventId, name[i], ticketType[i], price[i], currency[i], totalQuantity[i], perks[i]);
+            createTicket(eventId, name[i], ticketType[i], price[i], currency[i], totalQuantity[i], perks[i]);
         }
-
     }
-        
-    
 
     /**
      * @dev Purchase tickets
