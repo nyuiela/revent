@@ -17,7 +17,7 @@ import { generateSlug } from "@/lib/slug-generator";
 import { generateAndUploadTokenMetadata, uploadTokenImageToIPFS } from "@/lib/event-metadata";
 // import VerticalLinearStepper from "./register-stepper";
 import { useQuery } from "@tanstack/react-query";
-import { headers, namesQuery, url, getLastEventId } from "@/utils/subgraph";
+import { headers, namesQuery, url, getLastEventId, updateLastEventId } from "@/utils/subgraph";
 import request from "graphql-request";
 import Image from "next/image";
 import { useNotificationHelpers } from "@/hooks/useNotifications";
@@ -2164,15 +2164,10 @@ const CreateEventForm = () => {
                   ) : null}
 
                   {/* Single Batched Event and Ticket Creation Transaction */}
-                  {isConnected && canUseTransaction ? (
+                  {isConnected && canUseTransaction && preparedContracts ? (
                     <Transaction
                       chainId={chainId}
-                      calls={async (): Promise<Call[]> => {
-                        await handleCreateEvent();
-                        await prepareContractCalls();
-                        return preparedContracts || [] as never;
-                      }}
-                      // {(preparedContracts || []) as never}
+                      calls={(preparedContracts || []) as never}
                       onSuccess={handleSuccess}
                       onStatus={async (lifecycle) => {
                         try {
@@ -2191,6 +2186,9 @@ const CreateEventForm = () => {
                               // Use the pre-generated event ID
                               const eventId = preGeneratedEventId || '1';
                               setCreatedEventId(eventId);
+
+                              // Update the cached event ID for future use
+                              updateLastEventId(parseInt(eventId));
 
                               // Generate and upload event metadata
                               const metadataUrl = await generateAndUploadEventMetadata(eventId);
@@ -2338,7 +2336,7 @@ const CreateEventForm = () => {
                         )}
                       </div>
                     </div>
-                  )} */}
+                  )}
 
                   {/* Prepared Contracts Status */}
                   {/*               
