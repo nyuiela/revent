@@ -26,6 +26,7 @@ import Image from "next/image";
 import { Button } from "./DemoComponents";
 import { useRouter } from "next/navigation";
 import { ticketAbi, ticketAddress } from "@/lib/contract";
+import EventManagement from "./EventManagement";
 
 
 type Props = {
@@ -66,7 +67,7 @@ type Props = {
 export default function EventPage({ eventId, ipfsHash, idType, graphEventData, eventSlugData }: Props) {
   const [isScrolling, setIsScrolling] = useState(false);
   const { viewCount, isLoading: viewCountLoading } = useEventViews(eventId || '');
-  const { tickets, isLoading: ticketsLoading, hasTickets } = useEventTickets(eventId);
+  const { tickets, isLoading: ticketsLoading, hasTickets, error: ticketsError } = useEventTickets(eventId);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [ticketMode] = useState<"none" | "single" | "multiple">("single");
   const [selectedTicketIndex, setSelectedTicketIndex] = useState(0);
@@ -126,6 +127,14 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
     },
   });
 
+  // Check if connected user is the event creator using Graph data
+  const eventCreator = graphEventData?.creator;
+  const isEventCreator = Boolean(
+    address &&
+    eventCreator &&
+    address.toLowerCase() === eventCreator.toLowerCase()
+  );
+
   console.log('EventPage Debug:', {
     eventId,
     ipfsHash,
@@ -134,7 +143,10 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
     eventData,
     attendeesData,
     isRegistered,
-    graphEventData
+    graphEventData,
+    address,
+    eventCreator,
+    isEventCreator
   });
 
   // Scroll detection logic
@@ -415,15 +427,30 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
   // };
 
   // Ticket helpers - use real ticket data from contract or fallback to IPFS data
-  const ticketTypes = hasTickets ? tickets.map(ticket => ({
-    type: ticket.name,
-    price: parseFloat(ticket.price) / 1e18, // Convert from wei to ETH
-    currency: ticket.currency,
-    quantity: parseInt(ticket.totalQuantity),
-    perks: ticket.perks || []
-  })) : (event.tickets?.available ? (event.tickets?.types || []) : []);
+  const ticketTypes = hasTickets ? tickets.map(ticket => {
+    try {
+      return {
+        type: ticket.name || 'Unknown Ticket',
+        price: parseFloat(ticket.price || '0') / 1e18, // Convert from wei to ETH
+        currency: ticket.currency || 'ETH',
+        quantity: parseInt(ticket.totalQuantity || '0'),
+        perks: ticket.perks || []
+      };
+    } catch (error) {
+      console.error('Error parsing ticket data:', error);
+      return {
+        type: 'Invalid Ticket',
+        price: 0,
+        currency: 'ETH',
+        quantity: 0,
+        perks: []
+      };
+    }
+  }) : (event.tickets?.available ? (event.tickets?.types || []) : []);
 
-  const selectedTicket = ticketTypes[selectedTicketIndex];
+  // Ensure selectedTicketIndex is within bounds
+  const safeSelectedTicketIndex = Math.min(selectedTicketIndex, Math.max(0, ticketTypes.length - 1));
+  const selectedTicket = ticketTypes[safeSelectedTicketIndex];
   const effectiveQty = ticketMode === "none" ? 0 : (ticketMode === "single" ? 1 : Math.max(1, ticketQuantity));
   const totalPrice = selectedTicket ? selectedTicket.price * effectiveQty : 0;
   // const canRegister = ticketMode === "none" || (event.tickets?.available && !!selectedTicket && effectiveQty > 0);
@@ -527,7 +554,6 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
       {/* Content */}
       <div className="p-6 px-4 max-w-7xl mx-auto space-y-12">
-        {/* <EventManagement eventId={eventId || "1"} defaultIpfsHash={ipfsHash || "bafkreia2uchzmzosieaj6tyim4qzq5xvxhlyapq2gzacen2tffknfeco6u"} /> */}
 
         {/* Registration/Tickets Section */}
         <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
@@ -538,8 +564,17 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
             <div className="border border-[var(--events-card-border)] border-none bg-blue-500 mb-2">You are already registered for this event</div>
           )}
 
+          {/* Show error if tickets failed to load */}
+          {ticketsError && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="text-red-800 text-sm">
+                Error loading tickets: {ticketsError.message || 'Unknown error'}
+              </div>
+            </div>
+          )}
+
           {/* Show tickets if available, otherwise show registration */}
-          {hasTickets ? (
+          {!ticketsError && hasTickets ? (
             <>
               {/* Ticket types */}
               {ticketTypes.length > 0 ? (
@@ -596,7 +631,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                   )}
 
                   {/* Purchase button */}
-                  {selectedTicket && canPurchaseTickets && (
+                  {selectedTicket && canPurchaseTickets && tickets.length > 0 && safeSelectedTicketIndex < tickets.length && (
                     <div className="flex items-center gap-1 mb-0 bg-gray-300 p-4 px-[0.2rem] rounded-xl pb-0">
                       <Transaction
                         chainId={chainId}
@@ -606,10 +641,10 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                             address: ticketAddress as `0x${string}`,
                             functionName: "purchaseTicket",
                             args: [
-                              BigInt(tickets[selectedTicketIndex].ticketId),
+                              BigInt(tickets[safeSelectedTicketIndex].ticketId),
                               BigInt(ticketQuantity)
                             ],
-                            value: BigInt(Math.floor(selectedTicket.price * ticketQuantity * 1e18)), // Convert to wei
+                            value: BigInt(Math.floor((selectedTicket?.price || 0) * ticketQuantity * 1e18)), // Convert to wei
                           },
                         ]}
                         onStatus={(s) => {
@@ -635,7 +670,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                 <div className="text-sm text-[var(--events-foreground-muted)]">No tickets available</div>
               )}
             </>
-          ) : (
+          ) : !ticketsError ? (
             /* Regular registration when no tickets */
             <div className="border border-[var(--events-card-border)] border-none bg-transparent mb-2">
               <div className="flex items-center gap-1 mb-0 bg-gray-300 p-4 px-[0.2rem] rounded-xl pb-0">
@@ -647,8 +682,8 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                         abi: eventAbi.abi as Abi,
                         address: eventAddress as `0x${string}`,
                         functionName: "registerForEvent",
-                        args: [BigInt(eventId || 0), "0x"],
-                        value: BigInt(Math.floor(selectedTicket.price * ticketQuantity * 1e18)), // Convert to wei
+                        args: [BigInt(numericEventId || 1)],
+                        // value: BigInt(Math.floor(selectedTicket.price * ticketQuantity * 1e18)), // Convert to wei
                       },
                     ]}
                     onStatus={(s) => {
@@ -669,7 +704,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                 )}
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Summary */}
           {/* <div className="mt-4 flex items-center justify-between px-4">
@@ -869,6 +904,14 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
         </div>
       </div>
 
+      {/* Event Management - Only show to event creator */}
+      {isEventCreator && eventId && (
+        <EventManagement
+          eventId={eventId}
+          defaultIpfsHash={ipfsHash || ""}
+        />
+      )}
+
       {/* Sticky Registration Button */}
       {
         !isRegistered &&
@@ -895,7 +938,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                   {/* <button className="px-4 py-2 text-sm font-medium text-[var(--events-foreground)] border border-[var(--events-card-border)] rounded-lg hover:bg-[var(--events-accent)]/10 transition-colors">
                   Share
                 </button> */}
-                  {canTransact ? (
+                  {isMounted && canTransact ? (
                     <Transaction
                       chainId={chainId}
                       contracts={[

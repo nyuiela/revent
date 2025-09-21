@@ -52,7 +52,7 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
   return (
     <div className="relative overflow-hidden text-[12px]">
       {/* Main container with events theme */}
-      <div className="relative bg-[var(--events-card-bg)] rounded-3xl p-8 pb-4 shadow-2xl mx-4 mb-5" >
+      <div className="relative bg-[var(--events-card-bg)] rounded-3xl p-4 pb-4 shadow-2xl mx-4 mb-5" >
         {/* Header */}
         <div className="flex items-center mb-4">
           <div>
@@ -78,7 +78,7 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
             onClick={() => setActiveTab("update")}
             className={`px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${activeTab === "update"
               ? "bg-[var(--events-accent)] text-white"
-              : "text-[var(--events-foreground-muted)] text-xs hover:text-[var(--events-foreground)] hover:bg-[var(--events-accent)]/10"
+              : "text-[var(--events-foreground-muted)] text-nowrap text-xs hover:text-[var(--events-foreground)] hover:bg-[var(--events-accent)]/10"
               }`}
           >
             Update Event
@@ -162,7 +162,7 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
                       ]}
                       onStatus={(s) => setIsBusy(s.statusName === "transactionPending" || s.statusName === "buildingTransaction")}
                     >
-                      <button className="w-full px-4 py-2 bg-orange-500 text-white rounded-xl font-medium transition-all duration-200 transform hover:scale-105">
+                      <button className="w-full px-4 py-2 bg-none border-2 border-gray-600 text-white rounded-xl font-medium transition-all duration-200 transform hover:scale-105">
                         {isBusy ? "Ending..." : "End Event"}
                       </button>
                       <TransactionStatus>
@@ -219,7 +219,7 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
                   <p className="text-[var(--events-foreground-muted)] text-sm mb-4">Manage attendees</p>
                   <button
                     onClick={() => setActiveTab("attendance")}
-                    className="w-full px-4 py-2 bg-purple-500 text-white rounded-xl font-medium transition-all duration-200 transform hover:scale-105"
+                    className="w-full px-4 py-2 bg-none border-2 border-gray-600 text-white rounded-xl font-medium transition-all duration-200 transform hover:scale-105"
                   >
                     Manage
                   </button>
