@@ -151,3 +151,122 @@ type Unpaused @entity(immutable: true) {
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
+type TicketsV1ApprovalForAll @entity(immutable: true) {
+  id: Bytes!
+  account: Bytes! # address
+  operator: Bytes! # address
+  approved: Boolean! # bool
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TicketsV1Initialized @entity(immutable: true) {
+  id: Bytes!
+  version: BigInt! # uint64
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TicketsV1OwnershipTransferred @entity(immutable: true) {
+  id: Bytes!
+  previousOwner: Bytes! # address
+  newOwner: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TicketsV1Paused @entity(immutable: true) {
+  id: Bytes!
+  account: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TicketCreated @entity(immutable: true) {
+  id: Bytes!
+  ticketId: BigInt! # uint256
+  eventId: BigInt! # uint256
+  creator: Bytes! # address
+  name: String! # string
+  ticketType: String! # string
+  price: BigInt! # uint256
+  currency: String! # string
+  totalQuantity: BigInt! # uint256
+  perks: [String!]! # string[]
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TicketPurchased @entity(immutable: true) {
+  id: Bytes!
+  ticketId: BigInt! # uint256
+  eventId: BigInt! # uint256
+  buyer: Bytes! # address
+  quantity: BigInt! # uint256
+  totalPrice: BigInt! # uint256
+  currency: String! # string
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TicketUpdated @entity(immutable: true) {
+  id: Bytes!
+  ticketId: BigInt! # uint256
+  name: String! # string
+  ticketType: String! # string
+  price: BigInt! # uint256
+  currency: String! # string
+  totalQuantity: BigInt! # uint256
+  perks: [String!]! # string[]
+  isActive: Boolean! # bool
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TicketsV1TransferBatch @entity(immutable: true) {
+  id: Bytes!
+  operator: Bytes! # address
+  from: Bytes! # address
+  to: Bytes! # address
+  ids: [BigInt!]! # uint256[]
+  values: [BigInt!]! # uint256[]
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TicketsV1TransferSingle @entity(immutable: true) {
+  id: Bytes!
+  operator: Bytes! # address
+  from: Bytes! # address
+  to: Bytes! # address
+  internal_id: BigInt! # uint256
+  value: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TicketsV1URI @entity(immutable: true) {
+  id: Bytes!
+  value: String! # string
+  internal_id: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TicketsV1Unpaused @entity(immutable: true) {
+  id: Bytes!
+  account: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
