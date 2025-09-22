@@ -73,6 +73,13 @@ const LocationPicker: React.FC<Props> = ({ value, onChange, label = "Location", 
         const mod = (await import("mapbox-gl")).default;
         setMapboxgl(mod);
         mod.accessToken = token;
+        
+        // Double-check container exists before creating map
+        if (!containerRef.current) {
+          console.error('Map container not available');
+          return;
+        }
+        
         map = new mod.Map({
           container: containerRef.current,
           style: "mapbox://styles/mapbox/streets-v12",

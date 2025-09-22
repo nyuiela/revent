@@ -135,6 +135,22 @@ export async function getLastEventId(): Promise<number> {
     return 0;
   } catch (error) {
     console.error('Error fetching last event ID from subgraph, using fallback:', error);
+    
+    // Handle rate limiting specifically
+    if (error instanceof Error && error.message.includes('429')) {
+      console.log('Rate limited by Graph API, using cached or fallback ID');
+    }
+    
+    // Try to use cached ID if available
+    if (typeof window !== 'undefined') {
+      const cachedId = localStorage.getItem('lastEventId');
+      if (cachedId) {
+        const cached = parseInt(cachedId);
+        console.log('Using cached event ID due to API error:', cached);
+        return cached;
+      }
+    }
+    
     // Return a timestamp-based fallback to avoid conflicts
     const fallbackId = Math.floor(Date.now() / 1000) % 1000000; // Use last 6 digits of timestamp
     console.log('Using fallback event ID:', fallbackId);

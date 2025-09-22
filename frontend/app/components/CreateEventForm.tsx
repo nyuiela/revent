@@ -692,7 +692,15 @@ const CreateEventForm = () => {
 
       // After IPFS, call registerEvent with computed times and IPFS hash
       const startIso = formData.startDateTime || (formData.date && formData.time ? `${formData.date}T${formData.time}` : "");
-      const endIso = formData.endDateTime || "";
+      let endIso = formData.endDateTime || "";
+      // Fallback: if end not provided, default to +3 hours from start
+      if (!endIso && startIso) {
+        const tentativeEnd = new Date(startIso);
+        if (!isNaN(tentativeEnd.getTime())) {
+          tentativeEnd.setHours(tentativeEnd.getHours() + 3);
+          endIso = tentativeEnd.toISOString();
+        }
+      }
       if (!startIso || !endIso) {
         throw new Error("Please set both start and end time");
       }
@@ -824,22 +832,14 @@ const CreateEventForm = () => {
     return batchedContract ? [batchedContract] : [];
   };
 
-  // New function to create a single batched transaction with event and tickets
-  const createBatchedEventAndTickets = async (eventId: string) => {
+  // New function to create a single prepared set for Transaction.
+  // IMPORTANT: We only include the event creation here. Ticket creation
+  // requires the real on-chain eventId and should be executed after
+  // the event tx succeeds (sequentially), otherwise it will revert.
+  const createBatchedEventAndTickets = async (_eventId: string) => {
     const contracts = [];
-
-    // First, add the createEvent call
     const eventContract = await handleSubmit();
     contracts.push(...eventContract);
-
-    // Add batched tickets creation if tickets are configured
-    if (formData.tickets.available && formData.tickets.types.length > 0) {
-      const ticketContract = createBatchedTickets(eventId);
-      if (ticketContract) {
-        contracts.push(ticketContract);
-      }
-    }
-
     return contracts;
   };
 
@@ -1686,7 +1686,7 @@ const CreateEventForm = () => {
                     <div className="space-y-3">
                       <h3 className="text-lg font-semibold text-black dark:text-white">Current Ticket Types</h3>
                       {formData.tickets.types.map((ticket, index) => (
-                        <div key={index} className="flex items-center justify-between p-4 bg-[var(--app-background)] border border-border rounded-xl bg-white">
+                        <div key={index} className="flex items-center justify-between p-4 border border-border rounded-xl bg-white dark:bg-[var(--app-background)] text-black dark:text-white">
                           <div>
                             <h4 className="font-semibold text-[var(--app-foreground)] dark:text-white">{ticket.type}</h4>
                             <p className="text-sm text-[var(--app-foreground-muted)]">
@@ -2164,15 +2164,10 @@ const CreateEventForm = () => {
                   ) : null}
 
                   {/* Single Batched Event and Ticket Creation Transaction */}
-                  {isConnected && canUseTransaction ? (
+                  {isConnected && canUseTransaction && preparedContracts ? (
                     <Transaction
                       chainId={chainId}
-                      calls={async (): Promise<Call[]> => {
-                        await handleCreateEvent();
-                        await prepareContractCalls();
-                        return (preparedContracts || []) as unknown as Call[];
-                      }}
-                      // {(preparedContracts || []) as never}
+                      contracts={(preparedContracts || []) as never}
                       onSuccess={handleSuccess}
                       onStatus={async (lifecycle) => {
                         try {
@@ -2311,7 +2306,7 @@ const CreateEventForm = () => {
                   ) : null}
 
                   {/* Create Event Button (prepares everything) */}
-                  {/* {isConnected && !preparedContracts && (
+                  {isConnected && !preparedContracts && (
                     <div className="mt-6 p-4 px-0  rounded-lg">
                       <div className="text-center flex flex-col items-center justify-center">
 

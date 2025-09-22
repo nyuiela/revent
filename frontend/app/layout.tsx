@@ -80,7 +80,7 @@ export default async function RootLayout({
     }
   })
   return (
-    <html lang="en" className={plusJakarta.variable}>
+    <html lang="en" className={`${plusJakarta.variable} light`}>
       <head>
         <script
           dangerouslySetInnerHTML={{
