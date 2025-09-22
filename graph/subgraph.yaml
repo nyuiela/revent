@@ -43,7 +43,8 @@ dataSources:
           handler: handleAttendeeConfirmed
         - event: AttendeeRegistered(indexed uint256,indexed address,string,uint256)
           handler: handleAttendeeRegistered
-        - event: EventCreated(indexed uint256,indexed address,string,uint256,uint256,uint256,uint256,string)
+        - event: EventCreated(indexed uint256,indexed
+            address,string,uint256,uint256,uint256,uint256,string)
           handler: handleEventCreated
         - event: EventStatusChanged(indexed uint256,uint8,uint8)
           handler: handleEventStatusChanged
@@ -66,3 +67,55 @@ dataSources:
         - event: Unpaused(address)
           handler: handleUnpaused
       file: ./src/events-v-1.ts
+  - kind: ethereum
+    name: TicketsV1
+    network: base-sepolia
+    source:
+      address: "0xE845513938a85d9d69668199925A5FD63eCa66f8"
+      abi: TicketsV1
+      startBlock: 31351954
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - TicketsV1ApprovalForAll
+        - TicketsV1Initialized
+        - TicketsV1OwnershipTransferred
+        - TicketsV1Paused
+        - TicketCreated
+        - TicketPurchased
+        - TicketUpdated
+        - TicketsV1TransferBatch
+        - TicketsV1TransferSingle
+        - TicketsV1URI
+        - TicketsV1Unpaused
+      abis:
+        - name: TicketsV1
+          file: ./abis/TicketsV1.json
+      eventHandlers:
+        - event: ApprovalForAll(indexed address,indexed address,bool)
+          handler: handleApprovalForAll
+        - event: Initialized(uint64)
+          handler: handleInitialized
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
+        - event: Paused(address)
+          handler: handlePaused
+        - event: TicketCreated(indexed uint256,indexed uint256,indexed
+            address,string,string,uint256,string,uint256,string[])
+          handler: handleTicketCreated
+        - event: TicketPurchased(indexed uint256,indexed uint256,indexed
+            address,uint256,uint256,string)
+          handler: handleTicketPurchased
+        - event: TicketUpdated(indexed uint256,string,string,uint256,string,uint256,string[],bool)
+          handler: handleTicketUpdated
+        - event: TransferBatch(indexed address,indexed address,indexed address,uint256[],uint256[])
+          handler: handleTransferBatch
+        - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleTransferSingle
+        - event: URI(string,indexed uint256)
+          handler: handleURI
+        - event: Unpaused(address)
+          handler: handleUnpaused
+      file: ./src/tickets-v-1.ts
