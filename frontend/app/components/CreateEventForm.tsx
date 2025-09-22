@@ -48,6 +48,7 @@ const CreateEventForm = () => {
     startDateTime: "",
     endDateTime: "",
     location: "",
+    onlinePlatformLink: "",
     coordinates: { lat: 0, lng: 0 },
     image: "",
     category: "",
@@ -55,7 +56,7 @@ const CreateEventForm = () => {
     isLive: false,
     platforms: [],
     totalRewards: 0,
-      eventType: "In-Person",
+    eventType: "In-Person",
     hosts: [],
     agenda: [],
     sponsors: [],
@@ -287,6 +288,7 @@ const CreateEventForm = () => {
       date: startDate.toLocaleDateString(),
       time: startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       location: formData.location,
+      onlinePlatformLink: formData.onlinePlatformLink,
       coordinates: formData.coordinates,
       image: formData.image,
       category: formData.category,
@@ -337,6 +339,7 @@ const CreateEventForm = () => {
       description: randomEvent.description,
       category: randomEvent.category,
       location: randomEvent.location,
+      onlinePlatformLink: "meet.com/example",
       coordinates: randomEvent.coordinates,
       startDateTime: randomEvent.startDateTime,
       endDateTime: randomEvent.endDateTime,
@@ -786,7 +789,7 @@ const CreateEventForm = () => {
       </div>
 
       {/* Form Steps Component */}
-      {currentStep < 6 && (
+      {currentStep < 7 && (
         <FormSteps
           currentStep={currentStep}
           formData={formData}
@@ -810,19 +813,19 @@ const CreateEventForm = () => {
           isDragOver={isDragOver}
           setFormData={setFormData}
           setIsAutoFilled={setIsAutoFilled}
-                  setPreparedContracts={setPreparedContracts}
-                  setPreparedTicketContracts={setPreparedTicketContracts}
-                  setVerificationStatus={setVerificationStatus}
-                  checkDomainAvailability={checkDomainAvailability}
-                  prepareDomainMinting={prepareDomainMinting}
-                  handleTicketCreation={handleTicketCreation}
-                  createBatchedTickets={createBatchedTickets}
-                  createTicketsSequentially={createTicketsSequentially}
-                  verifyEventCreation={verifyEventCreation}
-                  data={data}
-                  error={error}
-                  isLoading={isLoading}
-                  takenDomainSet={takenDomainSet}
+          setPreparedContracts={setPreparedContracts}
+          setPreparedTicketContracts={setPreparedTicketContracts}
+          setVerificationStatus={setVerificationStatus}
+          checkDomainAvailability={checkDomainAvailability}
+          prepareDomainMinting={prepareDomainMinting}
+          handleTicketCreation={handleTicketCreation}
+          createBatchedTickets={createBatchedTickets}
+          createTicketsSequentially={createTicketsSequentially}
+          verifyEventCreation={verifyEventCreation}
+          data={data}
+          error={error}
+          isLoading={isLoading}
+          takenDomainSet={takenDomainSet}
         />
       )}
 
@@ -865,7 +868,7 @@ const CreateEventForm = () => {
                     createdEventId={createdEventId}
                     preGeneratedEventId={preGeneratedEventId}
                     formData={formData}
-                    setShowWalletModal={() => {}}
+                    setShowWalletModal={() => { }}
                     setTransactionSuccessful={setTransactionSuccessful}
                     setIsSubmitting={setIsSubmitting}
                     setCreatedEventId={setCreatedEventId}
@@ -891,12 +894,14 @@ const CreateEventForm = () => {
             setShowSuccessCard(false);
             setCreatedEventDetails(null);
             // Navigate to the event page after closing
-            if (createdEventId) {
-              router.push(`/${formData.slug || createdEventId}`);
-            }
+            // if (createdEventId) {
+            //   router.push(`/${formData.slug || createdEventId}`);
+            // }
           }}
         />
       )}
+
+
     </>
   );
 };

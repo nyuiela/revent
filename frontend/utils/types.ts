@@ -7,6 +7,7 @@ type EventFormData = {
   startDateTime: string;
   endDateTime: string;
   location: string;
+  onlinePlatformLink: string;
   coordinates: { lat: number; lng: number };
   image: string;
   category: string;
@@ -138,6 +139,7 @@ type EventDetails = {
   date: string;
   time: string;
   location: string;
+  onlinePlatformLink: string;
   coordinates: { lat: number; lng: number };
   image: string;
   category: string;

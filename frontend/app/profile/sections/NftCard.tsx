@@ -52,7 +52,7 @@ export default function NftCard() {
   ]
 
   return (
-    <div className="rounded-2xl bg-[#F7F6FF] p-4 ring-1 ring-black/5">
+    <div className="rounded-2xl bg-[#F7F6FF] dark:bg-background p-4 ring-1 ring-black/5">
       <h1 className="text-sm font-medium mb-3 flex items-center gap-2">My NFTs <span className="text-xs text-muted-foreground">({nft.length})</span></h1>
       <div className="grid grid-cols-4 gap-3 justify-center items-center">
         {nft.length === 0 && <div className="flex items-center justify-center">No NFTs</div>}

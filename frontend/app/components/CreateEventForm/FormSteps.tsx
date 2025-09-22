@@ -212,21 +212,19 @@ const FormSteps: React.FC<FormStepsProps> = ({
                   {/* Animated Step Icon Container */}
                   <div className="relative w-24 h-24 flex items-center justify-center">
                     {/* Background Glow */}
-                    <div className={`absolute inset-0 rounded-full bg-[var(--app-accent)] shadow-lg transition-all duration-300 ${
-                      isAnimating ? 'animate-pulse scale-110' : 'animate-pulse'
-                    }`}></div>
-                    
+                    <div className={`absolute inset-0 rounded-full bg-[var(--app-accent)] shadow-lg transition-all duration-300 ${isAnimating ? 'animate-pulse scale-110' : 'animate-pulse'
+                      }`}></div>
+
                     {/* Current Step Icon */}
-                    <div className={`relative z-10 w-20 h-20 rounded-full bg-[var(--app-accent)] flex items-center justify-center text-white shadow-xl transition-all duration-300 ${
-                      animationDirection === 'next' 
-                        ? 'transform -translate-x-32 rotate-45 opacity-0' 
-                        : animationDirection === 'prev'
+                    <div className={`relative z-10 w-20 h-20 rounded-full bg-[var(--app-accent)] flex items-center justify-center text-white shadow-xl transition-all duration-300 ${animationDirection === 'next'
+                      ? 'transform -translate-x-32 rotate-45 opacity-0'
+                      : animationDirection === 'prev'
                         ? 'transform translate-x-32 -rotate-45 opacity-0'
                         : 'transform translate-x-0 rotate-0 opacity-100'
-                    }`}>
-                      <Icon 
-                        name={steps[displayedStep - 1]?.icon as "home" | "share" | "users" | "calendar" | "star" | "plus" | "check"} 
-                        size="lg" 
+                      }`}>
+                      <Icon
+                        name={steps[displayedStep - 1]?.icon as "home" | "share" | "users" | "calendar" | "star" | "plus" | "check"}
+                        size="lg"
                         className="text-white"
                       />
                     </div>
@@ -234,9 +232,9 @@ const FormSteps: React.FC<FormStepsProps> = ({
                     {/* Next Step Icon (appears from right when going forward) */}
                     {animationDirection === 'next' && (
                       <div className="absolute z-10 w-20 h-20 rounded-full bg-[var(--app-accent)] flex items-center justify-center text-white shadow-xl animate-slideInFromRight">
-                        <Icon 
-                          name={steps[currentStep - 1]?.icon as "home" | "share" | "users" | "calendar" | "star" | "plus" | "check"} 
-                          size="lg" 
+                        <Icon
+                          name={steps[currentStep - 1]?.icon as "home" | "share" | "users" | "calendar" | "star" | "plus" | "check"}
+                          size="lg"
                           className="text-white"
                         />
                       </div>
@@ -245,9 +243,9 @@ const FormSteps: React.FC<FormStepsProps> = ({
                     {/* Previous Step Icon (appears from left when going backward) */}
                     {animationDirection === 'prev' && (
                       <div className="absolute z-10 w-20 h-20 rounded-full bg-[var(--app-accent)] flex items-center justify-center text-white shadow-xl animate-slideInFromLeft">
-                        <Icon 
-                          name={steps[currentStep - 1]?.icon as "home" | "share" | "users" | "calendar" | "star" | "plus" | "check"} 
-                          size="lg" 
+                        <Icon
+                          name={steps[currentStep - 1]?.icon as "home" | "share" | "users" | "calendar" | "star" | "plus" | "check"}
+                          size="lg"
                           className="text-white"
                         />
                       </div>
@@ -257,17 +255,17 @@ const FormSteps: React.FC<FormStepsProps> = ({
                   {/* Curved Path Indicator */}
                   <div className="absolute inset-0 pointer-events-none">
                     <svg className="w-full h-full opacity-10" viewBox="0 0 100 100" preserveAspectRatio="none">
-                      <path 
-                        d="M20,50 Q50,20 80,50" 
-                        stroke="var(--app-accent)" 
-                        strokeWidth="2" 
+                      <path
+                        d="M20,50 Q50,20 80,50"
+                        stroke="var(--app-accent)"
+                        strokeWidth="2"
                         fill="none"
                         className="transition-all duration-300"
                       />
                     </svg>
                   </div>
                 </div>
-                
+
                 <div className="text-center mt-4">
                   <span className="text-lg font-semibold text-[var(--app-accent)]">
                     Step {displayedStep} of {steps.length}
@@ -309,6 +307,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                                 description: '',
                                 category: '',
                                 location: '',
+                                onlinePlatformLink: '',
                                 coordinates: { lat: 0, lng: 0 },
                                 startDateTime: '',
                                 endDateTime: '',
@@ -401,7 +400,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                       ))}
                     </select>
                   </div>
-                  
+
                   {/* Event Type */}
                   <div className="space-y-3">
                     <label className="text-sm font-semibold text-[var(--app-foreground)]">
@@ -619,12 +618,24 @@ const FormSteps: React.FC<FormStepsProps> = ({
                   </div>
 
                   {/* Location picker with autocomplete + map pin */}
-                  <LocationPicker
+                  {formData.eventType !== "Online" && <LocationPicker
                     value={{ location: formData.location, coordinates: formData.coordinates }}
                     onChange={(next) => {
                       setFormData(prev => ({ ...prev, location: next.location, coordinates: next.coordinates }));
                     }}
-                  />
+                  />}
+                  {formData.eventType === "Online" && <div className="space-y-3">
+                    <label className="text-sm font-semibold text-[var(--app-foreground)]">
+                      Online Platform Link *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.onlinePlatformLink}
+                      onChange={(e) => handleInputChange('onlinePlatformLink', e.target.value)}
+                      className="w-[90%] px-4 py-3 bg-[var(--app-ba ckground)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                      required
+                    />
+                  </div>}
 
                   {/* Max Participants */}
                   <div className="space-y-3">
@@ -1115,7 +1126,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
           ) : null}
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
