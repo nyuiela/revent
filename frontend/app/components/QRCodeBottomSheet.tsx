@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Download, X, QrCode } from "lucide-react";
+import Image from "next/image";
 
 interface QRCodeBottomSheetProps {
   isOpen: boolean;
@@ -66,21 +67,22 @@ export default function QRCodeBottomSheet({
       />
 
       {/* Bottom Sheet */}
-      <div className="relative bg-[var(--events-card-bg)] rounded-t-3xl w-full max-w-md mx-4 shadow-2xl transform transition-transform duration-300 ease-out">
+      <div className="relative bg-card rounded-t-3xl w-full max-w-md shadow-2xl transform transition-transform duration-300 ease-out">
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-2">
           <div className="w-12 h-1 bg-[var(--events-foreground-muted)] rounded-full"></div>
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--events-foreground-muted)]/20">
+        <div className="flex items-center justify-between px-6 pb-4 border-b border-[var(--events-foreground-muted)]/20">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-[var(--events-accent)]/20 rounded-lg">
-              <QrCode className="w-5 h-5 text-[var(--events-accent)]" />
+              {/* <QrCode className="w-8 h-8 text-[var(--events-accent)]" /> */}
+              <Image src="/logo.png" alt="QR Code" className="w-10 h-10" width={32} height={32} />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-[var(--events-foreground)]">
-                Event Verification QR
+                Confirm Event Attendance
               </h3>
               <p className="text-sm text-[var(--events-foreground-muted)]">
                 {eventTitle}
@@ -101,13 +103,14 @@ export default function QRCodeBottomSheet({
           <div className="flex flex-col items-center space-y-4">
             <div
               ref={qrRef}
-              className="p-4 bg-white rounded-2xl shadow-lg"
+              className="bg-white"
             >
               {qrValue && (
                 <QRCodeSVG
                   value={qrValue}
-                  size={200}
+                  size={250}
                   level="M"
+                  className="bg-transparent shadow-none w-full h-ful object-cover"
                   includeMargin={true}
                 />
               )}
@@ -116,29 +119,17 @@ export default function QRCodeBottomSheet({
             {/* Event Info */}
             <div className="text-center">
               <p className="text-sm text-[var(--events-foreground-muted)] mb-1">
-                Event ID: {eventId}
+                {eventTitle}
               </p>
               <p className="text-xs text-[var(--events-foreground-muted)] max-w-xs break-all">
                 {qrValue}
               </p>
             </div>
 
-            {/* Instructions */}
-            <div className="bg-[var(--events-accent)]/10 rounded-xl p-4 w-full">
-              <h4 className="text-sm font-medium text-[var(--events-foreground)] mb-2">
-                How to use:
-              </h4>
-              <ul className="text-xs text-[var(--events-foreground-muted)] space-y-1">
-                <li>• Scan this QR code to verify event attendance</li>
-                <li>• Share with attendees for easy check-in</li>
-                <li>• Download the image for offline use</li>
-              </ul>
-            </div>
-
             {/* Download Button */}
             <button
               onClick={downloadQRCode}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-[var(--events-accent)] text-white rounded-xl font-medium transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
+              className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-indigo-600 text-white rounded-xl font-medium transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
             >
               <Download className="w-5 h-5" />
               Download QR Code

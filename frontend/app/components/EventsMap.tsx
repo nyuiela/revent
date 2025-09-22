@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, useImperativeHandle, forwardRef, 
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { useNotificationHelpers } from "@/hooks/useNotifications";
+// import { useNotificationHelpers } from "@/hooks/useNotifications";
 
 
 export type LiveEvent = {
@@ -55,7 +55,7 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag, userLoca
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   const { theme } = useTheme();
   const [mapStyle, setStyle] = useState<string | null>('mapbox://styles/mapbox/dark-v11');
-  const { notifyEventSelected } = useNotificationHelpers();
+  // const { notifyEventSelected } = useNotificationHelpers();
 
   // Helper: compute initial center once from current events or user location
   const initialCenter = useMemo<[number, number]>(() => {
@@ -260,9 +260,9 @@ const EventsMap = forwardRef<EventsMapRef, Props>(({ events, onMapDrag, userLoca
         el.addEventListener("click", (e) => {
           e.stopPropagation();
           console.log("Marker clicked for event:", ev.title);
-          
+
           // Show event selected notification
-          notifyEventSelected(ev.title);
+          // notifyEventSelected(ev.title);
 
           // Create popup content with proper styling and theme support
           const isDarkMode = theme === 'dark' || document.documentElement.classList.contains('dark');

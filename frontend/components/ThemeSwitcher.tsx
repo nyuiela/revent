@@ -30,7 +30,7 @@ export function ThemeSwitcher({ className }: ThemeSwitcherProps) {
           title={`Switch to ${name} theme${id === "system" ? ` (currently ${resolvedTheme})` : ""}`}
         >
           <Icon className="w-4 h-4" />
-          <span className="hidden sm:inline">{name}</span>
+          <span className="hidden sm:inline text-xs">{name}</span>
         </button>
       ))}
     </div>

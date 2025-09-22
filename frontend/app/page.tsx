@@ -7,14 +7,20 @@ import { useEffect, useState } from "react";
 import { Features } from "./components/DemoComponents";
 import StreamHome from "./components/StreamHome";
 import WaitlistModal from "./components/WaitlistModal";
-import Footer from "./components/footer";
+// import Footer from "./components/footer";
+import { MobileNavigation } from "./components/mobileNavigation";
+import EventsPage from "./events/page";
+import EarnPage from "./earn/page";
+import ProfilePage from "./profile/page";
+import { useRouter } from "next/navigation";
 
 
 export default function App() {
   const { setFrameReady, isFrameReady } = useMiniKit();
   // const [frameAdded, setFrameAdded] = useState(false);
-  const [activeTab, setActiveTab] = useState("home");
+  const [activeTab, setActiveTab] = useState("Home");
   const [showWaitlist, setShowWaitlist] = useState(false);
+  const router = useRouter();
   // const addFrame = useAddFrame();
 
   useEffect(() => {
@@ -68,7 +74,11 @@ export default function App() {
 
   //   return null;
   // }, [context, frameAdded, handleAddFrame]);
-
+  useEffect(() => {
+    if (activeTab === "Create") {
+      router.push("/events/create");
+    }
+  }, [activeTab, router]);
   return (
     <div className="flex flex-col min-h-screen font-sans text-[var(--app-foreground)] mini-app-theme from-[var(--app-background)] to-[var(--app-gray)]">
 
@@ -83,11 +93,16 @@ export default function App() {
         </header>
 
         <main className="flex-1">
-          {activeTab === "home" && <StreamHome />}
-          {activeTab === "features" && <Features setActiveTab={setActiveTab} />}
+          {activeTab === "Home" && <StreamHome />}
+          {activeTab === "Events" && <EventsPage />}
+          {activeTab === "Wallet" && <ProfilePage />}
+          {activeTab === "Earn" && <EarnPage />}
+          {/* {activeTab === "Create" && <div onClick={() => router.push("/create")}>Create</div>} */}
+          {/* {activeTab === "Earn" && <EarnPage />} */}
         </main>
-        <Footer />
       </div>
+      {/* <Footer /> */}
+      <MobileNavigation setActiveTab={setActiveTab} sActiveTab={activeTab} />
       {showWaitlist && (
         <WaitlistModal
           isOpen={showWaitlist}

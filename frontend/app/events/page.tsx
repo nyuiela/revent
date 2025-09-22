@@ -49,7 +49,7 @@ const EventsPage = () => {
 
   if (loading) {
     return (
-      <div className="h-screen text-[var(--events-foreground)] bg-black/80 relative z-[20] pt-10">
+      <div className="h-screen text-[var(--events-foreground)] bg-background relative z-[20] pt-10">
         <div className="flex items-center justify-center h-full">
           <div className="flex items-center gap-2">
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -199,7 +199,6 @@ const EventsPage = () => {
           ))
         )}
       </div>
-      <Footer />
     </div>
   )
 }
