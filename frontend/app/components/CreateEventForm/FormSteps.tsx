@@ -21,8 +21,6 @@ interface FormStepsProps {
   fileInputRef: React.RefObject<HTMLInputElement>;
   handleInputChange: (field: keyof EventFormData, value: string | number | boolean) => void;
   autoFillMockData: () => void;
-  handlePrevStep: () => void;
-  handleNextStep: () => void;
   handleFileSelect: (file: File) => void;
   handleFileInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   removeUploadedFile: () => void;
@@ -59,8 +57,6 @@ const FormSteps: React.FC<FormStepsProps> = ({
   fileInputRef,
   handleInputChange,
   autoFillMockData,
-  handlePrevStep,
-  handleNextStep,
   handleFileSelect,
   handleFileInputChange,
   removeUploadedFile,
@@ -84,33 +80,6 @@ const FormSteps: React.FC<FormStepsProps> = ({
   setPreparedTicketContracts,
   setVerificationStatus,
 }) => {
-  // Animation state for mobile step transitions
-  const [animationDirection, setAnimationDirection] = useState<'next' | 'prev' | null>(null);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [displayedStep, setDisplayedStep] = useState(currentStep);
-
-  // Handle step changes with animation
-  useEffect(() => {
-    if (displayedStep !== currentStep) {
-      setIsAnimating(true);
-      const timer = setTimeout(() => {
-        setDisplayedStep(currentStep);
-        setIsAnimating(false);
-        setAnimationDirection(null);
-      }, 300); // Animation duration
-      return () => clearTimeout(timer);
-    }
-  }, [currentStep, displayedStep]);
-
-  const handleNextStepWithAnimation = () => {
-    setAnimationDirection('next');
-    handleNextStep();
-  };
-
-  const handlePrevStepWithAnimation = () => {
-    setAnimationDirection('prev');
-    handlePrevStep();
-  };
   const categories = [
     "Gaming & Esports",
     "Technology",
@@ -130,39 +99,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
   ];
 
   return (
-    <div className="min-h-screen text-foreground bg-background relative z-[20] pt-14 pb-28">
-      {/* Custom CSS for animations */}
-      <style jsx>{`
-        @keyframes slideInFromRight {
-          0% {
-            transform: translateX(128px) rotate(45deg);
-            opacity: 0;
-          }
-          100% {
-            transform: translateX(0) rotate(0deg);
-            opacity: 1;
-          }
-        }
-        
-        @keyframes slideInFromLeft {
-          0% {
-            transform: translateX(-128px) rotate(-45deg);
-            opacity: 0;
-          }
-          100% {
-            transform: translateX(0) rotate(0deg);
-            opacity: 1;
-          }
-        }
-        
-        .animate-slideInFromRight {
-          animation: slideInFromRight 0.3s ease-out forwards;
-        }
-        
-        .animate-slideInFromLeft {
-          animation: slideInFromLeft 0.3s ease-out forwards;
-        }
-      `}</style>
+    <div className="min-h-screen text-foreground bg-background relative z-[20] -mt-28 pb-8">
       <div className="max-w-5xl mx-auto py-6 sm:py-8 md:py-10 bg-red-00">
         <div className="min-h-screen bg-[var(--app-background)] relative z-[20] pt-14 pb-28">
           <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 md:py-10">
@@ -208,70 +145,26 @@ const FormSteps: React.FC<FormStepsProps> = ({
 
               {/* Mobile Steps */}
               <div className="md:hidden">
-                <div className="relative h-32 flex items-center justify-center overflow-hidden">
-                  {/* Animated Step Icon Container */}
-                  <div className="relative w-24 h-24 flex items-center justify-center">
-                    {/* Background Glow */}
-                    <div className={`absolute inset-0 rounded-full bg-[var(--app-accent)] shadow-lg transition-all duration-300 ${isAnimating ? 'animate-pulse scale-110' : 'animate-pulse'
-                      }`}></div>
-
-                    {/* Current Step Icon */}
-                    <div className={`relative z-10 w-20 h-20 rounded-full bg-[var(--app-accent)] flex items-center justify-center text-white shadow-xl transition-all duration-300 ${animationDirection === 'next'
-                      ? 'transform -translate-x-32 rotate-45 opacity-0'
-                      : animationDirection === 'prev'
-                        ? 'transform translate-x-32 -rotate-45 opacity-0'
-                        : 'transform translate-x-0 rotate-0 opacity-100'
-                      }`}>
-                      <Icon
-                        name={steps[displayedStep - 1]?.icon as "home" | "share" | "users" | "calendar" | "star" | "plus" | "check"}
-                        size="lg"
+                <div className="relative h-24 flex items-center justify-center">
+                  {/* Current Step Icon */}
+                  <div className="relative w-20 h-20 flex items-center justify-center">
+                    <div className="absolute inset-0 rounded-full bg-[var(--app-accent)] shadow-lg animate-pulse"></div>
+                    <div className="relative z-10 w-16 h-16 rounded-full bg-[var(--app-accent)] flex items-center justify-center text-white shadow-xl">
+                      <Icon 
+                        name={steps[currentStep - 1]?.icon as "home" | "share" | "users" | "calendar" | "star" | "plus" | "check"} 
+                        size="lg" 
                         className="text-white"
                       />
                     </div>
-
-                    {/* Next Step Icon (appears from right when going forward) */}
-                    {animationDirection === 'next' && (
-                      <div className="absolute z-10 w-20 h-20 rounded-full bg-[var(--app-accent)] flex items-center justify-center text-white shadow-xl animate-slideInFromRight">
-                        <Icon
-                          name={steps[currentStep - 1]?.icon as "home" | "share" | "users" | "calendar" | "star" | "plus" | "check"}
-                          size="lg"
-                          className="text-white"
-                        />
-                      </div>
-                    )}
-
-                    {/* Previous Step Icon (appears from left when going backward) */}
-                    {animationDirection === 'prev' && (
-                      <div className="absolute z-10 w-20 h-20 rounded-full bg-[var(--app-accent)] flex items-center justify-center text-white shadow-xl animate-slideInFromLeft">
-                        <Icon
-                          name={steps[currentStep - 1]?.icon as "home" | "share" | "users" | "calendar" | "star" | "plus" | "check"}
-                          size="lg"
-                          className="text-white"
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Curved Path Indicator */}
-                  <div className="absolute inset-0 pointer-events-none">
-                    <svg className="w-full h-full opacity-10" viewBox="0 0 100 100" preserveAspectRatio="none">
-                      <path
-                        d="M20,50 Q50,20 80,50"
-                        stroke="var(--app-accent)"
-                        strokeWidth="2"
-                        fill="none"
-                        className="transition-all duration-300"
-                      />
-                    </svg>
                   </div>
                 </div>
-
+                
                 <div className="text-center mt-4">
                   <span className="text-lg font-semibold text-[var(--app-accent)]">
-                    Step {displayedStep} of {steps.length}
+                    Step {currentStep} of {steps.length}
                   </span>
                   <p className="text-sm text-[var(--app-foreground-muted)] mt-2">
-                    {steps[displayedStep - 1]?.title}
+                    {steps[currentStep - 1]?.title}
                   </p>
                 </div>
               </div>
@@ -1103,29 +996,6 @@ const FormSteps: React.FC<FormStepsProps> = ({
         </div>
       </div>
 
-      {/* Static Navigation Buttons at Bottom */}
-      <div className="fixed bottom-0 left-0 right-0  border-t border-border p-4 z-50 bg-app-card-bg">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <Button
-            onClick={handlePrevStepWithAnimation}
-            disabled={currentStep === 1 || isAnimating}
-            variant="outline"
-            className="px-6 py-3 border-none text-background-foreground hover:bg-background-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronLeftIcon className="w-6 h-6" />
-          </Button>
-
-          {currentStep < steps.length ? (
-            <Button
-              onClick={handleNextStepWithAnimation}
-              disabled={isAnimating}
-              className="px-6 py-3 bg-[var(--app-accent)] text-background-foreground hover:bg-[var(--app-accent-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronRightIcon className="w-6 h-6" />
-            </Button>
-          ) : null}
-        </div>
-      </div>
     </div >
   );
 };

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Button } from "../DemoComponents";
-import { Loader2 } from "lucide-react";
+import { CheckCircle2Icon, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { EventFormData } from "@/utils/types";
 import { useNotificationHelpers } from "@/hooks/useNotifications";
@@ -45,9 +45,11 @@ const EventSummary: React.FC<EventSummaryProps> = ({
   notifyEventCreationStarted,
 }) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 -mt-28">
       {/* Event Summary */}
       <div className="space-y-4 rounded-lg">
+        <CheckCircle2Icon className="w-10 h-10 text-green-500 text-center items-center justify-center" />
+        <h1 className="text-2xl font-bold text-center">Event Summary</h1>
         {/* Basic Information */}
         <div className="space-y-3">
           <h4 className="text-base sm:text-lg font-medium text-foreground border-b border-border pb-2">Basic Information</h4>

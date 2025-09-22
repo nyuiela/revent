@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Button } from "./DemoComponents";
-import { ChevronLeftIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useAccount } from "wagmi";
 import { eventAbi, eventAddress, ticketAddress, ticketAbi } from "@/lib/contract";
 import { useRouter } from 'next/navigation';
@@ -802,8 +802,6 @@ const CreateEventForm = () => {
           fileInputRef={fileInputRef}
           handleInputChange={handleInputChange}
           autoFillMockData={autoFillMockData}
-          handlePrevStep={handlePrevStep}
-          handleNextStep={handleNextStep}
           handleFileSelect={handleFileSelect}
           handleFileInputChange={handleFileInputChange}
           removeUploadedFile={removeUploadedFile}
@@ -901,6 +899,30 @@ const CreateEventForm = () => {
         />
       )}
 
+      {/* Shared Navigation Footer - Shows for all steps including EventSummary */}
+      {!showSuccessCard && (
+        <div className="fixed bottom-0 left-0 right-0 border-t border-border p-4 z-50 bg-app-card-bg">
+          <div className="max-w-4xl mx-auto flex justify-between items-center">
+            <Button
+              onClick={handlePrevStep}
+              disabled={currentStep === 1}
+              variant="outline"
+              className="px-6 py-3 border-none text-background-foreground hover:bg-background-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeftIcon className="w-6 h-6" />
+            </Button>
+
+            {currentStep < steps.length ? (
+              <Button
+                onClick={handleNextStep}
+                className="px-6 py-3 bg-[var(--app-accent)] text-background-foreground hover:bg-[var(--app-accent-hover)] transition-colors"
+              >
+                <ChevronRightIcon className="w-6 h-6" />
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      )}
 
     </>
   );

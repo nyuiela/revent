@@ -66,24 +66,32 @@ const TransactionHandler: React.FC<TransactionHandlerProps> = ({
   const handleSuccess = React.useCallback(async (response: TransactionResponse) => {
     try {
       const transactionHash = response.transactionReceipts[0].transactionHash;
+      const eventId = preGeneratedEventId || '1';
 
       console.log(`Transaction successful: ${transactionHash}`);
 
-      // Show contract transaction success notification
-      notifyContractTransactionSuccess(transactionHash);
+      // Only show notifications once - check if we've already processed this success
+      const notificationsProcessedKey = `notifications_processed_${eventId}`;
+      if (!sessionStorage.getItem(notificationsProcessedKey)) {
+        // Show contract transaction success notification
+        notifyContractTransactionSuccess(transactionHash);
 
-      // Show event creation success notification
-      notifyEventCreationSuccess(formData.title || 'Untitled Event');
+        // Show event creation success notification
+        notifyEventCreationSuccess(formData.title || 'Untitled Event');
 
-      await sendNotification({
-        title: "Congratulations!",
-        body: `You sent your a transaction, ${transactionHash}!`,
-      });
+        await sendNotification({
+          title: "Congratulations!",
+          body: `You sent your a transaction, ${transactionHash}!`,
+        });
+
+        // Mark as processed to prevent duplicate notifications
+        sessionStorage.setItem(notificationsProcessedKey, 'true');
+      }
     } catch (error) {
       console.error('Error in handleSuccess:', error);
       // Don't throw the error to prevent unhandled promise rejection
     }
-  }, [sendNotification, notifyContractTransactionSuccess, notifyEventCreationSuccess, formData.title]);
+  }, [sendNotification, notifyContractTransactionSuccess, notifyEventCreationSuccess, formData.title, preGeneratedEventId]);
 
   return (
     <>
@@ -114,17 +122,29 @@ const TransactionHandler: React.FC<TransactionHandlerProps> = ({
                   // Update the cached event ID for future use
                   updateLastEventId(parseInt(eventId));
 
-                  // Generate and upload event metadata
-                  const metadataUrl = await generateAndUploadEventMetadata(eventId);
-                  if (metadataUrl) {
-                    console.log('Event metadata available at:', metadataUrl);
+                  // Only generate metadata once - check if we've already processed this event
+                  const hasProcessedKey = `metadata_generated_${eventId}`;
+                  if (!sessionStorage.getItem(hasProcessedKey)) {
+                    // Generate and upload event metadata
+                    const metadataUrl = await generateAndUploadEventMetadata(eventId);
+                    if (metadataUrl) {
+                      console.log('Event metadata available at:', metadataUrl);
+                    }
+                    // Mark as processed to prevent duplicate calls
+                    sessionStorage.setItem(hasProcessedKey, 'true');
                   }
 
-                  // Create event details and show success card
-                  const eventDetails = createEventDetails(eventId);
-                  setCreatedEventDetails(eventDetails);
-                  setShowSuccessCard(true);
-                  setTransactionStep('complete');
+                  // Only show success card once - check if we've already processed this success
+                  const successProcessedKey = `success_processed_${eventId}`;
+                  if (!sessionStorage.getItem(successProcessedKey)) {
+                    // Create event details and show success card
+                    const eventDetails = createEventDetails(eventId);
+                    setCreatedEventDetails(eventDetails);
+                    setShowSuccessCard(true);
+                    setTransactionStep('complete');
+                    // Mark as processed to prevent duplicate success handling
+                    sessionStorage.setItem(successProcessedKey, 'true');
+                  }
                 } else {
                   // Transaction failed or error
                   console.log('Batched transaction failed or error');

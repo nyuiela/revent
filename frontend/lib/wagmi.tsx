@@ -5,7 +5,7 @@ import { createStorage, noopStorage } from 'wagmi'
 // Create storage with localStorage for persistence
 const storage = createStorage({
   storage: typeof window !== 'undefined' ? window.localStorage : noopStorage,
-  key: 'wagmi', // Custom key for localStorage
+  key: 'revent-wagmi', // Custom key for localStorage to avoid conflicts
 })
 
 const config = createConfig({
@@ -13,6 +13,7 @@ const config = createConfig({
   connectors: [
     injected(),
   ],
+  ssr: true,
   storage,
   transports: {
     [baseSepolia.id]: http('https://sepolia.base.org'),
