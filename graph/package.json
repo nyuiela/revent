@@ -1,13 +1,13 @@
 {
-  "name": "stream",
+  "name": "revent",
   "license": "UNLICENSED",
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
-    "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ stream",
-    "create-local": "graph create --node http://localhost:8020/ stream",
-    "remove-local": "graph remove --node http://localhost:8020/ stream",
-    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 stream",
+    "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ revent",
+    "create-local": "graph create --node http://localhost:8020/ revent",
+    "remove-local": "graph remove --node http://localhost:8020/ revent",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 revent",
     "test": "graph test"
   },
   "dependencies": {
