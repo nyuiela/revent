@@ -8,6 +8,11 @@ import ParticipantsList from "./sections/ParticipantsList";
 import QRCodeBottomSheet from "@/app/components/QRCodeBottomSheet";
 import TicketsList, { Ticket } from "./sections/TicketsList";
 import { X } from "lucide-react";
+import { eventAbi, eventAddress, chainId } from "@/lib/contract";
+import { Abi } from "viem";
+import ContractButton from "@/app/components/button/ContractButton";
+import StreamHeader from "@/app/components/StreamHeader";
+import { Button } from "@/app/components/DemoComponents";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -52,20 +57,9 @@ export default function ManagePage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <StreamHeader />
       <div className="mx-auto w-full max-w-5xl px-4 py-8">
-        <div className="mb-6 flex items-center justify-between">
-          {/* <div>
-            <h1 className="text-2xl font-bold">Manage Event</h1>
-            <p className="text-sm text-muted-foreground">Update content, details and media</p>
-          </div> */}
-          <button
-            onClick={onSave}
-            disabled={saving}
-            className="rounded-xl bg-[var(--events-accent,theme(colors.indigo.600))] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-          >
-            {saving ? "Saving..." : "Save Changes"}
-          </button>
-        </div>
+
 
         {/* Image / Media Editor */}
         <ImageEditor />
@@ -90,6 +84,16 @@ export default function ManagePage({ params }: Props) {
               values={values}
               onChange={(k, v) => setValues((p) => ({ ...p, [k]: v }))}
             />
+            <div className="mb-6 flex items-center justify-end mt-4">
+
+              <Button
+                onClick={onSave}
+                disabled={saving}
+                className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+              >
+                {saving ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
           </div>
         )}
 
@@ -105,9 +109,19 @@ export default function ManagePage({ params }: Props) {
           </div>
         )}
       </div>
-      <button onClick={() => console.log("cancel")} className="rounded-xl bg-rose-600/90 px-3 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto mt-4 h-10 mb-20">
+      {/* <button onClick={() => console.log("cancel")} className="rounded-xl bg-rose-600/90 px-3 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto mt-4 h-10 mb-20">
         <X className="h-4 w-4" /> Cancel Event
-      </button>
+      </button> */}
+      <ContractButton
+        idleLabel={"Cancel Event"}
+        chainId={Number(chainId)}
+        abi={eventAbi.abi as Abi}
+        address={eventAddress as `0x${string}`}
+        functionName="cancelEvent"
+        args={[BigInt(0)]}
+        btnClassName="bg-rose-600/90"
+        onWriteSuccess={() => console.log("cancel")}
+      />
 
       <QRCodeBottomSheet
         isOpen={qrOpen}

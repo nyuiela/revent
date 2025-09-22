@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Download, X, QrCode } from "lucide-react";
+import { Download, X, QrCode, Share } from "lucide-react";
 import Image from "next/image";
+import Button from "@mui/material/Button";
 
 interface QRCodeBottomSheetProps {
   isOpen: boolean;
@@ -117,24 +118,23 @@ export default function QRCodeBottomSheet({
             </div>
 
             {/* Event Info */}
-            <div className="text-center">
-              <p className="text-sm text-[var(--events-foreground-muted)] mb-1">
-                {eventTitle}
-              </p>
-              <p className="text-xs text-[var(--events-foreground-muted)] max-w-xs break-all">
-                {qrValue}
-              </p>
-            </div>
+            <div className="w-full flex flex-col items-center justify-center gap-4">
 
-            {/* Download Button */}
-            <button
-              onClick={downloadQRCode}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-indigo-600 text-white rounded-xl font-medium transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
-            >
-              <Download className="w-5 h-5" />
-              Download QR Code
-            </button>
+              {/* Download Button */}
+              <button
+                onClick={downloadQRCode}
+                className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-emerald-600 text-white rounded-xl font-medium transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
+              >
+                <Download className="w-5 h-5" />
+                Download QR Code
+              </button>
+              <Button onClick={() => navigator.clipboard.writeText(qrValue)} className="mt-4 text-background font-normal gap-2">
+                <Share className="w-4 h-4" />
+                Share
+              </Button>
+            </div>
           </div>
+          <div className="mt-4 text-[11px] text-muted-foreground text-center">powered by revent</div>
         </div>
       </div>
     </div>

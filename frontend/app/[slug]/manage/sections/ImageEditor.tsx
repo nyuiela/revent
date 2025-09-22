@@ -22,7 +22,7 @@ export default function ImageEditor() {
   };
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+    <div className="overflow-hidden rounded-2xl border-none border-border bg-card">
       <div className="relative aspect-[16/6] w-full bg-muted">
         <Image src={preview} alt="cover" fill className="object-cover" />
       </div>
