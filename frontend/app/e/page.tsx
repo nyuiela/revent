@@ -8,6 +8,7 @@ import ViewCount from '../../components/ViewCount'
 import { useEvents } from '../../hooks/useEvents'
 import { useViewCounts } from '../../hooks/useViewCounts'
 import StreamHeader from '../components/StreamHeader'
+import Image from 'next/image';
 
 
 // Function to format timestamp to readable date
@@ -134,9 +135,11 @@ const EventsPage = () => {
                 {/* Event Image */}
                 <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={event.avatarUrl}
                     alt={event.title}
+                    width={100}
+                    height={100}
                     className="w-full h-full object-cover "
                   />
                   {event.isLive && (

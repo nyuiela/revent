@@ -8,6 +8,7 @@ import ViewCount from '../../components/ViewCount';
 import { useInfiniteEvents } from '../../hooks/useInfiniteEvents';
 import { useViewCounts } from '../../hooks/useViewCounts';
 import { calculateDistance } from '../../hooks/useLocation';
+import Image from 'next/image';
 
 interface InfiniteScrollEventsProps {
   userLocation?: { lat: number; lng: number } | null;
@@ -135,9 +136,11 @@ export default function InfiniteScrollEvents({
                   {/* Event Image */}
                   <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={event.avatarUrl}
                       alt={event.title}
+                      width={100}
+                      height={100}
                       className="w-full h-full object-cover"
                     />
                     {/* Live indicator */}

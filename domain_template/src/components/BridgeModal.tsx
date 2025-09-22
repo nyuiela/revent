@@ -163,9 +163,11 @@ export default function BridgeModal({ isOpen, onClose }: BridgeModalProps) {
               >
                 {/* Background pattern for some chains */}
                 {chain.id === 'arbitrum' && (
-                  <img 
+                  <Image
                     className="inset-0 z-0 absolute h-full w-full mix-blend-overlay opacity-80" 
-                    alt="Arbitrum One" 
+                    alt="Arbitrum One"
+                    width={100}
+                    height={100}
                     src="https://superbridge.app/img/arbitrum-one/bg.png"
                   />
                 )}

@@ -1,4 +1,62 @@
-export const mockEvents = [
+import { EventFormData } from "@/utils/types";
+
+// Type for mock events that ensures all required fields are present
+type MockEventData = {
+  title: string;
+  description: string;
+  date: string;
+  time: string;
+  category: string;
+  location: string;
+  coordinates: { lat: number; lng: number };
+  startDateTime: string;
+  endDateTime: string;
+  maxParticipants: number;
+  eventType: "Online" | "In-Person" | "Hybrid";
+  isLive: boolean;
+  platforms: string[];
+  totalRewards: number;
+  hosts: {
+    name: string;
+    avatar: string;
+    role: string;
+    bio: string;
+    social: {
+      twitter?: string;
+      linkedin?: string;
+      website?: string;
+    };
+  }[];
+  agenda: {
+    title: string;
+    description: string;
+    startTime: string;
+    endTime: string;
+    speakers: string[];
+  }[];
+  sponsors: {
+    name: string;
+    logo: string;
+    link: string;
+  }[];
+  socialLinks: {
+    twitter?: string;
+    discord?: string;
+    website?: string;
+  };
+  tickets: {
+    available: boolean;
+    types: {
+      type: string;
+      price: number;
+      currency: string;
+      quantity: number;
+      perks: string[];
+    }[];
+  };
+};
+
+export const mockEvents: MockEventData[] = [
     {
       title: "Web3 Developer Meetup",
       description: "Join us for an exciting evening of Web3 development discussions, networking, and hands-on workshops. Learn about the latest trends in blockchain development, DeFi protocols, and NFT innovations.",
@@ -6,13 +64,11 @@ export const mockEvents = [
       time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toTimeString().slice(0, 5), // HH:MM format
       category: "Technology",
       location: "San Francisco, CA",
-      lat: 37.7749,
-      lng: -122.4194,
       coordinates: { lat: 37.7749, lng: -122.4194 },
       startDateTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16), // 7 days from now
       endDateTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 3 * 60 * 60 * 1000).toISOString().slice(0, 16), // 3 hours later
       maxParticipants: 150,
-      eventType: "in-person" as const,
+      eventType: "In-Person",
       isLive: false,
       platforms: ["Discord", "Zoom"],
       totalRewards: 1000,
@@ -71,13 +127,11 @@ export const mockEvents = [
       time: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toTimeString().slice(0, 5),
       category: "Finance",
       location: "New York, NY",
-      lat: 40.7128,
-      lng: -74.0060,
       coordinates: { lat: 40.7128, lng: -74.0060 },
       startDateTime: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16), // 14 days from now
       endDateTime: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000 + 8 * 60 * 60 * 1000).toISOString().slice(0, 16), // 8 hours later
       maxParticipants: 500,
-      eventType: "in-person" as const,
+      eventType: "In-Person",
       isLive: true,
       platforms: ["YouTube Live", "Twitter Spaces"],
       totalRewards: 5000,
@@ -142,13 +196,11 @@ export const mockEvents = [
       time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toTimeString().slice(0, 5),
       category: "Art & Culture",
       location: "Los Angeles, California, United States",
-      lat: 34.0522,
-      lng: -118.2437,
       coordinates: { lat: 34.0522, lng: -118.2437 },
       startDateTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16), // 3 days from now
       endDateTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000).toISOString().slice(0, 16), // 4 hours later
       maxParticipants: 200,
-      eventType: "hybrid" as const,
+      eventType: "Hybrid",
       isLive: true,
       platforms: ["Instagram Live", "Twitch"],
       totalRewards: 2500,
@@ -207,13 +259,11 @@ export const mockEvents = [
       time: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toTimeString().slice(0, 5),
       category: "Gaming & Esports",
       location: "Austin, TX",
-      lat: 30.2672,
-      lng: -97.7431,
       coordinates: { lat: 30.2672, lng: -97.7431 },
       startDateTime: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16), // 10 days from now
       endDateTime: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000 + 6 * 60 * 60 * 1000).toISOString().slice(0, 16), // 6 hours later
       maxParticipants: 100,
-      eventType: "online" as const,
+      eventType: "Online",
       isLive: true,
       platforms: ["Twitch", "YouTube Gaming"],
       totalRewards: 10000,
@@ -225,7 +275,7 @@ export const mockEvents = [
           bio: "Professional esports organizer and blockchain gaming expert",
           social: {
             twitter: "https://twitter.com/jessicapark",
-            twitch: "https://twitch.tv/jessicapark"
+            website: "https://jessicapark.com"
           }
         }
       ],
@@ -272,13 +322,11 @@ export const mockEvents = [
       time: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toTimeString().slice(0, 5),
       category: "Education",
       location: "Chicago, Illinois, United States",
-      lat: 41.8781,
-      lng: -87.6298,
       coordinates: { lat: 41.8781, lng: -87.6298 },
       startDateTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16), // 5 days from now
       endDateTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString().slice(0, 16), // 2 hours later
       maxParticipants: 75,
-      eventType: "hybrid" as const,
+      eventType: "Hybrid",
       isLive: false,
       platforms: ["Zoom", "Teams"],
       totalRewards: 500,

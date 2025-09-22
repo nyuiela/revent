@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { type LiveEvent } from "./EventsMap";
 import { Search, MapPin, Send } from "lucide-react";
+import Image from "next/image";
 
 type Props = {
   events: LiveEvent[];
@@ -102,10 +103,11 @@ export default function EventSearch({ events, onEventSelect, onSearch, selectedE
               className="w-full flex items-center gap-3 p-3 hover:bg-background text-left border-b border-background last:border-b-0 transition-colors bg-background"
             >
               <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={event.avatarUrl}
                   alt={event.username}
+                  width={100}
+                  height={100}
                   className="w-full h-full object-cover"
                 />
               </div>

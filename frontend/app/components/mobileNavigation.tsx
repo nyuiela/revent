@@ -84,8 +84,8 @@ export function MobileNavigation({ setActiveTab, sActiveTab }: { setActiveTab: (
     },
     {
       name: "Events",
-      activeIcon: AppIcons.betActive,
-      inactiveIcon: AppIcons.betInactive,
+      activeIcon: AppIcons.calendar,
+      inactiveIcon: AppIcons.calendar,
       path: "/events",
     },
     {

@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Image from 'next/image';
 
 export type GalleryItem = {
   id: string;
@@ -31,9 +32,11 @@ export default function GalleryGrid({ items, onClickItem }: GalleryGridProps) {
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
               />
             ) : (
-              <img
+              <Image
                 src={item.url || '/stream.jpg'}
                 alt={item.title}
+                width={100}
+                height={100}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                 loading="eager"
                 decoding="async"

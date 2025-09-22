@@ -12,6 +12,7 @@ import { useEvents } from "../../hooks/useEvents";
 import { useViewCounts } from "../../hooks/useViewCounts";
 import { useLocation, useProximityEvents, calculateDistance } from "../../hooks/useLocation";
 import InfiniteScrollEvents from "./InfiniteScrollEvents";
+import Image from "next/image";
 // import { useViewProfile } from "@coinbase/onchainkit/minikit";
 // Removed unused Graph Protocol imports - now handled by API route
 type Mode = "map" | "camera" | "screen";
@@ -257,8 +258,7 @@ export default function StreamHome() {
                 >
                   {/* Background image covering the whole card */}
                   <div className="absolute inset-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={event.avatarUrl} alt={event.title} className="w-full h-full object-cover" />
+                    <Image src={event.avatarUrl} alt={event.title} className="w-full h-full object-cover" width={100} height={100} />
                   </div>
 
                   {/* Gradient overlay for text readability */}
@@ -329,7 +329,7 @@ export default function StreamHome() {
             >
               <div className="relative h-32">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={c.image} alt={c.title} className="w-full h-full object-cover" />
+                <Image src={c.image} alt={c.title} className="w-full h-full object-cover" width={100} height={100} />
 
                 {/* Distance indicator */}
                 {c.distance !== null && (
@@ -369,7 +369,7 @@ export default function StreamHome() {
             <div key={u.id} className="flex flex-col items-center min-w-[72px]">
               <div className="relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-white shadow">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={u.avatarUrl} alt={u.name} className="w-full h-full object-cover" />
+                <Image src={u.avatarUrl} alt={u.name} className="w-full h-full object-cover" width={100} height={100} />
               </div>
               <div className="text-xs mt-1">
                 <OwnerDisplay

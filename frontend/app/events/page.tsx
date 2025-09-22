@@ -7,6 +7,7 @@ import Footer from '../components/footer'
 import ViewCount from '../../components/ViewCount'
 import { useEvents } from '../../hooks/useEvents'
 import { useViewCounts } from '../../hooks/useViewCounts'
+import Image from 'next/image';
 // import StreamHeader from '../components/StreamHeader'
 
 
@@ -134,9 +135,11 @@ const EventsPage = () => {
                 {/* Event Image */}
                 <div className="relative w-[7rem] h-[7rem] rounded-lg overflow-hidden flex-shrink-0 bg-red-400">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={event.avatarUrl}
                     alt={event.title}
+                    width={100}
+                    height={100}
                     className="w-full h-full object-cover "
                   />
                   {event.isLive && (

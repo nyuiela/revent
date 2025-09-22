@@ -511,8 +511,8 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
       {/* Hero Section */}
       <div className="relative h-[25rem] md:h-[25rem] mt-12 overflow-hidden">
-        <div className="absolute mt-2 left-0">
-          <Button variant="ghost" className="rounded-lg bg-transparent text-white cursor-pointer" onClick={() => router && router.back()}>
+        <div className="absolute mt-4 left-4 z-10">
+          <Button variant="ghost" className="rounded-lg border-2 border-gray-500 gap-5 bg-transparent text-white cursor-pointer" onClick={() => router.back()}>
             <ChevronLeft className="w-4 h-4" /> Back
           </Button>
         </div>
@@ -520,7 +520,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
         <Image
           src={event.image}
           alt={event.title}
-          className="w-full h-full object-cover rounded-lg"
+          className="w-full h-full object-cover rounded-lg mt-20"
           width={1000}
           height={1000}
         />
@@ -684,7 +684,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
           ) : !ticketsError ? (
             /* Regular registration when no tickets */
             <div className="border border-[var(--events-card-border)] border-none bg-transparent mb-2">
-              <div className="flex items-center gap-1 mb-0 bg-gray-300 p-4 px-[0.2rem] rounded-xl pb-0">
+              <div className="flex items-center gap-1 mb-0 p-4 px-[0.2rem] rounded-xl pb-0">
                 {canTransact ? (
                   <Transaction
                     chainId={chainId}
