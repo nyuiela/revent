@@ -26,7 +26,7 @@ import Image from "next/image";
 import { Button } from "./DemoComponents";
 import { useRouter } from "next/navigation";
 import { ticketAbi, ticketAddress } from "@/lib/contract";
-import EventManagement from "./EventManagement";
+// import EventManagement from "./EventManagement";
 
 
 type Props = {
@@ -60,6 +60,7 @@ type Props = {
     startTime?: string;
     endTime?: string;
     maxAttendees?: string;
+    onlinePlatformLink?: string;
   };
   onBack?: () => void;
 };
@@ -316,6 +317,9 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
       "Event details will be available soon.",
     date: formattedDate,
     time: formattedTime,
+    onlinePlatformLink: (ipfsData?.onlinePlatformLink as string) ||
+      (eventSlugData?.onlinePlatformLink as string) ||
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     location: (ipfsData?.location as string) ||
       "Location TBD",
     coordinates: (ipfsData?.coordinates as { lat: number; lng: number }) ||
@@ -510,9 +514,9 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
       </div> */}
 
       {/* Hero Section */}
-      <div className="relative h-[25rem] md:h-[25rem] mt-12 overflow-hidden">
-        <div className="absolute mt-4 left-4 z-10">
-          <Button variant="ghost" className="rounded-lg border-2 border-gray-500 gap-5 bg-transparent text-white cursor-pointer" onClick={() => router.back()}>
+      <div className="relative h-[25rem] md:h-[25rem] overflow-hidden">
+        <div className="left-4 mt-4 z-10 absolute">
+          <Button variant="ghost" className="rounded-lg gap-2 bg-transparent cursor-pointer text-background" onClick={() => router.back()}>
             <ChevronLeft className="w-4 h-4" /> Back
           </Button>
         </div>
@@ -520,7 +524,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
         <Image
           src={event.image}
           alt={event.title}
-          className="w-full h-full object-cover rounded-lg mt-20"
+          className="w-full h-full object-cover rounded-lg"
           width={1000}
           height={1000}
         />
@@ -917,16 +921,6 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
         </div>
       </div>
-
-      {/* Event Management - Only show to event creator */}
-      {
-        !isEventCreator && eventId && (
-          <EventManagement
-            eventId={eventId}
-            defaultIpfsHash={ipfsHash || ""}
-          />
-        )
-      }
 
       {/* Sticky Registration Button */}
       {

@@ -227,8 +227,9 @@ export default function InfiniteScrollEvents({
           <div className="flex items-center justify-center py-4">
             <button
               onClick={loadMore}
-              className="px-6 py-2 bg-[var(--app-accent)] text-white rounded-lg hover:bg-[var(--app-accent-hover)] transition-colors text-sm font-medium"
+              className="px-6 py-2 bg-[var(--app-accent)] text-foreground rounded-lg hover:bg-[var(--app-accent-hover)] transition-colors text-sm font-medium flex items-center gap-2"
             >
+              <span className="text-foreground"><Loader2 className="w-4 h-4" /></span>
               {isAutoScroll ? 'Load More Events (Auto)' : 'Load More Events'}
             </button>
           </div>
