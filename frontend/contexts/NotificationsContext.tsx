@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useRef } from 'react';
 import { X, CheckCircle, AlertCircle, Info, Upload, MapPin, Calendar, Users, FileText } from 'lucide-react';
 
 export interface Notification {
@@ -39,21 +39,39 @@ interface NotificationsProviderProps {
 
 export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const recentMapRef = useRef<Map<string, { id: string; ts: number }>>(new Map());
+  const DEDUPE_WINDOW_MS = 4000;
+  const MAX_TOASTS = 4;
 
   const addNotification = useCallback((notification: Omit<Notification, 'id'>): string => {
     const id = Math.random().toString(36).substr(2, 9);
+    const key = `${notification.type}|${notification.title}|${notification.message ?? ''}`;
+    const now = Date.now();
+
+    const existing = recentMapRef.current.get(key);
+    if (existing && now - existing.ts < DEDUPE_WINDOW_MS) {
+      return existing.id;
+    }
     const newNotification: Notification = {
       id,
       duration: 5000, // Default 5 seconds
       ...notification,
     };
 
-    setNotifications(prev => [...prev, newNotification]);
+    setNotifications(prev => {
+      const next = [...prev, newNotification];
+      if (next.length > MAX_TOASTS) next.shift();
+      return next;
+    });
+
+    recentMapRef.current.set(key, { id, ts: now });
 
     // Auto-remove notification after duration
     if (newNotification.duration && newNotification.duration > 0) {
       setTimeout(() => {
         setNotifications(current => current.filter(n => n.id !== id));
+        const cur = recentMapRef.current.get(key);
+        if (cur && cur.id === id) recentMapRef.current.delete(key);
       }, newNotification.duration);
     }
 
