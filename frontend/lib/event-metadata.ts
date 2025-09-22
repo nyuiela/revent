@@ -45,8 +45,10 @@ export function generateEventMetadata(
       baseUrl = 'https://revents.io';
     }
   }
-  const startDate = new Date(formData.startDateTime);
-  const endDate = new Date(formData.endDateTime);
+  const startDateRaw = formData.startDateTime;
+  const endDateRaw = formData.endDateTime;
+  const startDate = startDateRaw ? new Date(startDateRaw) : null;
+  const endDate = endDateRaw ? new Date(endDateRaw) : null;
 
   // Generate the metadata URL (for reference)
   // const metadataUrl = `${baseUrl}/metadata/${eventId}.json`;
@@ -64,19 +66,23 @@ export function generateEventMetadata(
       trait_type: "Category",
       value: formData.category
     },
-    {
+    // Start Date (safe)
+    ...(startDate && !isNaN(startDate.getTime()) ? [{
       trait_type: "Start Date",
       value: startDate.toISOString().split('T')[0],
       display_type: "date"
-    },
-    {
+    }] : startDateRaw ? [{
+      trait_type: "Start Date",
+      value: String(startDateRaw)
+    }] : []),
+    ...(startDate && !isNaN(startDate.getTime()) ? [{
       trait_type: "Start Time",
       value: startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    },
-    {
+    }] : []),
+    ...(startDate && endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) ? [{
       trait_type: "Duration",
       value: `${Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60))} hours`
-    },
+    }] : []),
     {
       trait_type: "Max Participants",
       value: formData.maxParticipants
