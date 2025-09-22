@@ -789,7 +789,7 @@ const CreateEventForm = () => {
       </div>
 
       {/* Form Steps Component */}
-      {currentStep < 7 && (
+      {currentStep < 6 && (
         <FormSteps
           currentStep={currentStep}
           formData={formData}

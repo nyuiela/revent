@@ -28,9 +28,9 @@ export default function EarnPage() {
             </div>
           </div>
 
-          <button className="rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted/50">
+          {/* <button className="rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted/50">
             Settings
-          </button>
+          </button> */}
         </div>
 
         {/* Score Cards */}

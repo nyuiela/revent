@@ -47,8 +47,7 @@ function KindBadge({ kind }: { kind: TxRow["kind"] }) {
 export default function TxHistory() {
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="grid grid-cols-[110px_180px_1fr_120px] border-b border-border px-4 py-3 text-xs font-medium text-muted-foreground">
-        <div>TxType</div>
+      <div className="grid grid-cols-[260px_1fr_120px] border-b border-border px-4 py-3 text-xs font-medium text-muted-foreground">
         <div>Tx</div>
         <div>Details</div>
         <div className="text-right">Date</div>
@@ -57,12 +56,11 @@ export default function TxHistory() {
         {txs.map((t, idx) => (
           <div
             key={idx}
-            className="grid grid-cols-[110px_180px_1fr_120px] items-center px-6 py-4 odd:bg-background"
+            className="grid grid-cols-[260px_1fr_120px] items-center px-6 py-4 odd:bg-background"
           >
-            {/* TxType */}
-            <div className="text-sm"><KindBadge kind={t.kind} /></div>
-            {/* Tx */}
-            <div className="text-sm font-semibold text-muted-foreground">
+            {/* TxType + Tx */}
+            <div className="flex items-center gap-3 text-sm">
+              <KindBadge kind={t.kind} />
               <button className="text-xs underline" onClick={() => t.link && window.open(t.link, "_blank")}>{t.hash}</button>
             </div>
             {/* Details */}

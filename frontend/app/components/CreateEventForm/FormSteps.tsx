@@ -418,9 +418,9 @@ const FormSteps: React.FC<FormStepsProps> = ({
                       ))}
                     </select>
                   </div>
-
+                  {/* 
                   {/* Event Slug */}
-                  <div className="space-y-3">
+                  {/* <div className="space-y-3">
                     <label className="text-sm font-semibold text-[var(--app-foreground)]">
                       Event Slug
                     </label>
@@ -460,7 +460,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                     <p className="text-xs text-[var(--app-foreground-muted)]">
                       A unique identifier for your event URL. Only lowercase letters, numbers, and hyphens allowed.
                     </p>
-                  </div>
+                  </div> */}
                 </div>
               )}
 
