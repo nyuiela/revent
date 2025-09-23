@@ -1,5 +1,6 @@
 import React from 'react'
 import EventPage from '../components/EventPage'
+import type { Metadata, ResolvingMetadata } from 'next'
 
 type Props = {
   params: Promise<{
@@ -52,6 +53,58 @@ async function fetchEventByEventId(eventId: string) {
   } catch (error) {
     console.error('Error fetching event by eventId from Graph Protocol:', error);
     return null;
+  }
+}
+
+// Helper used by generateMetadata to build per-event SEO
+async function getEventForSEO(slug: string) {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://revents.io';
+    const res = await fetch(`${baseUrl}/api/events/slug/${slug}`, { next: { revalidate: 300 } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.event ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function generateMetadata(
+  { params }: Props,
+  _parent: ResolvingMetadata
+): Promise<Metadata> {
+  const { slug } = await params
+  const event = await getEventForSEO(slug)
+
+  const site = 'https://revents.io'
+  const url = `${site}/${slug}`
+  const title = event?.title ? `${event.title} | Revent` : 'Event | Revent'
+  const description = (event?.description || 'Discover and attend onchain events.').slice(0, 160)
+  const image = event?.avatarUrl || `${site}/hero.png`
+
+  return {
+    title,
+    description,
+    metadataBase: new URL(site),
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'website',
+      url,
+      title,
+      description,
+      images: [{ url: image, width: 1200, height: 630, alt: event?.title || 'Event' }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [image],
+    },
+    robots: { index: true, follow: true },
+    other: {
+      'event:id': event?.id,
+      'event:slug': slug,
+    },
   }
 }
 
@@ -118,12 +171,45 @@ const EventDetailPage = async ({ params }: Props) => {
     console.log(`Found IPFS hash from Graph Protocol: ${ipfsHash}`);
 
     return (
-      <EventPage
-        eventId={graphEvent.id}
-        ipfsHash={ipfsHash}
-        idType="slug"
-        graphEventData={graphEvent}
-      />
+      <>
+        <script
+          type="application/ld+json"
+          // Event JSON-LD for rich snippets
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Event',
+              name: graphEvent.title,
+              startDate: graphEvent.startTime ? new Date(parseInt(graphEvent.startTime) * 1000).toISOString() : undefined,
+              endDate: graphEvent.endTime ? new Date(parseInt(graphEvent.endTime) * 1000).toISOString() : undefined,
+              eventStatus: 'https://schema.org/EventScheduled',
+              eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
+              location: {
+                '@type': 'Place',
+                name: graphEvent.locationName || 'TBA',
+                geo: graphEvent.lat && graphEvent.lng ? { '@type': 'GeoCoordinates', latitude: graphEvent.lat, longitude: graphEvent.lng } : undefined,
+              },
+              image: graphEvent.avatarUrl,
+              description: graphEvent.description,
+              organizer: { '@type': 'Organization', name: graphEvent.username || 'Revent Creator' },
+              url: `https://revents.io/${slug}`,
+              offers: {
+                '@type': 'Offer',
+                url: `https://revents.io/${slug}`,
+                price: graphEvent.registrationFee?.replace(/[^0-9.]/g, '') || '0',
+                priceCurrency: 'ETH',
+                availability: 'https://schema.org/InStock',
+              },
+            }),
+          }}
+        />
+        <EventPage
+          eventId={graphEvent.id}
+          ipfsHash={ipfsHash}
+          idType="slug"
+          graphEventData={graphEvent}
+        />
+      </>
     );
   } else {
     // Event not found

@@ -20,7 +20,7 @@ function Tab({ name, activeIcon, inactiveIcon, path, isActive, setActiveTab }: T
   return (
     <div
       // href={path}
-      className={`h-10 relative shrink-0 w-[62.5px] flex flex-col items-center justify-center ${name === "Create" ? "w-[80px] absolute bottom-[1rem] bg-foreground rounded-full p-4 h-12 flex items-center justify-center shadow-2xl border-t-2" : ""}`}
+      className={`h-10 relative shrink-0 w-[62.5px] flex flex-col items-center justify-center ${name === "Create" ? "w-[80px] absolute bottom-[1rem] bg-foreground rounded-full p-4 h-12 flex items-center justify-center shadow-2xl border-t-4 border-white dark:border-gray-800" : ""}`}
       onClick={() => setActiveTab(name)}
     >
       {name === "Create" && <div className="absolute text-background font-bold">Create</div>}

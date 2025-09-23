@@ -81,6 +81,48 @@ export default function App() {
   }, [activeTab, router]);
   return (
     <div className="flex flex-col min-h-screen font-sans text-[var(--app-foreground)] mini-app-theme from-[var(--app-background)] to-[var(--app-gray)]">
+      {/* Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "Revent",
+            "description": "Discover, create, and attend onchain events. Earn tokens by participating in blockchain events, streaming, and contributing to the decentralized ecosystem.",
+            "url": "https://revents.io",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web Browser",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "creator": {
+              "@type": "Organization",
+              "name": "Revent Team",
+              "url": "https://revents.io"
+            },
+            "featureList": [
+              "Create onchain events",
+              "Discover blockchain events",
+              "Earn token rewards",
+              "Event streaming",
+              "NFT attendance verification",
+              "Decentralized event management"
+            ],
+            "screenshot": "https://revents.io/hero.png",
+            "softwareVersion": "1.0",
+            "datePublished": "2024-01-01",
+            "dateModified": new Date().toISOString(),
+            "inLanguage": "en-US",
+            "isAccessibleForFree": true,
+            "browserRequirements": "Requires JavaScript. Requires HTML5.",
+            "softwareRequirements": "Any modern web browser",
+            "permissions": "camera, microphone (for event streaming)"
+          })
+        }}
+      />
 
       <div className="w-full max-w-md mx-auto p-0 ">
         <header className="flex justify-between items-center mb-0 h-0">
