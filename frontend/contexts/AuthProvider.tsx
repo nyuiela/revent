@@ -74,6 +74,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children, fallback }) => {
               Connect Wallet
             </div>
           </div>
+          <div className="mt-4 text-[11px] text-muted-foreground text-center">powered by revent</div>
         </div>
         <WalletModal
           isOpen={showWalletModal}
