@@ -89,7 +89,7 @@ export default function EventBoard() {
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+    <div className="overflow-hidden rounded-2xl border-none border-border bg-card">
       <div className="grid grid-cols-[100px_1fr_100px] border-b border-border px-4 py-3 text-xs font-medium text-muted-foreground">
         <div>EVENT</div>
         <div className="">TITLE</div>
@@ -99,7 +99,7 @@ export default function EventBoard() {
         {events.map((event, idx) => (
           <div
             key={event.id}
-            className="grid grid-cols-[100px_1fr_100px] items-center px-6 py-4 odd:bg-background"
+            className="grid grid-cols-[100px_1fr_100px] items-center px-6 py-4 odd:bg-background border-b-[0.5px] border-border rounded-xl"
           >
             <div className="text-sm font-semibold text-muted-foreground">
               <div className="h-12 w-12 overflow-hidden rounded-full border border-border bg-muted">
@@ -110,7 +110,7 @@ export default function EventBoard() {
               <div>
                 <div className="font-semibold">{event.title}</div>
                 <div className="text-xs text-muted-foreground">
-                  {event.isLive ? "🔴 Live" : "⏸ Not Live"} • {event.maxAttendees} max
+                  {event.isLive ? "Live" : "Not Live"} • {event.maxAttendees} max
                 </div>
               </div>
             </div>

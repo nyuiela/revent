@@ -36,10 +36,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   return (
     <AuthContext.Provider value={value}>
       {children}
-      <WalletModal 
-        isOpen={showWalletModal} 
-        onClose={() => setShowWalletModal(false)} 
-        className="bg-black shadow-lg" 
+      <WalletModal
+        isOpen={showWalletModal}
+        onClose={() => setShowWalletModal(false)}
+        className="bg-black shadow-lg"
       />
     </AuthContext.Provider>
   );
@@ -60,14 +60,14 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children, fallback }) => {
     }
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div className="relative w-full max-w-md mx-auto border border-[var(--app-card-border)] rounded-2xl shadow-xl p-6 bg-background animate-in slide-in-from-bottom-4">
+      <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="relative w-[98%] max-w-md mx-auto rounded-2xl shadow-xl p-6 bg-background animate-in slide-in-from-bottom-4">
           <div className="text-center">
             <h3 className="text-lg font-semibold mb-2">Connect Your Wallet</h3>
             <p className="text-sm text-muted-foreground mb-6">
               Please connect your wallet to access this page
             </p>
-            <div 
+            <div
               className="flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-app-card-bg border border-app-card-border text-sm cursor-pointer hover:bg-app-gray transition-colors mx-auto"
               onClick={() => setShowWalletModal(true)}
             >
@@ -75,10 +75,10 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children, fallback }) => {
             </div>
           </div>
         </div>
-        <WalletModal 
-          isOpen={showWalletModal} 
-          onClose={() => setShowWalletModal(false)} 
-          className="bg-black shadow-lg" 
+        <WalletModal
+          isOpen={showWalletModal}
+          onClose={() => setShowWalletModal(false)}
+          className="bg-black shadow-lg z-50"
         />
       </div>
     );
