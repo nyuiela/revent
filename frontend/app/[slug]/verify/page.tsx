@@ -68,7 +68,7 @@ export default function VerifyPage({ params }: Props) {
     };
 
     fetchEventData();
-  }, []);
+  }, [params]);
 
   if (loading) {
     return (

@@ -531,12 +531,12 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
       </div>
 
       {/* QR Code Bottom Sheet */}
-      <QRCodeBottomSheet
+      {/* <QRCodeBottomSheet
         isOpen={isQRCodeOpen}
         onClose={() => setIsQRCodeOpen(false)}
-        eventId={numericEventId}
+        slug={slug}
         eventTitle="Event Verification"
-      />
+      /> */}
     </div>
   );
 }

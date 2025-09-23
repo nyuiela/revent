@@ -38,6 +38,7 @@ export default function QRCodeBottomSheet({
         const svgData = new XMLSerializer().serializeToString(svgElement);
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
+        // @ts-expect-error - Image is not defined in the browser
         const img = new Image();
 
         img.onload = () => {

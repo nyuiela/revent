@@ -7,6 +7,7 @@ import {
   generateAndUploadTokenMetadata
 } from '@/lib/event-metadata';
 import { generateTokenId as generateTokenIdUtil } from '@/lib/token-id-generator';
+import { EventFormData } from '@/utils/types';
 
 export default function TestMetadataPage() {
   const [eventId, setEventId] = useState('1');
@@ -36,7 +37,8 @@ export default function TestMetadataPage() {
     isLive: false,
     platforms: ["Zoom", "Discord"],
     totalRewards: 100,
-    eventType: "offline" as const,
+    eventType: "In-Person" as const,
+    onlinePlatformLink: "",
     hosts: [
       { name: "Alice Johnson", role: "Organizer", avatar: "" },
       { name: "Bob Smith", role: "Speaker", avatar: "" }
@@ -77,7 +79,7 @@ export default function TestMetadataPage() {
     console.log('Current origin:', typeof window !== 'undefined' ? window.location.origin : 'server-side');
 
     try {
-      const generatedMetadata = generateEventMetadataJSON(eventId, sampleEventData);
+      const generatedMetadata = generateEventMetadataJSON(eventId, sampleEventData as EventFormData);
       const url = getEventMetadataUrl(eventId);
 
       console.log('Generated metadata:', generatedMetadata);

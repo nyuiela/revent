@@ -83,7 +83,7 @@ export default function EventBoard() {
   if (events.length === 0) {
     return (
       <div className="overflow-hidden rounded-2xl border border-border bg-card p-8 text-center">
-        <p className="text-muted-foreground">You haven't created any events yet</p>
+        <p className="text-muted-foreground">You haven&apos;t created any events yet</p>
       </div>
     );
   }
@@ -115,9 +115,9 @@ export default function EventBoard() {
               </div>
             </div>
             <div className="text-right text-base font-bold">
-              <Button 
-                variant="secondary" 
-                size="sm" 
+              <Button
+                variant="secondary"
+                size="sm"
                 className="w-sm bg-muted rounded-md px-2 py-1"
                 onClick={() => window.open(`/${event.slug}/manage`, '_blank')}
               >

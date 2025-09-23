@@ -60,7 +60,7 @@ export function generateEventMetadata(
   const attributes = [
     {
       trait_type: "Event Type",
-      value: formData.eventType === "online" ? "Online" : "Offline"
+      value: formData.eventType === "Online" ? "Online" : "In-Person"
     },
     {
       trait_type: "Category",

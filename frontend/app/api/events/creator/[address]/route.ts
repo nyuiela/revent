@@ -198,7 +198,7 @@ export async function GET(
 
     return NextResponse.json({
       events: [],
-      creator: address,
+      // creator: address,
       source: "error",
       error: error instanceof Error ? error.message : "Unknown error",
       details: "Failed to fetch events by creator from The Graph Protocol"

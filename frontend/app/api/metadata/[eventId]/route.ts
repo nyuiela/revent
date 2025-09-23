@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateEventMetadata } from '@/lib/event-metadata';
+import { EventFormData } from '@/utils/types';
 
 export async function GET(
   request: NextRequest,
@@ -37,12 +38,13 @@ export async function GET(
       location: 'TBD',
       coordinates: { lat: 0, lng: 0 },
       image: `${baseUrl}/images/default-event.png`,
+      onlinePlatformLink: '',
       category: 'Other',
       maxParticipants: 100,
       isLive: false,
       platforms: [],
       totalRewards: 0,
-      eventType: 'offline' as const,
+      eventType: 'In-Person' as const,
       hosts: [],
       agenda: [],
       sponsors: [],
@@ -60,7 +62,7 @@ export async function GET(
       tempTicket: { type: "", price: 0, currency: "USD", quantity: 0, perks: [] }
     };
 
-    const metadata = generateEventMetadata(eventId, placeholderEventData, baseUrl);
+    const metadata = generateEventMetadata(eventId, placeholderEventData as EventFormData, baseUrl);
 
     return NextResponse.json(metadata, {
       headers: {
