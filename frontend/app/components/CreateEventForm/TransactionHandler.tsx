@@ -7,6 +7,9 @@ import { WalletModal } from "@coinbase/onchainkit/wallet";
 import { Loader2 } from "lucide-react";
 import { EventFormData } from "@/utils/types";
 import { useNotificationHelpers } from "@/hooks/useNotifications";
+import MultiContractButton from "../button/MultiContractButton";
+import { eventAbi, eventAddress, ticketAbi, ticketAddress } from "@/lib/contract";
+import { Abi } from "viem";
 
 interface TransactionHandlerProps {
   isConnected: boolean;
@@ -96,7 +99,8 @@ const TransactionHandler: React.FC<TransactionHandlerProps> = ({
   return (
     <>
       {/* Single Batched Event and Ticket Creation Transaction */}
-      {isConnected && canUseTransaction && preparedContracts ? (
+      {true && isConnected && canUseTransaction && preparedContracts ? (
+
         <Transaction
           chainId={chainId}
           contracts={(preparedContracts || []) as never}
@@ -163,11 +167,11 @@ const TransactionHandler: React.FC<TransactionHandlerProps> = ({
             <TransactionStatusLabel />
             <TransactionStatusAction />
           </TransactionStatus>
-        </Transaction>
+        </Transaction >
       ) : null}
 
       {/* Connect Wallet */}
-      {!isConnected ? (
+      {/* {!isConnected ? (
         <div className="mt-6 p-4 px-0 rounded-lg w-full flex flex-col items-center justify-center">
           <div className="text-center w-full flex flex-col items-center justify-center">
             <button
@@ -181,10 +185,10 @@ const TransactionHandler: React.FC<TransactionHandlerProps> = ({
             </p>
           </div>
         </div>
-      ) : null}
+      ) : null} */}
 
       {/* Transaction Progress Indicator */}
-      {isSubmitting && (
+      {/* {isSubmitting && (
         <div className="mt-4 p-4 bg-app-card-bg border border-border rounded-lg">
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
@@ -206,7 +210,7 @@ const TransactionHandler: React.FC<TransactionHandlerProps> = ({
             </div>
           )}
         </div>
-      )}
+      )} */}
 
       {/* Wallet Modal */}
       <WalletModal

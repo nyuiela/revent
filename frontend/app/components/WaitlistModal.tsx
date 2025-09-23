@@ -48,7 +48,7 @@ export default function WaitlistModal({ isOpen, onClose }: Props) {
             {/* Header */}
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-[var(--app-accent)] rounded-full flex items-center justify-center mx-auto mb-4">
-                <Mail className="w-8 h-8 text-white" />
+                <Mail className="w-8 h-8 text-foreground" />
               </div>
               <h2 className="text-xl font-semibold text-[var(--app-foreground)] mb-2">
                 Join the Waitlist
@@ -85,7 +85,7 @@ export default function WaitlistModal({ isOpen, onClose }: Props) {
               <button
                 type="submit"
                 disabled={isLoading || !email.trim()}
-                className="w-full bg-[var(--app-accent)] hover:bg-[var(--app-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                className="w-full bg-emerald-600 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-background font-medium py-3 px-4 rounded-lg transition-colors"
               >
                 {isLoading ? "Joining..." : "Join Waitlist"}
               </button>
@@ -120,7 +120,7 @@ export default function WaitlistModal({ isOpen, onClose }: Props) {
             <button
               type="button"
               onClick={onClose}
-              className="bg-[var(--app-accent)] hover:bg-[var(--app-accent-hover)] text-white font-medium py-3 px-6 rounded-lg transition-colors"
+              className="bg-[var(--app-accent)] hover:bg-background/90 text-foreground font-medium py-3 px-6 rounded-lg transition-colors"
             >
               Get Started
             </button>

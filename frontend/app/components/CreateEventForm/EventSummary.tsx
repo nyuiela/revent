@@ -196,7 +196,7 @@ const EventSummary: React.FC<EventSummaryProps> = ({
       </div>
 
       {/* Transaction Mode Selection */}
-      {isConnected && canUseTransaction && !preparedContracts && (
+      {/* {isConnected && canUseTransaction && !preparedContracts && (
         <div className="mb-6 p-4 bg-muted border border-border rounded-lg">
           <h3 className="text-lg font-medium mb-4">Transaction Mode</h3>
           <div className="space-y-3">
@@ -234,10 +234,10 @@ const EventSummary: React.FC<EventSummaryProps> = ({
             </label>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Create Event Button (prepares everything) */}
-      {isConnected && !preparedContracts && (
+      {/* {isConnected && !preparedContracts && (
         <div className="mt-6 p-4 px-0  rounded-lg">
           <div className="text-center flex flex-col items-center justify-center">
             <button
@@ -266,10 +266,10 @@ const EventSummary: React.FC<EventSummaryProps> = ({
             )}
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Immediate Success Indicator */}
-      {transactionSuccessful && (
+      {/* {transactionSuccessful && (
         <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -287,9 +287,9 @@ const EventSummary: React.FC<EventSummaryProps> = ({
             </div>
           )}
         </div>
-      )}
+      )} */}
 
-      <p className="mt-2 text-center text-xs text-muted-foreground">
+      {/* <p className="mt-2 text-center text-xs text-muted-foreground">
         <button
           type="button"
           onClick={resetTransactionState}
@@ -297,7 +297,7 @@ const EventSummary: React.FC<EventSummaryProps> = ({
         >
           Cancel
         </button>
-      </p>
+      </p> */}
     </div>
   );
 };

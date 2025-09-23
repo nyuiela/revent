@@ -13,6 +13,7 @@ type RegistrationSuccessCardProps = {
   totalPrice?: number;
   currency?: string;
   onClose?: () => void;
+  ticketsCreated?: boolean;
 };
 
 export default function RegistrationSuccessCard({
@@ -21,7 +22,8 @@ export default function RegistrationSuccessCard({
   quantity = 1,
   totalPrice = 0,
   currency = "USD",
-  onClose
+  onClose,
+  ticketsCreated = false
 }: RegistrationSuccessCardProps) {
   const [showSuccess, setShowSuccess] = useState(true);
 
@@ -48,6 +50,16 @@ export default function RegistrationSuccessCard({
 
       {/* Success Card */}
       <Card className="z-10 w-[400px] text-center shadow-none border-none bg-transparent">
+        {/* Event Image */}
+        {event.image ? (
+          <div className="w-full mb-3">
+            <img
+              src={event.image}
+              alt={event.title}
+              className="w-full h-40 object-cover rounded-xl border border-border"
+            />
+          </div>
+        ) : null}
         {/* <CardHeader>
           <div className="flex items-center justify-center mb-2">
             <CheckCircle className="w-12 h-12 text-green-500" />
@@ -69,6 +81,12 @@ export default function RegistrationSuccessCard({
                 <MapPin className="w-4 h-4" />
                 {event.location}
               </div>
+              {ticketsCreated && (
+                <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                  <Ticket className="w-4 h-4" />
+                  Tickets created for this event
+                </div>
+              )}
             </div>
           </div>
 

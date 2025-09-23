@@ -1,9 +1,10 @@
 'use client'
 
-import React from 'react'
-import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import React, { useState } from 'react'
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId, useSwitchChain } from 'wagmi'
 import type { Abi } from 'viem'
 import { toast } from 'react-hot-toast'
+import { WalletModal } from '@coinbase/onchainkit/wallet'
 
 type HexAddress = `0x${string}`
 
@@ -50,6 +51,7 @@ export interface MultiContractButtonProps {
   // New props for multicall behavior
   useMulticall?: boolean // If true, will attempt to batch calls
   sequential?: boolean // If true, will execute calls one by one
+  preSubmitFunction?: () => Promise<ContractCall[] | void>
 }
 
 export function MultiContractButton(props: MultiContractButtonProps) {
@@ -79,6 +81,7 @@ export function MultiContractButton(props: MultiContractButtonProps) {
     onStateChange,
     useMulticall = false,
     sequential = false,
+    preSubmitFunction,
   } = props
 
   const { writeContract, data: txHash, isPending: isConfirming } = useWriteContract()
@@ -93,7 +96,11 @@ export function MultiContractButton(props: MultiContractButtonProps) {
   const [hasClicked, setHasClicked] = React.useState(false)
   const [fallbackSuccess, setFallbackSuccess] = React.useState(false)
   const [completedCalls, setCompletedCalls] = React.useState(0)
-
+  const [showModalConnect, setShowModalConnect] = useState(false);
+  const { address: account } = useAccount()
+  const currentChainId = useChainId()
+  const { switchChainAsync } = useSwitchChain()
+  const [loading, setLoading] = useState(false)
   const state: TxButtonState = React.useMemo(() => {
     if (canceled) return 'canceled'
     if (!hasClicked) return 'idle'
@@ -130,10 +137,15 @@ export function MultiContractButton(props: MultiContractButtonProps) {
     if (txHash && onWriteSuccess) onWriteSuccess(txHash)
   }, [txHash, onWriteSuccess])
 
+  const notifiedForHashRef = React.useRef<string | null>(null)
   React.useEffect(() => {
-    if (isSuccess && onReceiptSuccess) onReceiptSuccess(receipt)
-    if (isSuccess && showToast) toast.success(successToastMessage)
-  }, [isSuccess, receipt, onReceiptSuccess, showToast, successToastMessage])
+    if (!isSuccess) return
+    if (!txHash) return
+    if (notifiedForHashRef.current === txHash) return
+    notifiedForHashRef.current = txHash
+    if (onReceiptSuccess) onReceiptSuccess(receipt)
+    if (showToast) toast.success(successToastMessage)
+  }, [isSuccess, txHash, receipt, onReceiptSuccess, showToast, successToastMessage])
 
   // Handle receipt errors
   React.useEffect(() => {
@@ -153,6 +165,8 @@ export function MultiContractButton(props: MultiContractButtonProps) {
     if (txHash && !isSuccess && !isError && !receiptError && isMining) {
       const timeout = setTimeout(() => {
         console.log('[MultiContractButton] Fallback success triggered for tx:', txHash)
+        if (notifiedForHashRef.current === txHash) return
+        notifiedForHashRef.current = txHash
         setFallbackSuccess(true)
         if (showToast) toast.success(successToastMessage)
         if (onReceiptSuccess) onReceiptSuccess({ hash: txHash })
@@ -197,12 +211,13 @@ export function MultiContractButton(props: MultiContractButtonProps) {
     return 'Unknown error'
   }
 
-  const executeSequentialCalls = React.useCallback(async () => {
-    console.log('[MultiContractButton] Executing sequential calls:', contracts.length)
+  const executeSequentialCalls = React.useCallback(async (callsParam?: ContractCall[]) => {
+    const calls = callsParam ?? contracts
+    console.log('[MultiContractButton] Executing sequential calls:', calls.length)
 
-    for (let i = 0; i < contracts.length; i++) {
-      const call = contracts[i]
-      console.log(`[MultiContractButton] Executing call ${i + 1}/${contracts.length}:`, call)
+    for (let i = 0; i < calls.length; i++) {
+      const call = calls[i]
+      console.log(`[MultiContractButton] Executing call ${i + 1}/${calls.length}:`, call)
 
       try {
         await writeContract({
@@ -230,12 +245,13 @@ export function MultiContractButton(props: MultiContractButtonProps) {
     }
   }, [contracts, writeContract, chainId, showToast, onError])
 
-  const executeMulticall = React.useCallback(async () => {
-    console.log('[MultiContractButton] Executing multicall:', contracts.length)
+  const executeMulticall = React.useCallback(async (callsParam?: ContractCall[]) => {
+    const calls = callsParam ?? contracts
+    console.log('[MultiContractButton] Executing multicall:', calls.length)
 
     // For now, we'll execute the first call and let the user handle multicall logic
     // In a real implementation, you'd use a multicall contract
-    const firstCall = contracts[0]
+    const firstCall = calls[0]
 
     try {
       await writeContract({
@@ -254,22 +270,45 @@ export function MultiContractButton(props: MultiContractButtonProps) {
     }
   }, [contracts, writeContract, chainId, showToast, onError])
 
-  const handleClick = React.useCallback(() => {
+  const handleClick = React.useCallback(async () => {
     console.log('[MultiContractButton] handleClick invoked with', contracts.length, 'contracts')
     setCanceled(false)
     setLastError(null)
     setFallbackSuccess(false)
     setHasClicked(true)
     setCompletedCalls(0)
+    setLoading(true)
+    const prepared = await preSubmitFunction?.();
+    const calls = (prepared && Array.isArray(prepared) && prepared.length > 0) ? prepared as ContractCall[] : contracts
+    if (!calls || calls.length === 0) {
+      setLoading(false)
+      toast.error('Nothing to submit yet. Please try again.')
+      return
+    }
+
+    // Ensure correct chain before writing
+    try {
+      if (chainId && currentChainId && chainId !== currentChainId) {
+        await switchChainAsync({ chainId })
+      }
+    } catch (e) {
+      setLoading(false)
+      const msg = getFriendlyError(e)
+      if (showToast) toast.error(`Switch network failed: ${msg}`)
+      if (onError) onError(e)
+      return
+    }
     if (onWriteStart) onWriteStart()
 
     if (useMulticall) {
-      executeMulticall()
+      executeMulticall(calls)
+      setLoading(false)
     } else if (sequential) {
-      executeSequentialCalls()
+      executeSequentialCalls(calls)
+      setLoading(false)
     } else {
       // Default: execute first call only
-      const firstCall = contracts[0]
+      const firstCall = calls[0]
       try {
         writeContract({
           address: firstCall.address,
@@ -279,14 +318,16 @@ export function MultiContractButton(props: MultiContractButtonProps) {
           value: firstCall.value,
           chainId,
         })
+        setLoading(false)
       } catch (err) {
+        setLoading(false)
         console.error('[MultiContractButton] Error:', err)
         setLastError(err)
         if (showToast) toast.error(getFriendlyError(err))
         if (onError) onError(err)
       }
     }
-  }, [contracts, onWriteStart, useMulticall, sequential, executeMulticall, executeSequentialCalls, writeContract, chainId, showToast, onError])
+  }, [contracts, onWriteStart, useMulticall, sequential, executeMulticall, executeSequentialCalls, writeContract, chainId, showToast, onError, preSubmitFunction, currentChainId, switchChainAsync])
 
   const handleCancel = React.useCallback(() => {
     setCanceled(true)
@@ -311,14 +352,17 @@ export function MultiContractButton(props: MultiContractButtonProps) {
 
   return (
     <div className={`${className}`}>
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={Boolean(isDisabled)}
-        className={`rounded-xl px-3 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-10 ${btnClassName}`}
-      >
-        {label}{progressText}
-      </button>
+      {!account ? <button className={`rounded-xl px-3 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-10 ${btnClassName}`} onClick={() => setShowModalConnect(true)}>Connect Wallet</button> :
+        <button
+          type="button"
+          onClick={handleClick}
+          disabled={Boolean(isDisabled) || loading}
+          className={`rounded-xl px-3 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-10 ${btnClassName} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          {loading ? 'Loading...' : `${label}${progressText}`}
+        </button>
+      }
+
       {!showCancel && (state === 'confirming' || state === 'pending') && (
         <button
           type="button"
@@ -338,6 +382,7 @@ export function MultiContractButton(props: MultiContractButtonProps) {
               `Executing ${contracts.length} contract call${contracts.length > 1 ? 's' : ''}...`}
         </div>
       )}
+      <WalletModal isOpen={showModalConnect} onClose={() => { setShowModalConnect(false) }} className="bg-black shadow-lg z-50" />
     </div>
   )
 }

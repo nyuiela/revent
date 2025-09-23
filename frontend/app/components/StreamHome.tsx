@@ -126,7 +126,7 @@ export default function StreamHome() {
   }
 
   return (
-    <div className="space-y-5 animate-fade-in w-full bg-red-00">
+    <div className="space-y-5 animate-fade-in w-full bg-red-00 mb-20">
       <StreamHeader />
 
       {/* Main viewport card */}

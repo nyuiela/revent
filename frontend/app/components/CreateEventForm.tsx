@@ -20,6 +20,7 @@ import FormSteps from "./CreateEventForm/FormSteps";
 import TransactionHandler from "./CreateEventForm/TransactionHandler";
 import EventSummary from "./CreateEventForm/EventSummary";
 import { mockEvents } from "@/lib/create-event-data";
+import { MultiContractButton } from "./button/MultiContractButton";
 
 const CreateEventForm = () => {
   const { address, isConnected } = useAccount()
@@ -455,9 +456,12 @@ const CreateEventForm = () => {
 
   // New function to create a single prepared set for Transaction.
   const createBatchedEventAndTickets = async (_eventId: string) => {
-    const contracts = [];
+    const contracts: any[] = [];
     const eventContract = await handleSubmit();
     contracts.push(...eventContract);
+    // const tickets = await createBatchedTickets(_eventId);
+    const ticket = await createBatchedTickets('3')
+    if (ticket) contracts.push(ticket);
     return contracts;
   };
 
@@ -503,7 +507,8 @@ const CreateEventForm = () => {
       notifyIpfsUploadStarted();
 
       // Prepare both event and ticket contracts in one go
-      const contracts = await createBatchedEventAndTickets(nextEventId);
+      const contracts = await createBatchedEventAndTickets("2");
+      // const tickets = await createBatchedTickets(nextEventId);
 
       console.log('Prepared batched contract calls:', contracts);
       setPreparedContracts(contracts);
@@ -529,9 +534,29 @@ const CreateEventForm = () => {
       setVerificationStatus('Preparing everything for event creation...');
 
       // First prepare all contracts (image upload, metadata upload, contract preparation)
-      await prepareContractCalls();
+      // await prepareContractCalls();
+      const contracts = await createBatchedEventAndTickets("2");
+      // const contracts = await handleSubmit();
+      // setPreparedContracts([
+      //   {
+      //     address: ticketAddress as `0x${string}`,
+      //     abi: ticketAbi.abi,
+      //     functionName: "createTickets",
+      //     args: [
+      //       BigInt(2),
+      //       ["Ticket 1", "Ticket 2"],
+      //       ["Ticket 1", "Ticket 2"],
+      //       [BigInt(1000000000000000000), BigInt(2000000000000000000)],
+      //       ["USD", "USD"],
+      //       [BigInt(100), BigInt(200)],
+      //       [["Perk 1", "Perk 2"], ["Perk 3", "Perk 4"]]
+      //     ]
+      //   }
+      // ]);
+      setPreparedContracts(contracts);
 
       setVerificationStatus('Ready to create event! Click the transaction button below.');
+      return contracts;
     } catch (error) {
       console.error('Error preparing for event creation:', error);
       setVerificationStatus('Failed to prepare for event creation');
@@ -780,7 +805,7 @@ const CreateEventForm = () => {
   };
 
   return (
-    <>
+    <div className="relative bg-red-500">
       <div className="absolute top-4 left-4 z-[20]">
         <Button variant="ghost" onClick={() => router.back()}>
           <ChevronLeftIcon className="w-4 h-4" />
@@ -853,7 +878,7 @@ const CreateEventForm = () => {
                     notifyEventCreationStarted={notifyEventCreationStarted}
                   />
 
-                  <TransactionHandler
+                  {/* <TransactionHandler
                     isConnected={isConnected}
                     canUseTransaction={canUseTransaction}
                     chainId={chainId}
@@ -876,6 +901,33 @@ const CreateEventForm = () => {
                     createEventDetails={createEventDetails}
                     generateAndUploadEventMetadata={generateAndUploadEventMetadata}
                     updateLastEventId={updateLastEventId}
+                  /> */}
+
+                  <MultiContractButton
+                    useMulticall={false}
+                    sequential={true}
+                    chainId={chainId}
+                    contracts={preparedContracts || []}
+                    onReceiptSuccess={async () => {
+                      setTransactionSuccessful(true);
+                      const eid = preGeneratedEventId || createdEventId || formData.slug || 'event';
+                      const details = createEventDetails(eid);
+                      setCreatedEventDetails(details);
+                      setShowSuccessCard(true);
+                    }}
+                    idleLabel="Create Event & Tickets"
+                    className="mt-5"
+                    successLabel="Event & Tickets Created"
+                    errorLabel="Try Again"
+                    cancelLabel="Cancel"
+                    showCancel={true}
+                    showToast={true}
+                    successToastMessage="Event & Tickets Created"
+                    preSubmitFunction={handleCreateEvent}
+                    // onWriteSuccess={async () => {
+                    //   await handleCreateEvent();
+                    // }}
+                    btnClassName="w-full bg-emerald-600 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-background font-medium py-3 px-4 rounded-lg transition-colors"
                   />
                 </div>
               </div>
@@ -924,7 +976,7 @@ const CreateEventForm = () => {
         </div>
       )}
 
-    </>
+    </div>
   );
 };
 
