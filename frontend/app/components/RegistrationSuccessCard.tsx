@@ -119,14 +119,14 @@ export default function RegistrationSuccessCard({
           {/* Success Message */}
           <p className="text-foreground">
             {ticketType
-              ? `You've successfully purchased ${quantity > 1 ? `${quantity} tickets` : 'a ticket'} for this event!`
-              : "You've successfully registered for this event!"
+              ? `You've successfully minted ${quantity > 1 ? `${quantity} ticket types` : 'a ticket type'} for this event!`
+              : "You've successfully created & minted this event!"
             }
           </p>
 
           {/* Action Buttons */}
           <div className="flex gap-3 justify-center">
-            <button
+            {/* <button
               onClick={() => {
                 setShowSuccess(false);
                 onClose?.();
@@ -134,7 +134,7 @@ export default function RegistrationSuccessCard({
               className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
             >
               Cast Ticket
-            </button>
+            </button> */}
             <button
               onClick={() => {
                 setShowSuccess(false);

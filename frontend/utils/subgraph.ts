@@ -96,17 +96,29 @@ const lastEventIdQuery = gql`
 
 // Function to get the last event ID from the subgraph with fallback
 export async function getLastEventId(): Promise<number> {
-  // First try to get from localStorage to avoid repeated Graph API calls
-  if (typeof window !== 'undefined') {
-    const cachedId = localStorage.getItem('lastEventId');
-    if (cachedId) {
-      const cached = parseInt(cachedId);
-      console.log('Using cached event ID:', cached);
-      return cached;
-    }
-  }
-
   try {
+    // Fast path: try our own events API (same source used by hooks)
+    const apiTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Events API timeout')), 3000))
+    const apiDataPromise = fetch('/api/events/graph')
+      .then(r => {
+        if (!r.ok) throw new Error('Events API failed')
+        return r.json()
+      })
+      .then((d: { events?: Array<{ id?: string }> }) => {
+        const ids = (d.events || [])
+          .map(e => (e && typeof e.id === 'string' ? parseInt(e.id, 10) : NaN))
+          .filter(n => Number.isFinite(n)) as number[]
+        if (ids.length > 0) return Math.max(...ids)
+        return null
+      })
+
+    const apiResult = await Promise.race([apiDataPromise, apiTimeout]) as number | null
+    if (typeof apiResult === 'number' && Number.isFinite(apiResult)) {
+      if (typeof window !== 'undefined') localStorage.setItem('lastEventId', String(apiResult))
+      return apiResult
+    }
+
+    // Subgraph fallback
     const { request } = await import('graphql-request');
     const client = new (await import('graphql-request')).GraphQLClient(eventUrl, { headers: eventHeaders });
 
@@ -135,12 +147,12 @@ export async function getLastEventId(): Promise<number> {
     return 0;
   } catch (error) {
     console.error('Error fetching last event ID from subgraph, using fallback:', error);
-    
+
     // Handle rate limiting specifically
     if (error instanceof Error && error.message.includes('429')) {
       console.log('Rate limited by Graph API, using cached or fallback ID');
     }
-    
+
     // Try to use cached ID if available
     if (typeof window !== 'undefined') {
       const cachedId = localStorage.getItem('lastEventId');
@@ -150,7 +162,7 @@ export async function getLastEventId(): Promise<number> {
         return cached;
       }
     }
-    
+
     // Return a timestamp-based fallback to avoid conflicts
     const fallbackId = Math.floor(Date.now() / 1000) % 1000000; // Use last 6 digits of timestamp
     console.log('Using fallback event ID:', fallbackId);

@@ -92,3 +92,17 @@ export function useLiveEvents() {
     ...rest,
   };
 }
+
+// Hook for getting the last eventId (numeric) from events list
+export function useLastEventId() {
+  const { data: events, isLoading, error } = useEvents();
+
+  const lastId = events && events.length > 0
+    ? events
+      .map(e => parseInt(e.id, 10))
+      .filter(n => Number.isFinite(n))
+      .reduce((max, n) => Math.max(max, n), 0)
+    : undefined
+
+  return { lastEventId: lastId, isLoading, error };
+}

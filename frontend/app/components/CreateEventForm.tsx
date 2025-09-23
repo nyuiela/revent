@@ -460,7 +460,7 @@ const CreateEventForm = () => {
     const eventContract = await handleSubmit();
     contracts.push(...eventContract);
     // const tickets = await createBatchedTickets(_eventId);
-    const ticket = await createBatchedTickets('3')
+    const ticket = await createBatchedTickets(_eventId)
     if (ticket) contracts.push(ticket);
     return contracts;
   };
@@ -535,7 +535,8 @@ const CreateEventForm = () => {
 
       // First prepare all contracts (image upload, metadata upload, contract preparation)
       // await prepareContractCalls();
-      const contracts = await createBatchedEventAndTickets("2");
+      const eventId = await getNextEventId();
+      const contracts = await createBatchedEventAndTickets(eventId as string);
       // const contracts = await handleSubmit();
       // setPreparedContracts([
       //   {
