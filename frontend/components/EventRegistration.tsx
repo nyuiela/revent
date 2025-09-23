@@ -135,7 +135,7 @@ export default function EventRegistration({
             <div className="pt-2">
               <Transaction
                 chainId={chainId}
-                contracts={[
+                calls={[
                   {
                     abi: ticketAbi.abi as Abi,
                     address: ticketAddress as `0x${string}`,
@@ -172,7 +172,7 @@ export default function EventRegistration({
           {canTransact ? (
             <Transaction
               chainId={chainId}
-              contracts={[
+              calls={[
                 {
                   abi: eventAbi.abi as Abi,
                   address: eventAddress as `0x${string}`,

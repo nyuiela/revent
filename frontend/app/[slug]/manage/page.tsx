@@ -13,6 +13,7 @@ import { useAccount } from "wagmi";
 import { Abi } from "viem";
 import { chainId, eventAbi, eventAddress } from "@/lib/contract";
 import ContractButton from "@/app/components/button/ContractButton";
+import { AuthGuard } from "@/contexts/AuthProvider";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -124,85 +125,88 @@ export default function ManagePage({ params }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <StreamHeader />
-      <div className="mx-auto w-full max-w-5xl px-4 py-8">
-        {/* Event Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">{values.title}</h1>
-          <p className="text-muted-foreground">
-            Event ID: {eventData?.id} | Creator: {eventData?.creator?.slice(0, 6)}...{eventData?.creator?.slice(-4)}
-          </p>
-        </div>
+    <AuthGuard>
 
-        {/* Image / Media Editor */}
-        <ImageEditor />
+      <div className="min-h-screen bg-background text-foreground">
+        <StreamHeader />
+        <div className="mx-auto w-full max-w-5xl px-4 py-8">
+          {/* Event Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">{values.title}</h1>
+            <p className="text-muted-foreground">
+              Event ID: {eventData?.id} | Creator: {eventData?.creator?.slice(0, 6)}...{eventData?.creator?.slice(-4)}
+            </p>
+          </div>
 
-        {/* Actions */}
-        <div className="mt-8">
-          <ActionsPanel
-            onPublish={() => console.log("publish")}
-            onEnd={() => console.log("end")}
-            onCancel={() => console.log("cancel")}
-            onGenerateQR={() => setQrOpen(true)}
-            onEditToggle={() => setShowDetails((s) => !s)}
-            isEditing={showDetails}
-            eventId={eventData?.id}
-          />
-        </div>
+          {/* Image / Media Editor */}
+          <ImageEditor />
 
-        {/* Details table (hidden until Edit Event) */}
-        {showDetails && (
+          {/* Actions */}
           <div className="mt-8">
-            <DetailsTable
-              fields={fields}
-              values={values}
-              onChange={(k, v) => setValues((p) => ({ ...p, [k]: v }))}
+            <ActionsPanel
+              onPublish={() => console.log("publish")}
+              onEnd={() => console.log("end")}
+              onCancel={() => console.log("cancel")}
+              onGenerateQR={() => setQrOpen(true)}
+              onEditToggle={() => setShowDetails((s) => !s)}
+              isEditing={showDetails}
+              eventId={eventData?.id}
             />
-            <div className="mb-6 flex items-center justify-end mt-4">
-
-              <Button
-                onClick={onSave}
-                disabled={saving}
-                className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-              >
-                {saving ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
           </div>
-        )}
 
-        {/* Participants */}
-        <div className="mt-8">
-          <ParticipantsList />
+          {/* Details table (hidden until Edit Event) */}
+          {showDetails && (
+            <div className="mt-8">
+              <DetailsTable
+                fields={fields}
+                values={values}
+                onChange={(k, v) => setValues((p) => ({ ...p, [k]: v }))}
+              />
+              <div className="mb-6 flex items-center justify-end mt-4">
+
+                <Button
+                  onClick={onSave}
+                  disabled={saving}
+                  className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+                >
+                  {saving ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Participants */}
+          <div className="mt-8">
+            <ParticipantsList />
+          </div>
+
+          {/* Tickets - hidden when none */}
+          {tickets.length > 0 && (
+            <div className="mt-8">
+              <TicketsList tickets={tickets} />
+            </div>
+          )}
         </div>
 
-        {/* Tickets - hidden when none */}
-        {tickets.length > 0 && (
-          <div className="mt-8">
-            <TicketsList tickets={tickets} />
-          </div>
-        )}
+        <ContractButton
+          idleLabel={"Cancel Event"}
+          chainId={Number(chainId)}
+          abi={eventAbi.abi as Abi}
+          address={eventAddress as `0x${string}`}
+          functionName="cancelEvent"
+          args={[BigInt(0)]}
+          btnClassName="bg-rose-600/90"
+          onWriteSuccess={() => console.log("cancel")}
+        />
+
+        <QRCodeBottomSheet
+          isOpen={qrOpen}
+          onClose={() => setQrOpen(false)}
+          slug={eventData?.slug || "event"}
+          eventTitle={values.title}
+        />
       </div>
-
-      <ContractButton
-        idleLabel={"Cancel Event"}
-        chainId={Number(chainId)}
-        abi={eventAbi.abi as Abi}
-        address={eventAddress as `0x${string}`}
-        functionName="cancelEvent"
-        args={[BigInt(0)]}
-        btnClassName="bg-rose-600/90"
-        onWriteSuccess={() => console.log("cancel")}
-      />
-
-      <QRCodeBottomSheet
-        isOpen={qrOpen}
-        onClose={() => setQrOpen(false)}
-        slug={eventData?.slug || "event"}
-        eventTitle={values.title}
-      />
-    </div>
+    </AuthGuard>
   );
 }
 

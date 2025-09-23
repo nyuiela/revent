@@ -102,7 +102,7 @@ export default function StreamHeader() {
 
           {isConnected && address ? (
             <div className="flex items-center gap-2 px-3 py-1.5 scale-[1.2] lg:scale-[1.0] rounded-full bg-app-card-bg border border-app-card-border text-sm">
-              <User className="w-4 h-4 text-primary" />
+              {/* <User className="w-4 h-4 text-primary" /> */}
               <span className="text-app-foreground">
                 {address.slice(0, 6)}...{address.slice(-4)}
               </span>

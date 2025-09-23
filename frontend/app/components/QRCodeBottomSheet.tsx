@@ -5,6 +5,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Download, X, QrCode, Share } from "lucide-react";
 import Image from "next/image";
 import Button from "@mui/material/Button";
+import { useBannerToast } from "@/contexts/BannerToastContext";
 
 interface QRCodeBottomSheetProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export default function QRCodeBottomSheet({
 }: QRCodeBottomSheetProps) {
   const [qrValue, setQrValue] = useState("");
   const qrRef = useRef<HTMLDivElement>(null);
+  const { showBannerTimed } = useBannerToast();
 
   // Generate QR code data - this could be a verification URL or event ID
   useEffect(() => {
@@ -76,7 +78,7 @@ export default function QRCodeBottomSheet({
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pb-4 border-b border-[var(--events-foreground-muted)]/20">
+        <div className="flex items-center justify-between px-6 pb-4 border-b-[1px] border-border">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-[var(--events-accent)]/20 rounded-lg">
               {/* <QrCode className="w-8 h-8 text-[var(--events-accent)]" /> */}
@@ -84,7 +86,7 @@ export default function QRCodeBottomSheet({
             </div>
             <div>
               <h3 className="text-lg font-semibold text-[var(--events-foreground)]">
-                Confirm Event Attendance
+                Event Attendance
               </h3>
               <p className="text-sm text-[var(--events-foreground-muted)]">
                 {eventTitle}
@@ -129,7 +131,7 @@ export default function QRCodeBottomSheet({
                 <Download className="w-5 h-5" />
                 Download QR Code
               </button>
-              <Button onClick={() => navigator.clipboard.writeText(qrValue)} className="mt-4 text-background font-normal gap-2">
+              <Button onClick={async () => { try { await navigator.clipboard.writeText(qrValue); showBannerTimed("Link copied", 1500); } catch { } }} className="mt-4 text-background font-normal gap-2">
                 <Share className="w-4 h-4" />
                 Share
               </Button>

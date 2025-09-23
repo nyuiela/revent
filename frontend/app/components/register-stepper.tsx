@@ -7,7 +7,7 @@ import StepContent from '@mui/material/StepContent';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import { Transaction, TransactionButton, TransactionResponse, TransactionSponsor, TransactionStatus, TransactionStatusAction, TransactionStatusLabel } from '@coinbase/onchainkit/transaction';
+import { Transaction, TransactionButton, TransactionResponseType, TransactionSponsor, TransactionStatus, TransactionStatusAction, TransactionStatusLabel } from '@coinbase/onchainkit/transaction';
 import { useCallback, useState } from 'react';
 import { eventAbi, eventAddress } from '@/lib/contract';
 import { EventFormData } from '@/utils/types';
@@ -59,7 +59,7 @@ export default function VerticalLinearStepper({ domainName, formData, ipfsHash }
     },
   ];
 
-  const handleSuccess = useCallback(async (response: TransactionResponse) => {
+  const handleSuccess = useCallback(async (response: TransactionResponseType) => {
     const transactionHash = response.transactionReceipts[0].transactionHash;
 
     console.log(`Transaction successful: ${transactionHash}`);

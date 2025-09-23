@@ -807,10 +807,10 @@ const CreateEventForm = () => {
 
   return (
     <div className="relative bg-red-500">
-      <div className="absolute top-4 left-4 z-[20]">
-        <Button variant="ghost" onClick={() => router.back()}>
-          <ChevronLeftIcon className="w-4 h-4" />
-          Back
+      <div className="fixed top-4 left-4 z-50 text-foreground bg-background">
+        <Button variant="ghost" className="cursor-pointer" onClick={() => router.back()}>
+          <ChevronLeftIcon className="w-5 h-5" />
+          Go Back
         </Button>
       </div>
 
@@ -825,7 +825,7 @@ const CreateEventForm = () => {
           uploadedFile={uploadedFile}
           previewUrl={previewUrl}
           uploadError={uploadError}
-          fileInputRef={fileInputRef}
+          fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>}
           handleInputChange={handleInputChange}
           autoFillMockData={autoFillMockData}
           handleFileSelect={handleFileSelect}

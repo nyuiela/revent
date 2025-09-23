@@ -650,7 +650,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                     <div className="flex items-center gap-1 mb-0 p-4 px-[0.2rem] rounded-xl pb-0">
                       <Transaction
                         chainId={chainId}
-                        contracts={[
+                        calls={[
                           {
                             abi: ticketAbi.abi as Abi,
                             address: ticketAddress as `0x${string}`,
@@ -692,7 +692,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                 {canTransact ? (
                   <Transaction
                     chainId={chainId}
-                    contracts={[
+                    calls={[
                       {
                         abi: eventAbi.abi as Abi,
                         address: eventAddress as `0x${string}`,
@@ -951,7 +951,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                   {isMounted && canTransact ? (
                     <Transaction
                       chainId={chainId}
-                      contracts={[
+                      calls={[
                         {
                           abi: eventAbi.abi as Abi,
                           address: eventAddress as `0x${string}`,

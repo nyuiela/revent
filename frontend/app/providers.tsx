@@ -41,14 +41,17 @@ export function Providers(props: { children: ReactNode }) {
               }}
             > */}
             <OnchainKitProvider
-              apiKey="YOUR_API_KEY"
+              apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
               chain={baseSepolia}
               miniKit={{
                 enabled: true, // Add this
               }}
               config={{
                 appearance: {
-                  mode: 'auto', // 'light' | 'dark' | 'auto'
+                  mode: "auto",
+                  theme: "mini-app-theme",
+                  name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
+                  logo: process.env.NEXT_PUBLIC_ICON_URL,
                 },
                 wallet: {
                   display: 'modal', // 'modal' | 'drawer'

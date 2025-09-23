@@ -13,7 +13,6 @@ import EventsPage from "./events/page";
 import EarnPage from "./earn/page";
 import ProfilePage from "./profile/page";
 import { useRouter } from "next/navigation";
-import { useBannerToast } from "@/contexts/BannerToastContext";
 
 
 
@@ -23,8 +22,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("Home");
   const [showWaitlist, setShowWaitlist] = useState(false);
   const router = useRouter();
-  const { showBannerPersistent, hideBanner } = useBannerToast();
-  showBannerPersistent("Beta launch");
+
   // hideBanner();
   // const addFrame = useAddFrame();
 

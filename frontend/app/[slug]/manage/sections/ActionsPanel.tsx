@@ -95,9 +95,6 @@ export default function ActionsPanel({
                 window.location.reload();
               }}
             />
-            <div className="text-xs text-purple-600 w-[90%] text-center mx-auto mt-1">
-              Publish event and Set Code
-            </div>
           </div>
 
           <div className="text-xs text-amber-600 w-[90%] text-center mx-auto mt-2">

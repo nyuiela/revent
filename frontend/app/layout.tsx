@@ -163,6 +163,8 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${plusJakarta.variable} light`}>
       <head>
+        <meta name="fc:miniapp" content="<stringified MiniAppEmbed JSON>" />
+        <meta name="fc:frame" content="<stringified MiniAppEmbed JSON>" />
         <script
           dangerouslySetInnerHTML={{
             __html: `

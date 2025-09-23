@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { CalendarDays, Gift, Home, WalletCards } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
+import { useBannerToast } from "@/contexts/BannerToastContext";
 
 interface TabProps {
   name: string;
@@ -17,18 +18,40 @@ interface TabProps {
 }
 
 function Tab({ name, activeIcon, inactiveIcon, path, isActive, setActiveTab }: TabProps) {
+  const triggerFeedback = () => {
+    try {
+      const prefersReduced = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      if (prefersReduced) return
+      if (typeof window !== 'undefined' && 'vibrate' in navigator && typeof navigator.vibrate === 'function') {
+        navigator.vibrate(15)
+        return
+      }
+      if (typeof window !== 'undefined' && ('AudioContext' in window || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)) {
+        const AudioCtx = (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext || AudioContext
+        const ctx = new AudioCtx()
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.type = 'square'
+        osc.frequency.value = 180
+        gain.gain.value = 0.02
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        const now = ctx.currentTime
+        osc.start(now)
+        osc.stop(now + 0.03)
+        osc.onended = () => {
+          try { ctx.close() } catch { }
+        }
+      }
+    } catch { }
+  }
 
   return (
     <div
       // href={path}
-      className={`h-10 relative shrink-0 w-[62.5px] flex flex-col items-center justify-center ${name === "Create" ? "w-[80px] absolute bottom-[1rem] bg-foreground rounded-full p-4 h-12 flex items-center justify-center shadow-2xl border-t-4 border-emerald-200 dark:border-emerald-600" : ""}`}
+      className={`h-10 relative shrink-0 w-[62.5px] flex flex-col items-center justify-center cursor-pointer ${name === "Create" ? "w-[80px] absolute bottom-[1rem] bg-foreground rounded-full p-4 h-12 flex items-center justify-center shadow-2xl border-t-4 border-emerald-200 dark:border-emerald-600" : ""}`}
       onClick={() => {
-        try {
-          if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-            // Light tap haptic
-            navigator.vibrate?.(10)
-          }
-        } catch { }
+        triggerFeedback()
         setActiveTab(name)
       }}
     >
@@ -65,6 +88,8 @@ export function MobileNavigation({ setActiveTab, sActiveTab }: { setActiveTab: (
   const pathname = usePathname();
   const [isHidden, setIsHidden] = useState(false)
   const hideTimeoutRef = useRef<number | null>(null)
+  const { showBannerPersistent, hideBanner } = useBannerToast();
+  showBannerPersistent("Beta launch");
 
   useEffect(() => {
     const handleScroll = () => {

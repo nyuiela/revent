@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Transaction, TransactionButton, TransactionResponse, TransactionSponsor, TransactionStatus, TransactionStatusAction, TransactionStatusLabel } from "@coinbase/onchainkit/transaction";
+import { Transaction, TransactionButton, TransactionResponseType, TransactionSponsor, TransactionStatus, TransactionStatusAction, TransactionStatusLabel } from "@coinbase/onchainkit/transaction";
 import { useNotification } from "@coinbase/onchainkit/minikit";
 import { WalletModal } from "@coinbase/onchainkit/wallet";
 import { Loader2 } from "lucide-react";
@@ -66,7 +66,7 @@ const TransactionHandler: React.FC<TransactionHandlerProps> = ({
     notifyEventCreationSuccess,
   } = useNotificationHelpers();
 
-  const handleSuccess = React.useCallback(async (response: TransactionResponse) => {
+  const handleSuccess = React.useCallback(async (response: TransactionResponseType) => {
     try {
       const transactionHash = response.transactionReceipts[0].transactionHash;
       const eventId = preGeneratedEventId || '1';
@@ -103,7 +103,7 @@ const TransactionHandler: React.FC<TransactionHandlerProps> = ({
 
         <Transaction
           chainId={chainId}
-          contracts={(preparedContracts || []) as never}
+          calls={(preparedContracts || []) as never}
           onSuccess={handleSuccess}
           onStatus={async (lifecycle) => {
             try {

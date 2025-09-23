@@ -121,7 +121,7 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
                   {canTransact ? (
                     <Transaction
                       chainId={chainId}
-                      contracts={[
+                      calls={[
                         {
                           abi: eventAbi.abi as Abi,
                           address: eventAddress as `0x${string}`,
@@ -155,7 +155,7 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
                   {canTransact ? (
                     <Transaction
                       chainId={chainId}
-                      contracts={[
+                      calls={[
                         {
                           abi: eventAbi.abi as Abi,
                           address: eventAddress as `0x${string}`,
@@ -189,7 +189,7 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
                   {canTransact ? (
                     <Transaction
                       chainId={chainId}
-                      contracts={[
+                      calls={[
                         {
                           abi: eventAbi.abi as Abi,
                           address: eventAddress as `0x${string}`,
@@ -330,7 +330,7 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
                 {canTransact ? (
                   <Transaction
                     chainId={chainId}
-                    contracts={[
+                    calls={[
                       {
                         abi: eventAbi.abi as Abi,
                         address: eventAddress as `0x${string}`,
@@ -407,7 +407,7 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
                   {canTransact ? (
                     <Transaction
                       chainId={chainId}
-                      contracts={[
+                      calls={[
                         {
                           abi: eventAbi.abi as Abi,
                           address: eventAddress as `0x${string}`,
@@ -432,7 +432,7 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
                   {canTransact ? (
                     <Transaction
                       chainId={chainId}
-                      contracts={[
+                      calls={[
                         {
                           abi: eventAbi.abi as Abi,
                           address: eventAddress as `0x${string}`,
