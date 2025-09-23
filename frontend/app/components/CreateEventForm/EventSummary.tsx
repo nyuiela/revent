@@ -48,7 +48,7 @@ const EventSummary: React.FC<EventSummaryProps> = ({
     <div className="space-y-6 -mt-28">
       {/* Event Summary */}
       <div className="space-y-4 rounded-lg">
-        <CheckCircle2Icon className="w-10 h-10 text-green-500 text-center items-center justify-center" />
+        <CheckCircle2Icon className="w-10 h-10 mx-auto text-green-500 text-center items-center justify-center" />
         <h1 className="text-2xl font-bold text-center">Event Summary</h1>
         {/* Basic Information */}
         <div className="space-y-3">

@@ -854,9 +854,9 @@ const CreateEventForm = () => {
 
       {/* Review Step with Event Summary and Transaction Handler */}
       {currentStep === 6 && (
-        <div className="min-h-screen text-foreground bg-background relative z-[20] pt-14 pb-28">
+        <div className="min-h-screen text-foreground bg-background relative z-[20] pt-12 pb-20">
           <div className="max-w-5xl mx-auto py-6 sm:py-8 md:py-10 bg-red-00">
-            <div className="min-h-screen bg-[var(--app-background)] relative z-[20] pt-14 pb-28">
+            <div className="min-h-screen bg-[var(--app-background)] relative z-[20] pt-10">
               <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 md:py-10">
                 <div className="bg-[var(--app-card-bg)] rounded-2xl p-6 sm:p-8 md:p-10">
                   <EventSummary
