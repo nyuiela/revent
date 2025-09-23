@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EventDetails } from "@/utils/types";
 import Confetti from "./confetti";
 import { Ticket, Calendar, MapPin } from "lucide-react";
+import Image from "next/image";
 
 type RegistrationSuccessCardProps = {
   event: EventDetails;
@@ -53,10 +54,12 @@ export default function RegistrationSuccessCard({
         {/* Event Image */}
         {event.image ? (
           <div className="w-full mb-3">
-            <img
+            <Image
               src={event.image}
               alt={event.title}
               className="w-full h-40 object-cover rounded-xl border border-border"
+              width={1000}
+              height={1000}
             />
           </div>
         ) : null}

@@ -26,7 +26,6 @@ function Tab({ name, activeIcon, inactiveIcon, path, isActive, setActiveTab }: T
         try {
           if (typeof window !== 'undefined' && 'vibrate' in navigator) {
             // Light tap haptic
-            // @ts-ignore - vibrate not in lib.dom d.ts on some targets
             navigator.vibrate?.(10)
           }
         } catch { }
