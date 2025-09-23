@@ -1,24 +1,28 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import ImageEditor from "./sections/ImageEditor";
 import DetailsTable from "./sections/DetailsTable";
 import ActionsPanel from "./sections/ActionsPanel";
 import ParticipantsList from "./sections/ParticipantsList";
 import QRCodeBottomSheet from "@/app/components/QRCodeBottomSheet";
 import TicketsList, { Ticket } from "./sections/TicketsList";
-import { X } from "lucide-react";
-import { eventAbi, eventAddress, chainId } from "@/lib/contract";
-import { Abi } from "viem";
-import ContractButton from "@/app/components/button/ContractButton";
 import StreamHeader from "@/app/components/StreamHeader";
 import { Button } from "@/app/components/DemoComponents";
+import { useAccount } from "wagmi";
+import { Abi } from "viem";
+import { chainId, eventAbi, eventAddress } from "@/lib/contract";
+import ContractButton from "@/app/components/button/ContractButton";
 
 type Props = {
   params: Promise<{ slug: string }>;
 };
 
 export default function ManagePage({ params }: Props) {
+  const { address } = useAccount();
+  const [eventData, setEventData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [values, setValues] = useState<Record<string, string>>({
     title: "Sample Event",
     location: "Los Angeles, CA",
@@ -54,12 +58,82 @@ export default function ManagePage({ params }: Props) {
     await new Promise((r) => setTimeout(r, 800));
     setSaving(false);
   };
+  useEffect(() => {
+    const fetchEventData = async () => {
+      try {
+        setLoading(true);
+        const { slug } = await params;
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}/api/events/slug/${slug}`);
+        const data = await response.json();
+        console.log('Event data from Graph:', data);
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch event');
+        }
+
+        if (data.event) {
+          setEventData(data.event);
+
+          // Populate form values with Graph data
+          const event = data.event;
+          setValues({
+            title: event.title || "Untitled Event",
+            location: event.locationName || "Location TBD",
+            start: event.startTime ? new Date(parseInt(event.startTime) * 1000).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16),
+            end: event.endTime ? new Date(parseInt(event.endTime) * 1000).toISOString().slice(0, 16) : new Date(Date.now() + 3600 * 1000).toISOString().slice(0, 16),
+            maxAttendees: event.maxAttendees || "100",
+            registrationFee: event.registrationFee || "0.01 ETH",
+            description: event.description || "Event description",
+          });
+        }
+
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching event data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch event');
+        setEventData(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEventData();
+  }, []);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading event data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-destructive mb-4">Error Loading Event</h1>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <StreamHeader />
       <div className="mx-auto w-full max-w-5xl px-4 py-8">
-
+        {/* Event Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">{values.title}</h1>
+          <p className="text-muted-foreground">
+            Event ID: {eventData?.id} | Creator: {eventData?.creator?.slice(0, 6)}...{eventData?.creator?.slice(-4)}
+          </p>
+        </div>
 
         {/* Image / Media Editor */}
         <ImageEditor />
@@ -73,6 +147,7 @@ export default function ManagePage({ params }: Props) {
             onGenerateQR={() => setQrOpen(true)}
             onEditToggle={() => setShowDetails((s) => !s)}
             isEditing={showDetails}
+            eventId={eventData?.id}
           />
         </div>
 
@@ -109,9 +184,7 @@ export default function ManagePage({ params }: Props) {
           </div>
         )}
       </div>
-      {/* <button onClick={() => console.log("cancel")} className="rounded-xl bg-rose-600/90 px-3 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto mt-4 h-10 mb-20">
-        <X className="h-4 w-4" /> Cancel Event
-      </button> */}
+
       <ContractButton
         idleLabel={"Cancel Event"}
         chainId={Number(chainId)}
@@ -126,7 +199,7 @@ export default function ManagePage({ params }: Props) {
       <QRCodeBottomSheet
         isOpen={qrOpen}
         onClose={() => setQrOpen(false)}
-        eventId={values.title || "event"}
+        slug={eventData?.slug || "event"}
         eventTitle={values.title}
       />
     </div>

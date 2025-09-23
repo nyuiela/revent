@@ -1,10 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
-import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi'
+import React from 'react'
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import type { Abi } from 'viem'
 import { toast } from 'react-hot-toast'
-import { WalletModal } from "@coinbase/onchainkit/wallet";
 
 type HexAddress = `0x${string}`
 
@@ -16,12 +15,16 @@ export type TxButtonState =
   | 'error'
   | 'canceled'
 
-export interface TxButtonProps {
+export interface ContractCall {
   address: HexAddress
   abi: Abi
   functionName: string
   args?: readonly unknown[]
   value?: bigint
+}
+
+export interface ContractsButtonProps {
+  contracts: ContractCall[]
   chainId?: number
   className?: string
   disabled?: boolean
@@ -46,13 +49,9 @@ export interface TxButtonProps {
   onStateChange?: (state: TxButtonState) => void
 }
 
-export function ContractButton(props: TxButtonProps) {
+export function ContractsButton(props: ContractsButtonProps) {
   const {
-    address,
-    abi,
-    functionName,
-    args,
-    value,
+    contracts,
     chainId,
     className,
     disabled,
@@ -77,21 +76,18 @@ export function ContractButton(props: TxButtonProps) {
     onStateChange,
   } = props
 
-  const { address: account } = useAccount()
   const { writeContract, data: txHash, isPending: isConfirming } = useWriteContract()
   const { isLoading: isMining, isSuccess, isError, data: receipt, error: receiptError } = useWaitForTransactionReceipt({
     hash: txHash,
-    chainId: chainId, // Explicitly pass chainId to ensure proper chain handling
-    confirmations: 1, // Reduce confirmations for faster feedback
+    chainId: chainId,
+    confirmations: 1,
   })
 
   const [canceled, setCanceled] = React.useState(false)
   const [lastError, setLastError] = React.useState<unknown>(null)
   const [hasClicked, setHasClicked] = React.useState(false)
   const [fallbackSuccess, setFallbackSuccess] = React.useState(false)
-  const [showModal, setShowModal] = useState(false);
-  const [showModalConnect, setShowModalConnect] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  const [currentCallIndex, setCurrentCallIndex] = React.useState(0)
 
   const state: TxButtonState = React.useMemo(() => {
     if (canceled) return 'canceled'
@@ -105,7 +101,7 @@ export function ContractButton(props: TxButtonProps) {
 
   // Debug logging for transaction states
   React.useEffect(() => {
-    console.log('[TxButton] State change:', {
+    console.log('[ContractsButton] State change:', {
       state,
       txHash,
       isConfirming,
@@ -113,9 +109,11 @@ export function ContractButton(props: TxButtonProps) {
       isSuccess,
       isError,
       receiptError,
-      chainId
+      chainId,
+      currentCallIndex,
+      totalCalls: contracts.length
     })
-  }, [state, txHash, isConfirming, isMining, isSuccess, isError, receiptError, chainId])
+  }, [state, txHash, isConfirming, isMining, isSuccess, isError, receiptError, chainId, currentCallIndex, contracts.length])
 
   React.useEffect(() => {
     if (onStateChange) onStateChange(state)
@@ -130,10 +128,10 @@ export function ContractButton(props: TxButtonProps) {
     if (isSuccess && showToast) toast.success(successToastMessage)
   }, [isSuccess, receipt, onReceiptSuccess, showToast, successToastMessage])
 
-  // Handle receipt errors (including chain-specific issues)
+  // Handle receipt errors
   React.useEffect(() => {
     if (receiptError) {
-      console.error('[TxButton] Receipt error:', receiptError)
+      console.error('[ContractsButton] Receipt error:', receiptError)
       setLastError(receiptError)
       if (showToast) {
         const errorMsg = getFriendlyError(receiptError)
@@ -143,11 +141,11 @@ export function ContractButton(props: TxButtonProps) {
     }
   }, [receiptError, showToast, onError])
 
-  // Fallback success mechanism for chains that might not return receipts properly
+  // Fallback success mechanism
   React.useEffect(() => {
     if (txHash && !isSuccess && !isError && !receiptError && isMining) {
       const timeout = setTimeout(() => {
-        console.log('[TxButton] Fallback success triggered for tx:', txHash)
+        console.log('[ContractsButton] Fallback success triggered for tx:', txHash)
         setFallbackSuccess(true)
         if (showToast) toast.success(successToastMessage)
         if (onReceiptSuccess) onReceiptSuccess({ hash: txHash })
@@ -161,7 +159,8 @@ export function ContractButton(props: TxButtonProps) {
     if (state === 'success') {
       const t = setTimeout(() => {
         setHasClicked(false)
-        setFallbackSuccess(false) // Reset fallback success
+        setFallbackSuccess(false)
+        setCurrentCallIndex(0) // Reset for next batch
       }, resetDelayMs)
       return () => clearTimeout(t)
     }
@@ -174,14 +173,14 @@ export function ContractButton(props: TxButtonProps) {
       (typeof anyErr?.shortMessage === 'string' ? anyErr.shortMessage : '') ||
       (typeof anyErr?.message === 'string' ? (anyErr.message as string) : '')
     const name: string = typeof anyErr?.name === 'string' ? (anyErr.name as string) : ''
-    // Common user-reject signals
+
     if (
       name === 'UserRejectedRequestError' ||
       /user rejected|user denied|rejected/i.test(message)
     ) {
       return 'User rejected the request'
     }
-    // Attempt to extract revert reason
+
     const cause = anyErr?.cause as Record<string, unknown> | undefined
     const causeMsg: string =
       (cause && typeof cause.shortMessage === 'string' ? (cause.shortMessage as string) : '') ||
@@ -191,34 +190,49 @@ export function ContractButton(props: TxButtonProps) {
     return 'Unknown error'
   }
 
-  const handleClick = React.useCallback(() => {
-    // Debug: verify clicks are reaching handler
-    console.log('[TxButton] handleClick invoked')
-    setCanceled(false)
-    setLastError(null)
-    setFallbackSuccess(false) // Reset fallback success
-    setHasClicked(true)
-    if (onWriteStart) onWriteStart()
+  const executeNextCall = React.useCallback(async () => {
+    if (currentCallIndex >= contracts.length) {
+      console.log('[ContractsButton] All calls completed')
+      return
+    }
+
+    const currentCall = contracts[currentCallIndex]
+    console.log(`[ContractsButton] Executing call ${currentCallIndex + 1}/${contracts.length}:`, currentCall)
+
     try {
-      writeContract({
-        address,
-        abi,
-        functionName: functionName as never,
-        args,
-        value,
+      await writeContract({
+        address: currentCall.address,
+        abi: currentCall.abi,
+        functionName: currentCall.functionName as never,
+        args: currentCall.args,
+        value: currentCall.value,
         chainId,
       })
     } catch (err) {
-      console.error('Error writing contract:', err)
+      console.error(`[ContractsButton] Error in call ${currentCallIndex + 1}:`, err)
       setLastError(err)
       if (showToast) toast.error(getFriendlyError(err))
       if (onError) onError(err)
     }
-  }, [address, abi, functionName, args, value, chainId, onWriteStart, onError, writeContract, showToast])
+  }, [contracts, currentCallIndex, writeContract, chainId, showToast, onError])
+
+  const handleClick = React.useCallback(() => {
+    console.log('[ContractsButton] handleClick invoked with', contracts.length, 'contracts')
+    setCanceled(false)
+    setLastError(null)
+    setFallbackSuccess(false)
+    setHasClicked(true)
+    setCurrentCallIndex(0)
+    if (onWriteStart) onWriteStart()
+
+    // Start executing the first call
+    executeNextCall()
+  }, [contracts.length, onWriteStart, executeNextCall])
 
   const handleCancel = React.useCallback(() => {
     setCanceled(true)
     setHasClicked(false)
+    setCurrentCallIndex(0)
     if (showToast) toast.error(cancelToastMessage)
     if (onCancel) onCancel()
   }, [onCancel, cancelToastMessage, showToast])
@@ -232,19 +246,21 @@ export function ContractButton(props: TxButtonProps) {
   else if (state === 'error') label = errorLabel
   else if (state === 'canceled') label = idleLabel
 
+  // Show progress for multiple calls
+  const showProgress = contracts.length > 1 && (state === 'confirming' || state === 'pending')
+  const progressText = showProgress ? ` (${currentCallIndex + 1}/${contracts.length})` : ''
+
   return (
     <div className={`${className}`}>
-      {!account ? <button className={`rounded-xl px-3 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-10 ${btnClassName}`} onClick={() => setShowModalConnect(true)}>Connect Wallet</button> :
-        <button
-          type="button"
-          onClick={handleClick}
-          disabled={Boolean(isDisabled)}
-          className={`rounded-xl px-3 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-10 ${btnClassName}`}
-        >
-          {label}
-        </button>}
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={Boolean(isDisabled)}
+        className={`rounded-xl px-3 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-10 ${btnClassName}`}
+      >
+        {label}{progressText}
+      </button>
       {!showCancel && (state === 'confirming' || state === 'pending') && (
-        // {showCancel && (
         <button
           type="button"
           onClick={handleCancel}
@@ -256,11 +272,13 @@ export function ContractButton(props: TxButtonProps) {
       {state === 'error' && Boolean(lastError) && (
         <span className="ml-2 text-xs text-red-500">{errorToastMessage}</span>
       )}
-      <WalletModal isOpen={showModalConnect} onClose={() => { setShowModalConnect(false) }} className="bg-black shadow-lg z-50" />
+      {showProgress && (
+        <div className="mt-2 text-xs text-muted-foreground text-center">
+          Executing {contracts.length} contract call{contracts.length > 1 ? 's' : ''}...
+        </div>
+      )}
     </div>
   )
 }
 
-export default ContractButton
-
-
+export default ContractsButton

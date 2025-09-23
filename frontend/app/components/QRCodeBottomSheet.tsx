@@ -9,14 +9,14 @@ import Button from "@mui/material/Button";
 interface QRCodeBottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  eventId: string | number;
+  slug: string | number;
   eventTitle?: string;
 }
 
 export default function QRCodeBottomSheet({
   isOpen,
   onClose,
-  eventId,
+  slug,
   eventTitle = "Event Verification"
 }: QRCodeBottomSheetProps) {
   const [qrValue, setQrValue] = useState("");
@@ -24,12 +24,12 @@ export default function QRCodeBottomSheet({
 
   // Generate QR code data - this could be a verification URL or event ID
   useEffect(() => {
-    if (isOpen && eventId) {
+    if (isOpen && slug) {
       // You can customize this URL structure based on your needs
-      const verificationUrl = `${window.location.origin}/verify/${eventId}`;
+      const verificationUrl = `${window.location.origin}/${slug}/verify?code=123456`;
       setQrValue(verificationUrl);
     }
-  }, [isOpen, eventId]);
+  }, [isOpen, slug]);
 
   const downloadQRCode = () => {
     if (qrRef.current) {
@@ -47,7 +47,7 @@ export default function QRCodeBottomSheet({
 
           const pngFile = canvas.toDataURL('image/png');
           const downloadLink = document.createElement('a');
-          downloadLink.download = `event-${eventId}-qr-code.png`;
+          downloadLink.download = `event-${slug}-qr-code.png`;
           downloadLink.href = pngFile;
           downloadLink.click();
         };

@@ -9,12 +9,14 @@ import ContractButton from "@/app/components/button/ContractButton";
 export default function VerifyModal({
   isOpen,
   code,
+  eventId,
   onClose,
   onConfirm,
   onMint,
 }: {
   isOpen: boolean;
   code: string;
+  eventId?: string | number;
   onClose: () => void;
   onConfirm: () => void;
   onMint: () => void;
@@ -22,7 +24,7 @@ export default function VerifyModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-10 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
 
       <div className="relative w-full max-w-md rounded-3xl bg-card p-6 text-foreground shadow-2xl">
@@ -35,7 +37,10 @@ export default function VerifyModal({
             <Ticket className="h-6 w-6" />
           </div>
           <h2 className="text-xl font-semibold">Mint Attendance NFT</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Confirm your attendance to receive your NFT.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Confirm your attendance to receive your NFT.
+            {eventId && <span className="block mt-1 text-xs">Event ID: {eventId}</span>}
+          </p>
 
           <div className="mt-5 w-full rounded-xl border border-border bg-background p-4 text-left">
             <div className="text-xs text-muted-foreground">Confirmation code</div>
@@ -60,8 +65,11 @@ export default function VerifyModal({
               functionName="confirmAttendance"
               className="w-full h-fit p-0"
               btnClassName="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-medium text-white hover:opacity-90 w-full"
-              args={[BigInt(0), code]}
-              onWriteSuccess={() => console.log("publish")}
+              args={[BigInt(eventId || 0), code]}
+              onWriteSuccess={() => {
+                console.log("Attendance confirmed for event", eventId);
+                onConfirm();
+              }}
             />
             {/* <button
               onClick={onMint}
