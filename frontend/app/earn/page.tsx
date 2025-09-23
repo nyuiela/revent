@@ -4,11 +4,10 @@ import React from "react";
 import ScoreCards from "./sections/ScoreCards";
 import BadgesBanner from "./sections/BadgesBanner";
 import Leaderboard from "./sections/Leaderboard";
-import Image from "next/image";
 
 export default function EarnPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground overflow-y-auto">
       <div className="mx-auto w-full max-w-5xl px-4 py-8">
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
@@ -44,7 +43,7 @@ export default function EarnPage() {
         </div>
 
         {/* Leaderboard */}
-        <div className="mt-6">
+        <div className="mt-6 mb-20">
           <Leaderboard />
         </div>
       </div>
