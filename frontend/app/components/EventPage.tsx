@@ -516,7 +516,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
       {/* Hero Section */}
       <div className="relative h-[25rem] md:h-[25rem] overflow-hidden">
         <div className="left-4 mt-4 z-10 absolute">
-          <Button variant="ghost" className="rounded-lg gap-2 bg-transparent cursor-pointer text-background" onClick={() => router.back()}>
+          <Button variant="ghost" className="rounded-lg gap-2 bg-transparent cursor-pointer text-background dark:text-white" onClick={() => router.back()}>
             <ChevronLeft className="w-4 h-4" /> Back
           </Button>
         </div>
@@ -594,14 +594,14 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
               {/* Ticket types */}
               {ticketTypes.length > 0 ? (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-1 gap-1 mb-0 bg-gray-300 dark:bg-gray-900 p-4 px-[0.2rem] pb-1 rounded-xl">
+                  <div className="grid grid-cols-1 md:grid-cols-1 gap-1 mb-0 bg-gray-300 dark:bg-gray-900 p-6 px-[0.2rem] pb-1 rounded-xl">
                     {ticketTypes.map((t, idx) => (
                       <button
                         type="button"
                         key={t.type}
                         onClick={() => setSelectedTicketIndex(idx)}
                         className={`text-left p-4 rounded-2xl transition-colors bg-white dark:bg-gray-800 border-none ${selectedTicketIndex === idx
-                          ? "bg-[#edf6f9] dark:border-[var(--events-card-border)] dark:bg-gray-700 "
+                          ? "bg-[#edf6f9] dark:border-[var(--events-card-border)] dark:bg-gray-700"
                           : "dark:border-[var(--events-card-border)] bg-transparent dark:bg-gray-800 "}`}
                       >
                         <div className="flex items-center justify-between">
@@ -647,7 +647,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
                   {/* Purchase button */}
                   {selectedTicket && canPurchaseTickets && tickets.length > 0 && safeSelectedTicketIndex < tickets.length && (
-                    <div className="flex items-center gap-1 mb-0 bg-gray-300 p-4 px-[0.2rem] rounded-xl pb-0">
+                    <div className="flex items-center gap-1 mb-0 p-4 px-[0.2rem] rounded-xl pb-0">
                       <Transaction
                         chainId={chainId}
                         contracts={[
