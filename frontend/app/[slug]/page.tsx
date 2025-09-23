@@ -2,11 +2,15 @@ import React from 'react'
 import EventPage from '../components/EventPage'
 import type { Metadata, ResolvingMetadata } from 'next'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 type Props = {
   params: Promise<{
     slug: string
   }>
 }
+
 
 // Helper function to detect if slug is actually a numeric eventId (for backward compatibility)
 function isNumericEventId(slug: string): boolean {
@@ -24,7 +28,7 @@ function isIpfsHash(slug: string): boolean {
 async function fetchEventBySlug(slug: string) {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/events/slug/${slug}`);
+    const response = await fetch(`${baseUrl}/api/events/slug/${slug}`, { cache: 'no-store' });
     const data = await response.json();
 
     if (!response.ok) {
@@ -42,7 +46,7 @@ async function fetchEventBySlug(slug: string) {
 async function fetchEventByEventId(eventId: string) {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/events/${eventId}`);
+    const response = await fetch(`${baseUrl}/api/events/${eventId}`, { cache: 'no-store' });
     const data = await response.json();
 
     if (!response.ok) {
