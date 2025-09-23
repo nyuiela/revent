@@ -126,7 +126,7 @@ export default function StreamHome() {
   }
 
   return (
-    <div className="space-y-5 animate-fade-in w-full bg-red-00 mb-20">
+    <div className="space-y-5 animate-fade-in w-full bg-red-00 mb-24">
       <StreamHeader />
 
       {/* Main viewport card */}
@@ -362,11 +362,11 @@ export default function StreamHome() {
       />
 
       {/* Curators for you */}
-      <section className="space-y-3 px-4">
+      <section className="space-y-3 px-4 mb-8">
         <h3 className="text-sm font-medium">Active Participants for you</h3>
-        <div className="flex gap-4 overflow-x-auto custom-scrollbar pb-1">
+        <div className="flex gap-4 overflow-x-auto custom-scrollbar pb-4 mt-4">
           {curators.map((u) => (
-            <div key={u.id} className="flex flex-col items-center min-w-[72px]">
+            <div key={u.id} className="flex flex-col items-center min-w-[72px] mt-2">
               <div className="relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-white shadow">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <Image src={u.avatarUrl} alt={u.name} className="w-full h-full object-cover" width={100} height={100} />

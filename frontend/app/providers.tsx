@@ -10,6 +10,7 @@ import QueryProvider from "@/context/queryProvider";
 import { TransactionProvider } from 'ethereum-identity-kit'
 import config from '@/lib/wagmi';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
+import { AuthProvider } from '@/contexts/AuthProvider';
 
 // Create a client for wagmi
 const queryClient = new QueryClient();
@@ -39,7 +40,9 @@ export function Providers(props: { children: ReactNode }) {
             >
               <TransactionProvider>
                 <NotificationsProvider>
-                  {props.children}
+                  <AuthProvider>
+                    {props.children}
+                  </AuthProvider>
                 </NotificationsProvider>
               </TransactionProvider>
             </MiniKitProvider>

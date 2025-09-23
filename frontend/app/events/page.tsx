@@ -82,7 +82,7 @@ const EventsPage = () => {
   }
 
   return (
-    <div className="min-h-screen text-[var(--events-foreground)] bg-background relative z-[20] pt-10 ">
+    <div className="min-h-screen text-[var(--events-foreground)] bg-background relative z-[20] pt-10 mb-28">
       {/* Header */}
       <div className="top-0 z-40 bg-transparent border-none">
         {/* <StreamHeader /> */}
