@@ -1,74 +1,75 @@
-@import url("https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap')
+layer(base);
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-.mini-app-theme {
-  --ock-font-family: "Geist", sans-serif;
-  --ock-border-radius: 0.75rem;
-  --ock-border-radius-inner: 0.5rem;
+@layer utilities {
+  .mini-app-theme {
+    --ock-font-family: 'Geist', sans-serif;
+    --ock-border-radius: 0.75rem;
+    --ock-border-radius-inner: 0.5rem;
 
-  /* Text colors */
-  --ock-text-inverse: hsl(var(--app-background));
-  --ock-text-foreground: hsl(var(--app-foreground));
-  --ock-text-foreground-muted: hsl(var(--app-foreground-muted));
-  --ock-text-error: hsl(var(--destructive));
-  --ock-text-primary: hsl(var(--primary));
-  --ock-text-success: hsl(var(--success));
-  --ock-text-warning: hsl(var(--warning));
-  --ock-text-disabled: hsl(var(--muted-foreground));
+    /* Text colors */
+    --ock-text-inverse: hsl(var(--app-background));
+    --ock-text-foreground: hsl(var(--app-foreground));
+    --ock-text-foreground-muted: hsl(var(--app-foreground-muted));
+    --ock-text-error: hsl(var(--destructive));
+    --ock-text-primary: hsl(var(--primary));
+    --ock-text-success: hsl(var(--success));
+    --ock-text-warning: hsl(var(--warning));
+    --ock-text-disabled: hsl(var(--muted-foreground));
 
-  /* Background colors */
-  --ock-bg-default: hsl(var(--app-background));
-  --ock-bg-default-hover: hsl(var(--app-gray));
-  --ock-bg-default-active: hsl(var(--app-gray-dark));
-  --ock-bg-alternate: hsl(var(--app-gray));
-  --ock-bg-alternate-hover: hsl(var(--app-gray-dark));
-  --ock-bg-alternate-active: hsl(var(--app-gray-dark));
-  --ock-bg-inverse: hsl(var(--app-foreground));
-  --ock-bg-inverse-hover: hsl(var(--secondary-hover));
-  --ock-bg-inverse-active: hsl(var(--secondary));
-  --ock-bg-primary: hsl(var(--primary));
-  --ock-bg-primary-hover: hsl(var(--primary-hover));
-  --ock-bg-primary-active: hsl(var(--primary-active));
-  --ock-bg-primary-washed: hsl(var(--primary-light));
-  --ock-bg-primary-disabled: hsl(var(--muted-foreground));
-  --ock-bg-secondary: hsl(var(--app-gray));
-  --ock-bg-secondary-hover: hsl(var(--app-gray-dark));
-  --ock-bg-secondary-active: hsl(var(--secondary-hover));
-  --ock-bg-error: hsl(var(--destructive) / 0.1);
-  --ock-bg-warning: hsl(var(--warning) / 0.1);
-  --ock-bg-success: hsl(var(--success) / 0.1);
-  --ock-bg-default-reverse: hsl(var(--app-foreground));
+    /* Background colors */
+    --ock-bg-default: hsl(var(--app-background));
+    --ock-bg-default-hover: hsl(var(--app-gray));
+    --ock-bg-default-active: hsl(var(--app-gray-dark));
+    --ock-bg-alternate: hsl(var(--app-gray));
+    --ock-bg-alternate-hover: hsl(var(--app-gray-dark));
+    --ock-bg-alternate-active: hsl(var(--app-gray-dark));
+    --ock-bg-inverse: hsl(var(--app-foreground));
+    --ock-bg-inverse-hover: hsl(var(--secondary-hover));
+    --ock-bg-inverse-active: hsl(var(--secondary));
+    --ock-bg-primary: hsl(var(--primary));
+    --ock-bg-primary-hover: hsl(var(--primary-hover));
+    --ock-bg-primary-active: hsl(var(--primary-active));
+    --ock-bg-primary-washed: hsl(var(--primary-light));
+    --ock-bg-primary-disabled: hsl(var(--muted-foreground));
+    --ock-bg-secondary: hsl(var(--app-gray));
+    --ock-bg-secondary-hover: hsl(var(--app-gray-dark));
+    --ock-bg-secondary-active: hsl(var(--secondary-hover));
+    --ock-bg-error: hsl(var(--destructive) / 0.1);
+    --ock-bg-warning: hsl(var(--warning) / 0.1);
+    --ock-bg-success: hsl(var(--success) / 0.1);
+    --ock-bg-default-reverse: hsl(var(--app-foreground));
 
-  /* Icon colors */
-  --ock-icon-color-primary: hsl(var(--primary));
-  --ock-icon-color-foreground: hsl(var(--app-foreground));
-  --ock-icon-color-foreground-muted: hsl(var(--app-foreground-muted));
-  --ock-icon-color-inverse: hsl(var(--app-background));
-  --ock-icon-color-error: hsl(var(--destructive));
-  --ock-icon-color-success: hsl(var(--success));
-  --ock-icon-color-warning: hsl(var(--warning));
+    /* Icon colors */
+    --ock-icon-color-primary: hsl(var(--primary));
+    --ock-icon-color-foreground: hsl(var(--app-foreground));
+    --ock-icon-color-foreground-muted: hsl(var(--app-foreground-muted));
+    --ock-icon-color-inverse: hsl(var(--app-background));
+    --ock-icon-color-error: hsl(var(--destructive));
+    --ock-icon-color-success: hsl(var(--success));
+    --ock-icon-color-warning: hsl(var(--warning));
 
-  /* Line colors */
-  --ock-line-primary: hsl(var(--primary));
-  --ock-line-default: hsl(var(--app-gray-dark));
-  --ock-line-heavy: hsl(var(--border));
-  --ock-line-inverse: hsl(var(--muted-foreground));
-}
+    /* Line colors */
+    --ock-line-primary: hsl(var(--primary));
+    --ock-line-default: hsl(var(--app-gray-dark));
+    --ock-line-heavy: hsl(var(--border));
+    --ock-line-inverse: hsl(var(--muted-foreground));
+  }
 
-* {
-  touch-action: manipulation;
-}
+  * {
+    touch-action: manipulation;
+  }
 
-body {
-  color: hsl(var(--app-foreground));
-  background: hsl(var(--app-background));
-  font-family: var(--font-plus-jakarta, var(--font-geist-sans)), sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;
+  body {
+    color: hsl(var(--app-foreground));
+    background: hsl(var(--app-background));
+    font-family: var(--font-plus-jakarta, var(--font-geist-sans)), sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+  }
 }
 
 @layer utilities {

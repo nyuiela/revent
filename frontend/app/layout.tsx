@@ -11,6 +11,8 @@ import { eventsCreatedQuery } from "@/context/queryProvider";
 import 'ethereum-identity-kit/css'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import DataPrefetcher from "../components/DataPrefetcher"
+import { OnchainKitProvider } from "@coinbase/onchainkit";
+import { baseSepolia } from "wagmi/chains";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -179,6 +181,24 @@ export default async function RootLayout({
         />
       </head>
       <body className="bg-background">
+        {/* <OnchainKitProvider
+          apiKey="YOUR_API_KEY"
+          chain={baseSepolia}
+          // miniKit={{
+          //   enabled: true, // Add this
+          // }}
+          config={{
+            appearance: {
+              mode: 'auto', // 'light' | 'dark' | 'auto'
+            },
+            wallet: {
+              display: 'modal', // 'modal' | 'drawer'
+              preference: 'all', // 'all' | 'smartWalletOnly' | 'eoaOnly'
+            },
+
+          }
+          }
+        > */}
         <ThemeProvider>
           <Providers>
             <DataPrefetcher>
@@ -186,7 +206,9 @@ export default async function RootLayout({
             </DataPrefetcher>
           </Providers>
         </ThemeProvider>
+
+        {/* </OnchainKitProvider> */}
       </body>
-    </html>
+    </html >
   );
 }

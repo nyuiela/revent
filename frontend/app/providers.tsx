@@ -12,6 +12,7 @@ import config from '@/lib/wagmi';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { BannerToastProvider } from '@/contexts/BannerToastContext';
 import { AuthProvider } from '@/contexts/AuthProvider';
+import { OnchainKitProvider } from "@coinbase/onchainkit";
 
 // Create a client for wagmi
 const queryClient = new QueryClient();
@@ -27,7 +28,7 @@ export function Providers(props: { children: ReactNode }) {
       <WagmiProvider config={config}>
         <QueryClientProvider client={queryClient}>
           <QueryProvider>
-            <MiniKitProvider
+            {/* <MiniKitProvider
               apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
               chain={baseSepolia} // change to baseSepolia later
               config={{
@@ -38,6 +39,24 @@ export function Providers(props: { children: ReactNode }) {
                   logo: process.env.NEXT_PUBLIC_ICON_URL,
                 },
               }}
+            > */}
+            <OnchainKitProvider
+              apiKey="YOUR_API_KEY"
+              chain={baseSepolia}
+              miniKit={{
+                enabled: true, // Add this
+              }}
+              config={{
+                appearance: {
+                  mode: 'auto', // 'light' | 'dark' | 'auto'
+                },
+                wallet: {
+                  display: 'modal', // 'modal' | 'drawer'
+                  preference: 'all', // 'all' | 'smartWalletOnly' | 'eoaOnly'
+                },
+
+              }
+              }
             >
               <TransactionProvider>
                 <NotificationsProvider>
@@ -48,7 +67,8 @@ export function Providers(props: { children: ReactNode }) {
                   </BannerToastProvider>
                 </NotificationsProvider>
               </TransactionProvider>
-            </MiniKitProvider>
+            </OnchainKitProvider>
+            {/* </MiniKitProvider> */}
           </QueryProvider>
         </QueryClientProvider>
       </WagmiProvider>
