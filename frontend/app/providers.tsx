@@ -10,6 +10,7 @@ import QueryProvider from "@/context/queryProvider";
 import { TransactionProvider } from 'ethereum-identity-kit'
 import config from '@/lib/wagmi';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
+import { BannerToastProvider } from '@/contexts/BannerToastContext';
 import { AuthProvider } from '@/contexts/AuthProvider';
 
 // Create a client for wagmi
@@ -40,9 +41,11 @@ export function Providers(props: { children: ReactNode }) {
             >
               <TransactionProvider>
                 <NotificationsProvider>
-                  <AuthProvider>
-                    {props.children}
-                  </AuthProvider>
+                  <BannerToastProvider>
+                    <AuthProvider>
+                      {props.children}
+                    </AuthProvider>
+                  </BannerToastProvider>
                 </NotificationsProvider>
               </TransactionProvider>
             </MiniKitProvider>

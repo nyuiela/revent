@@ -5,6 +5,7 @@ import { AppIcons } from "@/lib/assets";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { CalendarDays, Gift, Home, WalletCards } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface TabProps {
   name: string;
@@ -20,8 +21,17 @@ function Tab({ name, activeIcon, inactiveIcon, path, isActive, setActiveTab }: T
   return (
     <div
       // href={path}
-      className={`h-10 relative shrink-0 w-[62.5px] flex flex-col items-center justify-center ${name === "Create" ? "w-[80px] absolute bottom-[1rem] bg-foreground rounded-full p-4 h-12 flex items-center justify-center shadow-2xl border-t-4 border-white dark:border-gray-800" : ""}`}
-      onClick={() => setActiveTab(name)}
+      className={`h-10 relative shrink-0 w-[62.5px] flex flex-col items-center justify-center ${name === "Create" ? "w-[80px] absolute bottom-[1rem] bg-foreground rounded-full p-4 h-12 flex items-center justify-center shadow-2xl border-t-4 border-emerald-200 dark:border-emerald-600" : ""}`}
+      onClick={() => {
+        try {
+          if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+            // Light tap haptic
+            // @ts-ignore - vibrate not in lib.dom d.ts on some targets
+            navigator.vibrate?.(10)
+          }
+        } catch { }
+        setActiveTab(name)
+      }}
     >
       {name === "Create" && <div className="absolute text-background font-bold">Create</div>}
       {name !== "Create" && <div className="absolute aspect-[24/24] bottom-[41.25%] top-[-1.25%] translate-x-[-50%]" style={{ left: "calc(50% - 0.25px)" }}>
@@ -77,18 +87,19 @@ export function MobileNavigation({ setActiveTab, sActiveTab }: { setActiveTab: (
     }
   }, [])
 
+  const theme = useTheme()
   const menuItems = [
     {
       name: "Home",
       // activeIcon: AppIcons.homeActive,
-      activeIcon: <Home className="text-foreground" color="#000" />,
+      activeIcon: <Home className="text-foreground" fill="transparent" color={theme.resolvedTheme === "dark" ? "#fff" : "#000"} />,
       // inactiveIcon: AppIcons.homeInactive,
       inactiveIcon: <Home className="text-foreground-muted" fill="transparent" color="#9CA3AF" />,
       path: "/",
     },
     {
       name: "Events",
-      activeIcon: <CalendarDays fill="transparent" className="bg-transparent" color="#000" />,
+      activeIcon: <CalendarDays fill="transparent" className="bg-transparent" color={theme.resolvedTheme === "dark" ? "#fff" : "#000"} />,
       inactiveIcon: <CalendarDays className="text-foreground-muted" fill="transparent" color="#9CA3AF" />,
       path: "/events",
     },
@@ -100,13 +111,13 @@ export function MobileNavigation({ setActiveTab, sActiveTab }: { setActiveTab: (
     },
     {
       name: "Earn",
-      activeIcon: <Gift className="bg-transparent" color="#000" />,
+      activeIcon: <Gift className="bg-transparent" color={theme.resolvedTheme === "dark" ? "#fff" : "#000"} />,
       inactiveIcon: <Gift className="text-foreground-muted" fill="transparent" color="#9CA3AF" />,
       path: "/earn",
     },
     {
       name: "Wallet",
-      activeIcon: <WalletCards className="bg-transparent" color="#000" />,
+      activeIcon: <WalletCards className="bg-transparent" color={theme.resolvedTheme === "dark" ? "#fff" : "#000"} />,
       inactiveIcon: <WalletCards className="text-foreground-muted" fill="transparent" color="#9CA3AF" />,
       // inactiveIcon: AppIcons.walletInactive,
       path: "/profile",

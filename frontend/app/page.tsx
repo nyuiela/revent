@@ -13,6 +13,8 @@ import EventsPage from "./events/page";
 import EarnPage from "./earn/page";
 import ProfilePage from "./profile/page";
 import { useRouter } from "next/navigation";
+import { useBannerToast } from "@/contexts/BannerToastContext";
+
 
 
 export default function App() {
@@ -21,6 +23,9 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("Home");
   const [showWaitlist, setShowWaitlist] = useState(false);
   const router = useRouter();
+  const { showBannerPersistent, hideBanner } = useBannerToast();
+  showBannerPersistent("Beta launch");
+  // hideBanner();
   // const addFrame = useAddFrame();
 
   useEffect(() => {
@@ -79,6 +84,7 @@ export default function App() {
       router.push("/events/create");
     }
   }, [activeTab, router]);
+
   return (
     <div className="flex flex-col min-h-screen font-sans text-[var(--app-foreground)] mini-app-theme from-[var(--app-background)] to-[var(--app-gray)]">
       {/* Structured Data for SEO */}
@@ -123,6 +129,10 @@ export default function App() {
           })
         }}
       />
+
+      {/* <div className="w-fit max-w-xs mx-auto p-2 fixed bottom-20 left-0 right-0 z-50 bg-emerald-500 rounded-2xl text-[11px] px-4">
+        hello world
+      </div> */}
 
       <div className="w-full max-w-md mx-auto p-0 ">
         <header className="flex justify-between items-center mb-0 h-0">

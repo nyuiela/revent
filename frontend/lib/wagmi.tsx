@@ -1,6 +1,7 @@
 import { createConfig, http, injected } from 'wagmi'
 import { baseSepolia } from 'wagmi/chains'
 import { createStorage, noopStorage } from 'wagmi'
+import { farcasterMiniApp as miniAppConnector } from '@farcaster/miniapp-wagmi-connector'
 
 // Create storage with localStorage for persistence
 const storage = createStorage({
@@ -11,7 +12,8 @@ const storage = createStorage({
 const config = createConfig({
   chains: [baseSepolia],
   connectors: [
-    injected(),
+    miniAppConnector(),
+    // injected(),
   ],
   ssr: true,
   storage,

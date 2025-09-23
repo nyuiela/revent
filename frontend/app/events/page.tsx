@@ -133,7 +133,7 @@ const EventsPage = () => {
             >
               <div className="flex gap-4 items-center justify-between">
                 {/* Event Image */}
-                <div className="relative w-[7rem] h-[7rem] rounded-lg overflow-hidden flex-shrink-0 bg-red-400">
+                <div className="relative w-[7rem] h-[7rem] rounded-lg overflow-hidden flex-shrink-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <Image
                     src={event.avatarUrl}
