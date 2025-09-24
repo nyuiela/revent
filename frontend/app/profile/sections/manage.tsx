@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Button } from "@/app/components/DemoComponents";
 import { useAccount } from "wagmi";
 
-type Event = {
+type ManageEvent = {
   id: string;
   title: string;
   username: string;
@@ -20,9 +20,13 @@ type Event = {
   blockTimestamp: string;
 };
 
-export default function EventBoard() {
+interface EventBoardProps {
+  onEventsLoaded?: (events: ManageEvent[]) => void;
+}
+
+export default function EventBoard({ onEventsLoaded }: EventBoardProps) {
   const { address } = useAccount();
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<ManageEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -48,6 +52,11 @@ export default function EventBoard() {
 
         setEvents(data.events || []);
         setError(null);
+        
+        // Notify parent component that events are loaded
+        if (onEventsLoaded) {
+          onEventsLoaded(data.events || []);
+        }
       } catch (err) {
         console.error('Error fetching user events:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch events');

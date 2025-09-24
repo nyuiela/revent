@@ -53,9 +53,13 @@ NEXT_PUBLIC_APP_OG_TITLE=
 NEXT_PUBLIC_APP_OG_DESCRIPTION=
 NEXT_PUBLIC_APP_OG_IMAGE=
 
-# Redis config
+# Redis config (Optional - used for waitlist and notifications)
 REDIS_URL=
 REDIS_TOKEN=
+
+# Alternative Redis config for waitlist (if different from above)
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
 ```
 
 3. Start the development server:
@@ -73,6 +77,12 @@ npm run dev
 - Redis-backed notification system using Upstash
 - Ready-to-use notification endpoints in `api/notify` and `api/webhook`
 - Notification client utilities in `lib/notification-client.ts`
+
+### Waitlist System
+- Email waitlist functionality with Redis persistence
+- In-memory fallback when Redis is not configured (development mode)
+- Automatic duplicate detection and position tracking
+- API endpoints: `POST /api/waitlist`, `GET /api/waitlist`, `PUT /api/waitlist`
 
 ### Theming
 - Custom theme defined in `theme.css` with OnchainKit variables

@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
 
-// Initialize Redis client
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+// Initialize Redis client with fallback
+let redis: Redis | null = null;
+
+try {
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+  }
+} catch (error) {
+  console.warn('Redis not configured, using in-memory fallback for waitlist');
+}
+
+// In-memory fallback storage
+const inMemoryWaitlist = new Set<string>();
+let inMemoryCount = 0;
 
 const WAITLIST_KEY = 'waitlist_emails';
 const WAITLIST_COUNT_KEY = 'waitlist_count';
@@ -41,25 +53,46 @@ export async function POST(request: NextRequest) {
     const normalizedEmail = email.toLowerCase().trim();
 
     // Check if email already exists
-    const exists = await redis.sismember(WAITLIST_KEY, normalizedEmail);
+    let exists: boolean;
+    let totalCount: number;
 
-    if (exists) {
-      return NextResponse.json({
-        success: true,
-        message: 'Email already registered',
-        alreadyExists: true
-      });
+    if (redis) {
+      // Use Redis
+      exists = await redis.sismember(WAITLIST_KEY, normalizedEmail);
+      
+      if (exists) {
+        return NextResponse.json({
+          success: true,
+          message: 'Email already registered',
+          alreadyExists: true
+        });
+      }
+
+      // Add email to set and increment counter
+      const pipeline = redis.pipeline();
+      pipeline.sadd(WAITLIST_KEY, normalizedEmail);
+      pipeline.incr(WAITLIST_COUNT_KEY);
+      await pipeline.exec();
+
+      // Get updated count
+      totalCount = await redis.get(WAITLIST_COUNT_KEY) as number;
+    } else {
+      // Use in-memory fallback
+      exists = inMemoryWaitlist.has(normalizedEmail);
+      
+      if (exists) {
+        return NextResponse.json({
+          success: true,
+          message: 'Email already registered',
+          alreadyExists: true
+        });
+      }
+
+      // Add to in-memory storage
+      inMemoryWaitlist.add(normalizedEmail);
+      inMemoryCount++;
+      totalCount = inMemoryCount;
     }
-
-    // Add email to set and increment counter
-    const pipeline = redis.pipeline();
-    pipeline.sadd(WAITLIST_KEY, normalizedEmail);
-    pipeline.incr(WAITLIST_COUNT_KEY);
-
-    await pipeline.exec();
-
-    // Get updated count
-    const totalCount = await redis.get(WAITLIST_COUNT_KEY) as number;
 
     return NextResponse.json({
       success: true,
@@ -85,7 +118,13 @@ export async function GET(request: NextRequest) {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
-    const exists = await redis.sismember(WAITLIST_KEY, normalizedEmail);
+    let exists: boolean;
+
+    if (redis) {
+      exists = await redis.sismember(WAITLIST_KEY, normalizedEmail);
+    } else {
+      exists = inMemoryWaitlist.has(normalizedEmail);
+    }
 
     return NextResponse.json({
       exists,
@@ -101,8 +140,16 @@ export async function GET(request: NextRequest) {
 // Get waitlist statistics
 export async function PUT(request: NextRequest) {
   try {
-    const totalCount = await redis.get(WAITLIST_COUNT_KEY) as number || 0;
-    const totalEmails = await redis.scard(WAITLIST_KEY);
+    let totalCount: number;
+    let totalEmails: number;
+
+    if (redis) {
+      totalCount = await redis.get(WAITLIST_COUNT_KEY) as number || 0;
+      totalEmails = await redis.scard(WAITLIST_KEY);
+    } else {
+      totalCount = inMemoryCount;
+      totalEmails = inMemoryWaitlist.size;
+    }
 
     return NextResponse.json({
       totalCount,

@@ -29,6 +29,10 @@ type Event = {
   transactionCount: number;
 };
 
+type TxHistoryProps = {
+  events?: Event[];
+};
+
 type TxRow = {
   hash: string;
   action: string;
@@ -55,9 +59,9 @@ function KindBadge({ kind }: { kind: string }) {
   );
 }
 
-export default function TxHistory() {
+export default function TxHistory({ events: propEvents }: TxHistoryProps) {
   const { address } = useAccount();
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<Event[]>(propEvents || []);
   const [transactions, setTransactions] = useState<TransactionEvent[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<TransactionEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -67,6 +71,13 @@ export default function TxHistory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Update events when props change
+  useEffect(() => {
+    if (propEvents) {
+      setEvents(propEvents);
+    }
+  }, [propEvents]);
 
   useEffect(() => {
     const fetchTransactionData = async () => {
@@ -84,14 +95,19 @@ export default function TxHistory() {
           throw new Error(data.error || 'Failed to fetch transaction data');
         }
 
-        setEvents(data.events || []);
+        // Only set events if not provided via props
+        if (!propEvents) {
+          setEvents(data.events || []);
+        }
         setTransactions(data.transactions || []);
         setFilteredTransactions(data.transactions || []);
         setError(null);
       } catch (err) {
         console.error('Error fetching transaction data:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch transaction data');
-        setEvents([]);
+        if (!propEvents) {
+          setEvents([]);
+        }
         setTransactions([]);
         setFilteredTransactions([]);
       } finally {
@@ -100,7 +116,7 @@ export default function TxHistory() {
     };
 
     fetchTransactionData();
-  }, [address]);
+  }, [address, propEvents]);
 
   // Handle event filtering
   useEffect(() => {
@@ -263,7 +279,14 @@ export default function TxHistory() {
                 className="w-full flex items-center gap-3 p-3 hover:bg-muted transition-colors text-left"
               >
                 <div className="h-8 w-8 rounded-full bg-muted border border-border flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs font-semibold">ALL</span>
+                  {/* <span className="text-xs font-semibold">ALL</span> */}
+                  <Image 
+                    src={"/icon.png"} 
+                    alt={"Event icon"} 
+                    width={32} 
+                    height={32}
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <div>
                   <div className="font-semibold text-sm">All Events</div>
