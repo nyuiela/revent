@@ -167,7 +167,7 @@ export default function InfiniteScrollEvents({
                           </div>
                         )}
 
-                        <div className="bg-gray-100 dark:bg-gray-800 text-[var(--app-foreground-muted)] text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                        <div className="bg-gray-100 dark:bg-muted text-[var(--app-foreground-muted)] text-xs px-2 py-1 rounded-full flex items-center gap-1">
                           <Eye className="w-3 h-3" />
                           <ViewCount
                             count={viewCounts[event.id] || 0}

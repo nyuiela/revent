@@ -25,6 +25,10 @@ export default function EventBoard() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const totalPages = Math.max(1, Math.ceil(events.length / pageSize));
+  const safePage = Math.min(totalPages, Math.max(1, page));
 
   useEffect(() => {
     const fetchUserEvents = async () => {
@@ -96,36 +100,80 @@ export default function EventBoard() {
         <div className="text-right">MANAGE</div>
       </div>
       <div>
-        {events.map((event, idx) => (
-          <div
-            key={event.id}
-            className="grid grid-cols-[60px_1fr_60px] items-center px-6 py-4 odd:bg-background"
-          >
-            <div className="text-sm text-muted-foreground">
-              <div className="h-12 w-12 overflow-hidden rounded-full border border-border bg-muted">
-                <Image src={event.avatarUrl || "/icon.png"} alt="event" className="h-full w-full object-cover" height={64} width={64} />
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div>
-                <div className="font-semibold">{event.title}</div>
-                <div className="text-xs text-muted-foreground">
-                  {event.isLive ? "Live" : "Not Live"} • {event.maxAttendees} max
+        {events
+          .slice((safePage - 1) * pageSize, safePage * pageSize)
+          .map((event, idx) => (
+            <div
+              key={event.id}
+              className="grid grid-cols-[60px_1fr_60px] items-center px-6 py-4 odd:bg-background"
+            >
+              <div className="text-sm text-muted-foreground">
+                <div className="h-12 w-12 overflow-hidden rounded-full border border-border bg-muted">
+                  <Image src={event.avatarUrl || "/icon.png"} alt="event" className="h-full w-full object-cover" height={64} width={64} />
                 </div>
               </div>
+              <div className="flex items-center gap-3">
+                <div>
+                  <div className="font-semibold">{event.title}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {event.isLive ? "Live" : "Not Live"} • {event.maxAttendees} max
+                  </div>
+                </div>
+              </div>
+              <div className="text-right text-base font-bold">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="bg-muted rounded-md hover:bg-muted-hover cursor-pointer px-2 py-1"
+                  onClick={() => window.open(`/${event.slug}/manage`, '_blank')}
+                >
+                  manage
+                </Button>
+              </div>
             </div>
-            <div className="text-right text-base font-bold">
-              <Button
-                variant="secondary"
-                size="sm"
-                className="bg-muted rounded-md hover:bg-muted-hover cursor-pointer px-2 py-1"
-                onClick={() => window.open(`/${event.slug}/manage`, '_blank')}
-              >
-                manage
-              </Button>
-            </div>
+          ))}
+        {/* Pagination Controls Row */}
+        <div className="flex items-center justify-between px-6 py-3 border-t border-border">
+          <div className="text-xs text-muted-foreground">
+            Showing {(safePage - 1) * pageSize + 1}-{Math.min(safePage * pageSize, events.length)} of {events.length}
           </div>
-        ))}
+          <div className="flex items-center gap-3">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="bg-muted rounded-md hover:bg-muted-hover cursor-pointer px-3 py-1 h-8 disabled:opacity-50"
+              disabled={safePage <= 1}
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+            >
+              Prev
+            </Button>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Page</span>
+              <input
+                type="number"
+                min={1}
+                max={totalPages}
+                value={safePage}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value || '1', 10)
+                  if (Number.isNaN(val)) return
+                  setPage(Math.min(totalPages, Math.max(1, val)))
+                }}
+                className="w-14 h-8 rounded-md border border-border bg-background px-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              />
+              <span>of {totalPages}</span>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="bg-muted rounded-md hover:bg-muted-hover cursor-pointer px-3 py-1 h-8 disabled:opacity-50"
+              disabled={safePage >= totalPages}
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -594,15 +594,15 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
               {/* Ticket types */}
               {ticketTypes.length > 0 ? (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-1 gap-1 mb-0 bg-gray-300 dark:bg-gray-900 p-6 px-[0.2rem] pb-1 rounded-xl">
+                  <div className="grid grid-cols-1 md:grid-cols-1 gap-1 mb-0 bg-gray-300 dark:bg-muted p-6 px-[0.2rem] pb-1 rounded-xl">
                     {ticketTypes.map((t, idx) => (
                       <button
                         type="button"
                         key={t.type}
                         onClick={() => setSelectedTicketIndex(idx)}
-                        className={`text-left p-4 rounded-2xl transition-colors bg-white dark:bg-gray-800 border-none ${selectedTicketIndex === idx
+                        className={`text-left p-4 rounded-2xl transition-colors bg-muted-foreground border-none cursor-pointer ${selectedTicketIndex === idx
                           ? "bg-[#edf6f9] dark:border-[var(--events-card-border)] dark:bg-gray-700"
-                          : "dark:border-[var(--events-card-border)] bg-transparent dark:bg-gray-800 "}`}
+                          : "dark:border-[var(--events-card-border)] bg-transparent dark:bg-muted-foreground "}`}
                       >
                         <div className="flex items-center justify-between">
                           <div>

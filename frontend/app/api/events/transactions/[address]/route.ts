@@ -33,7 +33,7 @@ export async function GET(
   { params }: { params: Promise<{ address: string }> }
 ) {
   const { address } = await params;
-  
+
   try {
 
     if (!address) {
@@ -50,14 +50,13 @@ export async function GET(
       eventCreateds(where: { creator: "${address.toLowerCase()}" }) {
         eventId
       }
-      attendeeRegistereds(where: { eventId_in: [] }) {
+      attendeeRegistereds(where: { eventId_in: [1] }) {
         id
         eventId
         attendee
         transactionHash
         blockNumber
         blockTimestamp
-        metadata
       }
       attendeeConfirmeds(where: { eventId_in: [] }) {
         id
@@ -66,7 +65,6 @@ export async function GET(
         transactionHash
         blockNumber
         blockTimestamp
-        metadata
       }
       attendeeAttendeds(where: { eventId_in: [] }) {
         id
@@ -90,7 +88,6 @@ export async function GET(
         eventId
         ticketId
         buyer
-        amount
         transactionHash
         blockNumber
         blockTimestamp
@@ -116,7 +113,7 @@ export async function GET(
 
     // Get event IDs created by this user
     const userEventIds = data.eventCreateds?.map((e: any) => e.eventId) || [];
-    
+
     if (userEventIds.length === 0) {
       return NextResponse.json({
         events: [],
@@ -166,7 +163,6 @@ export async function GET(
         eventId
         ticketId
         buyer
-        amount
         transactionHash
         blockNumber
         blockTimestamp
@@ -247,7 +243,6 @@ export async function GET(
         eventId: tx.eventId,
         ticketId: tx.ticketId,
         attendee: tx.buyer,
-        amount: tx.amount,
         txHash: tx.transactionHash,
         blockNumber: tx.blockNumber,
         blockTimestamp: tx.blockTimestamp,
