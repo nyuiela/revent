@@ -6,6 +6,11 @@ const nextConfig = {
     config.externals.push("pino-pretty", "lokijs", "encoding");
     return config;
   },
+  allowedDevOrigins: [
+    "https://revents.io",
+    "https://localhost:3000",
+    "http://192.168.100.135:3000",
+  ],
   images: {
     remotePatterns: [
       {

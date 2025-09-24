@@ -4,14 +4,14 @@ import { useState, useEffect } from "react";
 import {
   Eye,
   X,
-  Youtube,
-  Twitch,
-  User,
+
   LogOut
 } from "lucide-react";
 import { WalletModal } from "@coinbase/onchainkit/wallet";
-import { useAccount, useDisconnect } from "wagmi";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { ThemeSwitcher } from "../../components/ThemeSwitcher";
+import { useSendCalls } from "wagmi";
+import { parseEther } from "viem";
 
 type Platform = {
   id: string;
@@ -38,14 +38,14 @@ export default function StreamHeader() {
     {
       id: "yt",
       name: "YouTube",
-      icon: <Youtube className="w-4 h-4 text-red-600" />,
+      icon: <div></div>,
       connected: false,
       live: false
     },
     {
       id: "tw",
       name: "Twitch",
-      icon: <Twitch className="w-4 h-4 text-purple-600" />,
+      icon: <div></div>,
       connected: false,
       live: false
     },
@@ -57,6 +57,8 @@ export default function StreamHeader() {
       live: false
     },
   ]);
+  const { sendCalls } = useSendCalls()
+  const { connect, connectors } = useConnect()
 
   const isAnyLive = platforms.some((p) => p.live);
 
