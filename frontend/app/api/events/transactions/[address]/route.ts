@@ -10,12 +10,10 @@ interface TransactionEvent {
   id: string;
   eventId: string;
   attendee?: string;
-  attendeeName?: string;
   txHash: string;
   blockNumber: string;
   blockTimestamp: string;
   eventType: 'EventCreated' | 'AttendeeRegistered' | 'AttendeeConfirmed' | 'AttendeeAttended' | 'TicketCreated' | 'TicketPurchased' | 'EventUpdated' | 'EventStatusChanged';
-  metadata?: string;
   amount?: string;
   ticketType?: string;
   ticketId?: string;
@@ -56,7 +54,6 @@ export async function GET(
         id
         eventId
         attendee
-        attendeeName
         transactionHash
         blockNumber
         blockTimestamp
@@ -66,7 +63,6 @@ export async function GET(
         id
         eventId
         attendee
-        attendeeName
         transactionHash
         blockNumber
         blockTimestamp
@@ -136,21 +132,17 @@ export async function GET(
         id
         eventId
         attendee
-        attendeeName
         transactionHash
         blockNumber
         blockTimestamp
-        metadata
       }
       attendeeConfirmeds(where: { eventId_in: [${userEventIds.map((id: string) => `"${id}"`).join(',')}] }, orderBy: blockTimestamp, orderDirection: desc) {
         id
         eventId
         attendee
-        attendeeName
         transactionHash
         blockNumber
         blockTimestamp
-        metadata
       }
       attendeeAttendeds(where: { eventId_in: [${userEventIds.map((id: string) => `"${id}"`).join(',')}] }, orderBy: blockTimestamp, orderDirection: desc) {
         id
@@ -206,12 +198,10 @@ export async function GET(
         id: tx.id,
         eventId: tx.eventId,
         attendee: tx.attendee,
-        attendeeName: tx.attendeeName,
         txHash: tx.transactionHash,
         blockNumber: tx.blockNumber,
         blockTimestamp: tx.blockTimestamp,
         eventType: 'AttendeeRegistered',
-        metadata: tx.metadata
       });
     });
 
@@ -220,12 +210,10 @@ export async function GET(
         id: tx.id,
         eventId: tx.eventId,
         attendee: tx.attendee,
-        attendeeName: tx.attendeeName,
         txHash: tx.transactionHash,
         blockNumber: tx.blockNumber,
         blockTimestamp: tx.blockTimestamp,
         eventType: 'AttendeeConfirmed',
-        metadata: tx.metadata
       });
     });
 
