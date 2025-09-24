@@ -10,8 +10,10 @@ import {
   LogOut
 } from "lucide-react";
 import { WalletModal } from "@coinbase/onchainkit/wallet";
-import { useAccount, useDisconnect } from "wagmi";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { ThemeSwitcher } from "../../components/ThemeSwitcher";
+import { useSendCalls } from "wagmi";
+import { parseEther } from "viem";
 
 type Platform = {
   id: string;
@@ -57,6 +59,8 @@ export default function StreamHeader() {
       live: false
     },
   ]);
+  const { sendCalls } = useSendCalls()
+  const { connect, connectors } = useConnect()
 
   const isAnyLive = platforms.some((p) => p.live);
 
@@ -103,6 +107,25 @@ export default function StreamHeader() {
           {isConnected && address ? (
             <div className="flex items-center gap-2 px-3 py-1.5 scale-[1.2] lg:scale-[1.0] rounded-full bg-app-card-bg border border-app-card-border text-sm">
               {/* <User className="w-4 h-4 text-primary" /> */}
+              <button
+                onClick={() =>
+                  sendCalls({
+                    calls: [
+                      {
+                        to: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+                        value: parseEther('0.01')
+                      },
+                      {
+                        to: '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
+                        value: parseEther('0.02')
+                      }
+                    ]
+                  })
+                }
+              >
+                Send Batch Transfer
+              </button>
+
               <span className="text-app-foreground">
                 {address.slice(0, 6)}...{address.slice(-4)}
               </span>
@@ -119,7 +142,9 @@ export default function StreamHeader() {
               {/* <WalletModal isOpen={showModal} onClose={() => setShowModal(false)} /> */}
               {/* <NetworkSwitcher /> */}
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-app-card-bg border border-app-card-border text-sm cursor-pointer hover:bg-app-gray transition-colors"
-                onClick={() => setShowModalConnect(true)}
+                // onClick={() => setShowModalConnect(true)}
+                onClick={() => connect({ connector: connectors[0] })}
+
               >
                 {/* <button
                   className="ml-1 p-1 hover:bg-app-gray rounded transition-colors text-xs font-medium"

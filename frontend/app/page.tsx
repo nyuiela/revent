@@ -13,6 +13,7 @@ import EventsPage from "./events/page";
 import EarnPage from "./earn/page";
 import ProfilePage from "./profile/page";
 import { useRouter } from "next/navigation";
+import { sdk } from '@farcaster/miniapp-sdk'
 
 
 
@@ -23,12 +24,28 @@ export default function App() {
   const [showWaitlist, setShowWaitlist] = useState(false);
   const router = useRouter();
 
+  useEffect(() => {
+    async function getCapabilities() {
+      const capabilities = await sdk.getCapabilities()
+      if (capabilities.includes('haptics.impactOccurred')) {
+        console.log('capabilities', capabilities)
+        sdk.haptics.impactOccurred('medium')
+      }
+    }
+    getCapabilities()
+    // Impact haptic feedback is available
+  }, []);
   // hideBanner();
   // const addFrame = useAddFrame();
 
   useEffect(() => {
     if (!isFrameReady) {
       setFrameReady();
+      async function getToken() {
+        const { token } = await sdk.quickAuth.getToken()
+        console.log('token', token)
+      }
+      getToken()
     }
   }, [setFrameReady, isFrameReady]);
 
