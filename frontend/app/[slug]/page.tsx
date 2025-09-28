@@ -27,8 +27,8 @@ function isIpfsHash(slug: string): boolean {
 // Function to fetch event by slug from The Graph Protocol
 async function fetchEventBySlug(slug: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/events/slug/${slug}`, { cache: 'no-store' });
+    // const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const response = await fetch(`/api/events/slug/${slug}`, { cache: 'no-store' });
     const data = await response.json();
 
     if (!response.ok) {
@@ -45,8 +45,8 @@ async function fetchEventBySlug(slug: string) {
 // Function to fetch event by eventId from The Graph Protocol (for backward compatibility)
 async function fetchEventByEventId(eventId: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/events/${eventId}`, { cache: 'no-store' });
+    // const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const response = await fetch(`/api/events/${eventId}`, { cache: 'no-store' });
     const data = await response.json();
 
     if (!response.ok) {
@@ -63,8 +63,8 @@ async function fetchEventByEventId(eventId: string) {
 // Helper used by generateMetadata to build per-event SEO
 async function getEventForSEO(slug: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://revents.io';
-    const res = await fetch(`${baseUrl}/api/events/slug/${slug}`, { next: { revalidate: 300 } });
+    // const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://revents.io';
+    const res = await fetch(`/api/events/slug/${slug}`, { next: { revalidate: 300 } });
     if (!res.ok) return null;
     const data = await res.json();
     return data?.event ?? null;
