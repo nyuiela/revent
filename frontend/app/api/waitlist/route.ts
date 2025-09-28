@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
+import { getCollection } from '@/lib/mongodb';
 
 // Initialize Redis client with fallback
 let redis: Redis | null = null;
@@ -22,7 +23,7 @@ let inMemoryCount = 0;
 const WAITLIST_KEY = 'waitlist_emails';
 const WAITLIST_COUNT_KEY = 'waitlist_count';
 
-// Add email to waitlist
+// Add email to waitlist (MongoDB primary, Redis/in-memory as fallback)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
@@ -52,54 +53,50 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check if email already exists
-    let exists: boolean;
-    let totalCount: number;
-
-    if (redis) {
-      // Use Redis
-      exists = await redis.sismember(WAITLIST_KEY, normalizedEmail);
-      
-      if (exists) {
-        return NextResponse.json({
-          success: true,
-          message: 'Email already registered',
-          alreadyExists: true
-        });
+    // Try MongoDB first
+    try {
+      const col = await getCollection<{ email: string, createdAt: string }>('waitlist')
+      const existsMongo = await col.findOne({ email: normalizedEmail })
+      if (existsMongo) {
+        return NextResponse.json({ success: true, message: 'Email already registered', alreadyExists: true })
       }
-
-      // Add email to set and increment counter
-      const pipeline = redis.pipeline();
-      pipeline.sadd(WAITLIST_KEY, normalizedEmail);
-      pipeline.incr(WAITLIST_COUNT_KEY);
-      await pipeline.exec();
-
-      // Get updated count
-      totalCount = await redis.get(WAITLIST_COUNT_KEY) as number;
-    } else {
-      // Use in-memory fallback
-      exists = inMemoryWaitlist.has(normalizedEmail);
-      
-      if (exists) {
-        return NextResponse.json({
-          success: true,
-          message: 'Email already registered',
-          alreadyExists: true
-        });
-      }
-
-      // Add to in-memory storage
-      inMemoryWaitlist.add(normalizedEmail);
-      inMemoryCount++;
-      totalCount = inMemoryCount;
+      await col.insertOne({ email: normalizedEmail, createdAt: new Date().toISOString() })
+      const totalCount = await col.estimatedDocumentCount()
+      return NextResponse.json({ success: true, message: 'Email added to waitlist', totalCount, alreadyExists: false })
+    } catch (e) {
+      // Fallback to Redis or in-memory
+      // Check if email already exists
+      // let exists: boolean;
+      // let totalCount: number;
+      // if (redis) {
+      //   exists = await redis.sismember(WAITLIST_KEY, normalizedEmail);
+      //   if (exists) {
+      //     return NextResponse.json({ success: true, message: 'Email already registered', alreadyExists: true });
+      //   }
+      //   const pipeline = redis.pipeline();
+      //   pipeline.sadd(WAITLIST_KEY, normalizedEmail);
+      //   pipeline.incr(WAITLIST_COUNT_KEY);
+      //   await pipeline.exec();
+      //   totalCount = (await redis.get(WAITLIST_COUNT_KEY)) as number;
+      // } else {
+      //   exists = inMemoryWaitlist.has(normalizedEmail);
+      //   if (exists) {
+      //     return NextResponse.json({ success: true, message: 'Email already registered', alreadyExists: true });
+      //   }
+      //   inMemoryWaitlist.add(normalizedEmail);
+      //   inMemoryCount++;
+      //   totalCount = inMemoryCount;
+      // }
+      return NextResponse.json({ error: 'Failed to add email to waitlist' }, { status: 500 });
+      // return NextResponse.json({ success: false, message: 'Email added to waitlist', totalCount, alreadyExists: false })
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Email added to waitlist',
-      totalCount,
-      alreadyExists: false
-    });
+    // return NextResponse.json({
+    //   success: true,
+    //   message: 'Email added to waitlist',
+    //   totalCount,
+    //   alreadyExists: false
+    // });
 
   } catch (error) {
     console.error('Error adding email to waitlist:', error);
@@ -118,18 +115,20 @@ export async function GET(request: NextRequest) {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
-    let exists: boolean;
-
-    if (redis) {
-      exists = await redis.sismember(WAITLIST_KEY, normalizedEmail);
-    } else {
-      exists = inMemoryWaitlist.has(normalizedEmail);
+    // Try MongoDB
+    try {
+      const col = await getCollection<{ email: string }>('waitlist')
+      const existsMongo = await col.findOne({ email: normalizedEmail })
+      return NextResponse.json({ exists: Boolean(existsMongo), email: normalizedEmail })
+    } catch {
+      let exists: boolean;
+      if (redis) {
+        exists = Boolean(await redis.sismember(WAITLIST_KEY, normalizedEmail));
+      } else {
+        exists = inMemoryWaitlist.has(normalizedEmail);
+      }
+      return NextResponse.json({ exists, email: normalizedEmail })
     }
-
-    return NextResponse.json({
-      exists,
-      email: normalizedEmail
-    });
 
   } catch (error) {
     console.error('Error checking email in waitlist:', error);
@@ -140,22 +139,22 @@ export async function GET(request: NextRequest) {
 // Get waitlist statistics
 export async function PUT(request: NextRequest) {
   try {
-    let totalCount: number;
-    let totalEmails: number;
-
-    if (redis) {
-      totalCount = await redis.get(WAITLIST_COUNT_KEY) as number || 0;
-      totalEmails = await redis.scard(WAITLIST_KEY);
-    } else {
-      totalCount = inMemoryCount;
-      totalEmails = inMemoryWaitlist.size;
+    try {
+      const col = await getCollection<{ email: string }>('waitlist')
+      const totalEmails = await col.estimatedDocumentCount()
+      return NextResponse.json({ totalCount: totalEmails, totalEmails, lastUpdated: new Date().toISOString() })
+    } catch {
+      let totalCount: number;
+      let totalEmails: number;
+      if (redis) {
+        totalCount = ((await redis.get(WAITLIST_COUNT_KEY)) as number) || 0;
+        totalEmails = await redis.scard(WAITLIST_KEY);
+      } else {
+        totalCount = inMemoryCount;
+        totalEmails = inMemoryWaitlist.size;
+      }
+      return NextResponse.json({ totalCount, totalEmails, lastUpdated: new Date().toISOString() })
     }
-
-    return NextResponse.json({
-      totalCount,
-      totalEmails,
-      lastUpdated: new Date().toISOString()
-    });
 
   } catch (error) {
     console.error('Error getting waitlist stats:', error);

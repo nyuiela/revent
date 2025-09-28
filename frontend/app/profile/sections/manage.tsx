@@ -52,7 +52,7 @@ export default function EventBoard({ onEventsLoaded }: EventBoardProps) {
 
         setEvents(data.events || []);
         setError(null);
-        
+
         // Notify parent component that events are loaded
         if (onEventsLoaded) {
           onEventsLoaded(data.events || []);
@@ -67,7 +67,7 @@ export default function EventBoard({ onEventsLoaded }: EventBoardProps) {
     };
 
     fetchUserEvents();
-  }, [address]);
+  }, [address, onEventsLoaded]);
 
   if (!address) {
     return (

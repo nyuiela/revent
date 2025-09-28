@@ -51,6 +51,7 @@ export default function App() {
 
   // Check if user is first-time visitor
   useEffect(() => {
+    localStorage.removeItem("hasVisitedStream");
     const hasVisited = localStorage.getItem("hasVisitedStream");
     if (!hasVisited) {
       setShowWaitlist(true);
@@ -170,12 +171,12 @@ export default function App() {
       </div>
       {/* <Footer /> */}
       <MobileNavigation setActiveTab={setActiveTab} sActiveTab={activeTab} />
-      {showWaitlist && (
-        <WaitlistModal
-          isOpen={showWaitlist}
-          onClose={handleCloseWaitlist}
-        />
-      )}
+      {/* {!showWaitlist && ( */}
+      <WaitlistModal
+        isOpen={showWaitlist}
+        onClose={handleCloseWaitlist}
+      />
+      {/* )} */}
     </div>
   );
 }
