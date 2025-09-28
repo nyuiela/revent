@@ -18,7 +18,7 @@ try {
 
 // In-memory fallback storage
 const inMemoryWaitlist = new Set<string>();
-let inMemoryCount = 0;
+const inMemoryCount = 0;
 
 const WAITLIST_KEY = 'waitlist_emails';
 const WAITLIST_COUNT_KEY = 'waitlist_count';
