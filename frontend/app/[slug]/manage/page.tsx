@@ -118,7 +118,7 @@ export default function ManagePage({ params }: Props) {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-destructive mb-4">Error Loading Event</h1>
           <p className="text-muted-foreground mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>Retry</Button>
+          <Button onClick={() => window.location.reload()} className="cursor-pointer">Retry</Button>
         </div>
       </div>
     );
