@@ -64,7 +64,7 @@ export default function ManagePage({ params }: Props) {
       try {
         setLoading(true);
         const { slug } = await params;
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000' || 'http://localhost:3001';
         const response = await fetch(`${baseUrl}/api/events/slug/${slug}`);
         const data = await response.json();
         console.log('Event data from Graph:', data);

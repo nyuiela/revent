@@ -27,7 +27,7 @@ function isIpfsHash(slug: string): boolean {
 // Function to fetch event by slug from The Graph Protocol
 async function fetchEventBySlug(slug: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000' || 'http://localhost:3001';
     const response = await fetch(`${baseUrl}/api/events/slug/${slug}`, { cache: 'no-store' });
     const data = await response.json();
 
@@ -45,7 +45,7 @@ async function fetchEventBySlug(slug: string) {
 // Function to fetch event by eventId from The Graph Protocol (for backward compatibility)
 async function fetchEventByEventId(eventId: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000' || 'http://localhost:3001';
     const response = await fetch(`${baseUrl}/api/events/${eventId}`, { cache: 'no-store' });
     const data = await response.json();
 
