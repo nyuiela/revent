@@ -21,6 +21,9 @@ export async function GET() {
       payload: process.env.FARCASTER_PAYLOAD,
       signature: process.env.FARCASTER_SIGNATURE,
     },
+    baseBuilder: {
+      allowedAddresses: ["0x26Acb30eC215FD5Ed507F95db14b33CAFCEd6472"]
+    },
     frame: {
       version: "1",
       name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
@@ -41,9 +44,6 @@ export async function GET() {
       ogImageUrl: process.env.NEXT_PUBLIC_APP_OG_IMAGE,
       noindex: false,
       buttonTitle: "Make memories last",
-      "baseBuilder": {
-        allowedAddresses: ["0x26Acb30eC215FD5Ed507F95db14b33CAFCEd6472"]
-      },
       requiredChains: [
         "eip155:8453"
       ],

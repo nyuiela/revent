@@ -67,7 +67,7 @@ export default function EventBoard({ onEventsLoaded }: EventBoardProps) {
     };
 
     fetchUserEvents();
-  }, [address, onEventsLoaded]);
+  }, [address]);
 
   if (!address) {
     return (

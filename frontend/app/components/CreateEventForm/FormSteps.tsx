@@ -150,15 +150,15 @@ const FormSteps: React.FC<FormStepsProps> = ({
                   <div className="relative w-20 h-20 flex items-center justify-center">
                     <div className="absolute inset-0 rounded-full bg-[var(--app-accent)] shadow-lg animate-pulse"></div>
                     <div className="relative z-10 w-16 h-16 rounded-full bg-[var(--app-accent)] flex items-center justify-center text-white shadow-xl">
-                      <Icon 
-                        name={steps[currentStep - 1]?.icon as "home" | "share" | "users" | "calendar" | "star" | "plus" | "check"} 
-                        size="lg" 
+                      <Icon
+                        name={steps[currentStep - 1]?.icon as "home" | "share" | "users" | "calendar" | "star" | "plus" | "check"}
+                        size="lg"
                         className="text-white"
                       />
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="text-center mt-4">
                   <span className="text-lg font-semibold text-[var(--app-accent)]">
                     Step {currentStep} of {steps.length}
@@ -175,76 +175,78 @@ const FormSteps: React.FC<FormStepsProps> = ({
               {currentStep === 1 && (
                 <div className="space-y-4 sm:space-y-6">
                   {/* Auto-fill Mock Data Button */}
-                  <div className="mb-6 p-4 bg-[var(--app-gray)] rounded-xl">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div>
-                        <h3 className="text-sm font-semibold text-[var(--app-foreground)]">Quick Start</h3>
-                        <p className="text-xs text-[var(--app-foreground-muted)] mt-1">
-                          Fill the form with realistic mock data for testing
-                        </p>
-                      </div>
-                      <div className="flex gap-3">
-                        <button
-                          type="button"
-                          onClick={autoFillMockData}
-                          className="px-4 py-2 bg-[var(--app-accent)] text-black dark:text-white text-sm font-medium rounded-lg hover:bg-[var(--app-accent-hover)] transition-colors min-h-[44px] text-nowrap"
-                        >
-                          {isAutoFilled ? "✓ Auto-filled" : "Auto-fill"}
-                        </button>
-                        {(isAutoFilled || formData.title) && (
+                  {process.env.NEXT_PUBLIC_NODE_ENV === "development" && (
+                    <div className="mb-6 p-4 bg-[var(--app-gray)] rounded-xl">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                          <h3 className="text-sm font-semibold text-[var(--app-foreground)]">Quick Start</h3>
+                          <p className="text-xs text-[var(--app-foreground-muted)] mt-1">
+                            Fill the form with realistic mock data for testing
+                          </p>
+                        </div>
+                        <div className="flex gap-3">
                           <button
                             type="button"
-                            onClick={() => {
-                              setFormData({
-                                title: '',
-                                description: '',
-                                category: '',
-                                location: '',
-                                onlinePlatformLink: '',
-                                coordinates: { lat: 0, lng: 0 },
-                                startDateTime: '',
-                                endDateTime: '',
-                                maxParticipants: 100,
-                                image: '',
-                                tickets: {
-                                  available: false,
-                                  types: []
-                                },
-                                date: '',
-                                time: '',
-                                isLive: false,
-                                platforms: [],
-                                totalRewards: 0,
-                                eventType: "In-Person",
-                                hosts: [],
-                                agenda: [],
-                                sponsors: [],
-                                socialLinks: {},
-                                slug: ''
-                              });
-                              setIsAutoFilled(false);
-                              setPreparedContracts(null);
-                              setPreparedTicketContracts(null);
-                              setVerificationStatus('');
-                            }}
-                            className="px-4 py-2 bg-[var(--app-gray)] text-[var(--app-foreground)] dark:text-white text-sm font-medium rounded-lg hover:bg-[var(--app-gray-hover)] transition-colors min-h-[44px]"
+                            onClick={autoFillMockData}
+                            className="px-4 py-2 bg-[var(--app-accent)] text-black dark:text-white text-sm font-medium rounded-lg hover:bg-[var(--app-accent-hover)] transition-colors min-h-[44px] text-nowrap"
                           >
-                            Clear Form
+                            {isAutoFilled ? "✓ Auto-filled" : "Auto-fill"}
                           </button>
-                        )}
+                          {(isAutoFilled || formData.title) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormData({
+                                  title: '',
+                                  description: '',
+                                  category: '',
+                                  location: '',
+                                  onlinePlatformLink: '',
+                                  coordinates: { lat: 0, lng: 0 },
+                                  startDateTime: '',
+                                  endDateTime: '',
+                                  maxParticipants: 100,
+                                  image: '',
+                                  tickets: {
+                                    available: false,
+                                    types: []
+                                  },
+                                  date: '',
+                                  time: '',
+                                  isLive: false,
+                                  platforms: [],
+                                  totalRewards: 0,
+                                  eventType: "In-Person",
+                                  hosts: [],
+                                  agenda: [],
+                                  sponsors: [],
+                                  socialLinks: {},
+                                  slug: ''
+                                });
+                                setIsAutoFilled(false);
+                                setPreparedContracts(null);
+                                setPreparedTicketContracts(null);
+                                setVerificationStatus('');
+                              }}
+                              className="px-4 py-2 bg-[var(--app-gray)] text-[var(--app-foreground)] dark:text-white text-sm font-medium rounded-lg hover:bg-[var(--app-gray-hover)] transition-colors min-h-[44px]"
+                            >
+                              Clear Form
+                            </button>
+                          )}
+                        </div>
                       </div>
+                      {isAutoFilled && (
+                        <div className="mt-2 text-xs text-blue-600">
+                          Form filled with mock data! You can modify any fields as needed.
+                        </div>
+                      )}
+                      {isAutoFilled && (
+                        <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-700">
+                          <strong>Mock Event:</strong> {formData.title} • {formData.category} • {formData.location}
+                        </div>
+                      )}
                     </div>
-                    {isAutoFilled && (
-                      <div className="mt-2 text-xs text-blue-600">
-                        Form filled with mock data! You can modify any fields as needed.
-                      </div>
-                    )}
-                    {isAutoFilled && (
-                      <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-700">
-                        <strong>Mock Event:</strong> {formData.title} • {formData.category} • {formData.location}
-                      </div>
-                    )}
-                  </div>
+                  )}
 
                   {/* Event Title */}
                   <div className="space-y-3">
