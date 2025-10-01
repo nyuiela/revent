@@ -27,6 +27,7 @@ import { Button } from "./DemoComponents";
 import { useRouter } from "next/navigation";
 import { ticketAbi, ticketAddress } from "@/lib/contract";
 import { formatAddress } from "@/utils/farcaster";
+import ContractButton from "./button/ContractButton";
 // import EventManagement from "./EventManagement";
 
 
@@ -84,7 +85,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
   const [isRegistering, setIsRegistering] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const numericEventId = eventId && typeof eventId === "string" ? Number(eventId) : eventId;
-  const canTransact = Boolean(address && chainId && eventAddress);
+  const canTransact = Boolean(chainId && eventAddress);
   const canPurchaseTickets = Boolean(address && chainId && ticketAddress);
 
   // Debug logging
@@ -649,8 +650,26 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
                   {/* Purchase button */}
                   {selectedTicket && canPurchaseTickets && tickets.length > 0 && safeSelectedTicketIndex < tickets.length && (
-                    <div className="flex items-center gap-1 mb-0 p-4 px-[0.2rem] rounded-xl pb-0">
-                      <Transaction
+                    <div className="flex items-center gap-1 mb-0 p-4 px-[0.2rem] rounded-xl pb-0 w-full">
+                      <ContractButton
+                        chainId={chainId}
+                        abi={eventAbi.abi as Abi}
+                        address={eventAddress as `0x${string}`}
+                        functionName="registerForEvent"
+                        args={[BigInt(numericEventId || 0), "0x"]}
+                        onReceiptSuccess={async () => {
+                        }}
+                        idleLabel={isPurchasing ? "Purchasing..." : `Purchase ${ticketQuantity} Ticket${ticketQuantity > 1 ? 's' : ''}`}
+                        successLabel="Tickets Purchased"
+                        errorLabel="Try Again"
+                        cancelLabel="Cancel"
+                        showCancel={true}
+                        showToast={true}
+                        successToastMessage="Registered for Event"
+                        btnClassName="w-full bg-emerald-600 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors cursor-pointer"
+                        className="w-full"
+                      />
+                      {/* <Transaction
                         chainId={chainId}
                         calls={[
                           {
@@ -679,7 +698,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                           <TransactionStatusLabel />
                           <TransactionStatusAction />
                         </TransactionStatus>
-                      </Transaction>
+                      </Transaction> */}
                     </div>
                   )}
                 </div>
@@ -689,36 +708,54 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
             </>
           ) : !ticketsError ? (
             /* Regular registration when no tickets */
-            <div className="border border-[var(--events-card-border)] border-none bg-transparent mb-2">
-              <div className="flex items-center gap-1 mb-0 p-4 px-[0.2rem] rounded-xl pb-0">
+            <div className="border border-[var(--events-card-border)] border-none bg-transparent">
+              <div className="flex items-center gap-1 mb-0 p-4 pt-0 px-[0.2rem] rounded-xl pb-0">
                 {canTransact ? (
-                  <Transaction
+                  <ContractButton
                     chainId={chainId}
-                    calls={[
-                      {
-                        abi: eventAbi.abi as Abi,
-                        address: eventAddress as `0x${string}`,
-                        functionName: "registerForEvent",
-                        args: [BigInt(numericEventId || 1), "0x"],
-                      },
-                    ]}
-                    onStatus={(s) => {
-                      console.log('Registration transaction status:', s);
-                      setIsRegistering(s.statusName === "transactionPending" || s.statusName === "buildingTransaction");
-                      if (s.statusName === "success") {
-                        setShowRegistrationSuccess(true);
-                      }
-                      if (s.statusName === "error") {
-                        console.error('Registration transaction error:', s);
-                      }
+                    abi={eventAbi.abi as Abi}
+                    address={eventAddress as `0x${string}`}
+                    functionName="registerForEvent"
+                    args={[BigInt(numericEventId || 0), "0x"]}
+                    onReceiptSuccess={async () => {
                     }}
-                  >
-                    <TransactionButton text={isRegistering ? "Registering..." : "Register for Event"} className="mb-0 p-2 font-medium rounded-xl" />
-                    <TransactionStatus>
-                      <TransactionStatusLabel />
-                      <TransactionStatusAction />
-                    </TransactionStatus>
-                  </Transaction>
+                    idleLabel="Register for Event"
+                    className="w-full"
+                    successLabel="Registered for Event"
+                    errorLabel="Try Again"
+                    cancelLabel="Cancel"
+                    showCancel={true}
+                    showToast={true}
+                    successToastMessage="Registered for Event"
+                    btnClassName="w-full bg-emerald-600 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors cursor-pointer"
+                  />
+                  // <Transaction
+                  //   chainId={chainId}
+                  //   calls={[
+                  //     {
+                  //       abi: eventAbi.abi as Abi,
+                  //       address: eventAddress as `0x${string}`,
+                  //       functionName: "registerForEvent",
+                  //       args: [BigInt(numericEventId || 1), "0x"],
+                  //     },
+                  //   ]}
+                  //   onStatus={(s) => {
+                  //     console.log('Registration transaction status:', s);
+                  //     setIsRegistering(s.statusName === "transactionPending" || s.statusName === "buildingTransaction");
+                  //     if (s.statusName === "success") {
+                  //       setShowRegistrationSuccess(true);
+                  //     }
+                  //     if (s.statusName === "error") {
+                  //       console.error('Registration transaction error:', s);
+                  //     }
+                  //   }}
+                  // >
+                  //   <TransactionButton text={isRegistering ? "Registering..." : "Register for Event"} className="mb-0 p-2 font-medium rounded-xl" />
+                  //   <TransactionStatus>
+                  //     <TransactionStatusLabel />
+                  //     <TransactionStatusAction />
+                  //   </TransactionStatus>
+                  // </Transaction>
                 ) : (
                   <></>
                 )}
@@ -886,7 +923,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
       {/* Sticky Registration Button */}
       {
-        !isRegistered &&
+        false && !isRegistered &&
         (<div
           className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out bg-black/40 border-none ${isScrolling ? 'translate-y-full' : 'translate-y-0'
             }`}
