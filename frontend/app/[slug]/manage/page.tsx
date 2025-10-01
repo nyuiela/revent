@@ -123,6 +123,18 @@ export default function ManagePage({ params }: Props) {
       </div>
     );
   }
+  if (eventData.creator !== address) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-destructive mb-4">⚠️</h1>
+          <h1 className="text-2xl font-bold text-destructive mb-4">Not Authorized</h1>
+          <h1 className="mb-4">You are not the creator of this event</h1>
+          <Button onClick={() => window.location.href = `/`} className="cursor-pointer">Go Back</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthGuard>

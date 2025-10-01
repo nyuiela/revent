@@ -140,7 +140,7 @@ const EventsPage = () => {
                     alt={event.title}
                     width={100}
                     height={100}
-                    className="w-full h-full object-cover "
+                    className="w-full h-full object-cover"
                   />
                   {event.isLive && (
                     <div className="absolute top-1 left-1 bg-red-500 text-white text-xs px-1 py-0.5 rounded">
