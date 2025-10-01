@@ -106,7 +106,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
             {/* Progress Steps */}
             <div className="mb-0">
               {/* Desktop Steps */}
-              <div className="hidden md:block">
+              <div className="hidden md:hidden">
                 <div className="flex items-center justify-between">
                   {steps.map((step, index) => (
                     <div key={step.id} className="flex items-center">
@@ -144,9 +144,9 @@ const FormSteps: React.FC<FormStepsProps> = ({
               </div>
 
               {/* Mobile Steps */}
-              <div className="md:hidden">
-                <div className="relative h-24 flex items-center justify-center">
-                  {/* Current Step Icon */}
+              <div className="mt-[7.5rem]">
+                {/* <div className="relative h-24 flex items-center justify-center">
+
                   <div className="relative w-20 h-20 flex items-center justify-center">
                     <div className="absolute inset-0 rounded-full bg-[var(--app-accent)] shadow-lg animate-pulse"></div>
                     <div className="relative z-10 w-16 h-16 rounded-full bg-[var(--app-accent)] flex items-center justify-center text-white shadow-xl">
@@ -157,7 +157,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                       />
                     </div>
                   </div>
-                </div>
+                </div> */}
 
                 <div className="text-center mt-4">
                   <span className="text-lg font-semibold text-[var(--app-accent)]">
@@ -171,7 +171,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
             </div>
 
             {/* Form Content */}
-            <div className="bg-[var(--app-card-bg)] rounded-2xl p-6 sm:p-8 md:p-10">
+            <div className="bg-[var(--app-card-bg)] rounded-2xl p-6 sm:p-8 md:p-10 mt-10">
               {currentStep === 1 && (
                 <div className="space-y-4 sm:space-y-6">
                   {/* Auto-fill Mock Data Button */}

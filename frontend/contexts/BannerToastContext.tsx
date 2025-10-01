@@ -74,8 +74,8 @@ export const BannerToastProvider = ({ children }: { children: React.ReactNode })
 const BannerToast = ({ message, onClose }: { message: string | null; onClose: () => void }) => {
   if (!message) return null;
   return (
-    <div className="fixed left-0 right-0 bottom-20 z-50 flex justify-center px-4">
-      <div className="max-w-xs w-fit bg-emerald-600 dark:bg-foreground text-background rounded-2xl text-[11px] px-4 py-2 shadow-xl border border-border/30 animate-in fade-in slide-in-from-bottom-2">
+    <div className="fixed left-0 right-0 bottom-20 z-20 flex justify-center px-4">
+      <div className="max-w-xs w-fit bg-emerald-600 text-background rounded-2xl text-[11px] px-4 py-2 shadow-xl border border-border/30 animate-in fade-in slide-in-from-bottom-2">
         <div className="flex items-center gap-2">
           <span className="truncate">{message}</span>
           <button

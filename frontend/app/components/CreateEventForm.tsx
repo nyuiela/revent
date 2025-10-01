@@ -806,7 +806,7 @@ const CreateEventForm = () => {
   };
 
   return (
-    <div className="relative bg-red-500">
+    <div className="relative bg-red-500 flex flex-col align-center justify-center">
       <div className="fixed top-4 left-4 z-50 text-foreground bg-background">
         <Button variant="ghost" className="cursor-pointer" onClick={() => router.back()}>
           <ChevronLeftIcon className="w-5 h-5" />
