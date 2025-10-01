@@ -6,7 +6,7 @@ import {
   Clock,
   ChevronLeft,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { useAccount, useChainId, useReadContract } from "wagmi";
 import { Transaction, TransactionButton, TransactionStatus, TransactionStatusAction, TransactionStatusLabel } from "@coinbase/onchainkit/transaction";
 import { WalletModal } from "@coinbase/onchainkit/wallet";
@@ -26,6 +26,7 @@ import Image from "next/image";
 import { Button } from "./DemoComponents";
 import { useRouter } from "next/navigation";
 import { ticketAbi, ticketAddress } from "@/lib/contract";
+import { formatAddress } from "@/utils/farcaster";
 // import EventManagement from "./EventManagement";
 
 
@@ -474,6 +475,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
 
 
+
   //  function onBack(): void {
   //   window.history.back();
   // }
@@ -600,9 +602,9 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                         type="button"
                         key={t.type}
                         onClick={() => setSelectedTicketIndex(idx)}
-                        className={`text-left p-4 rounded-2xl transition-colors bg-muted-foreground border-none cursor-pointer ${selectedTicketIndex === idx
-                          ? "bg-[#edf6f9] dark:border-[var(--events-card-border)] dark:bg-gray-700"
-                          : "dark:border-[var(--events-card-border)] bg-transparent dark:bg-muted-foreground "}`}
+                        className={`text-left p-4 rounded-2xl transition-colors bg-muted border-none cursor-pointer ${selectedTicketIndex === idx
+                          ? "bg-muted-foreground/30"
+                          : "bg-muted-foreground/10"}`}
                       >
                         <div className="flex items-center justify-between">
                           <div>
@@ -807,7 +809,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className=" font-medium text-[14px]">{host.name}</h3>
+                        <h3 className=" font-medium text-[14px]">{formatAddress(host.name as `0x${string}` || "")}</h3>
                         <ProfileSocials userAddress={host.name as `0x${string}` || ""} records={host.social} style={{}} />
                         {/* {host.social && (
                           <div className="flex items-center gap-2">
