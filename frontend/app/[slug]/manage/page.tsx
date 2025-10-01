@@ -14,6 +14,7 @@ import { Abi } from "viem";
 import { chainId, eventAbi, eventAddress } from "@/lib/contract";
 import ContractButton from "@/app/components/button/ContractButton";
 import { AuthGuard } from "@/contexts/AuthProvider";
+import { ConnectWallet } from "@coinbase/onchainkit/wallet";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -54,6 +55,8 @@ export default function ManagePage({ params }: Props) {
     { name: "General Admission", type: "standard", price: "0.01 ETH", quantity: 150 },
     { name: "VIP", type: "vip", price: "0.05 ETH", quantity: 25 },
   ];
+  console.log("eventData", eventData);
+  console.log("address", address);
   const onSave = async () => {
     setSaving(true);
     await new Promise((r) => setTimeout(r, 800));
@@ -123,13 +126,14 @@ export default function ManagePage({ params }: Props) {
       </div>
     );
   }
-  if (eventData.creator !== address) {
+  if (eventData.creator !== address?.toLowerCase()) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-destructive mb-4">⚠️</h1>
           <h1 className="text-2xl font-bold text-destructive mb-4">Not Authorized</h1>
           <h1 className="mb-4">You are not the creator of this event</h1>
+          <ConnectWallet />
           <Button onClick={() => window.location.href = `/`} className="cursor-pointer">Go Back</Button>
         </div>
       </div>
@@ -176,13 +180,24 @@ export default function ManagePage({ params }: Props) {
               />
               <div className="mb-6 flex items-center justify-end mt-4">
 
-                <Button
+                <ContractButton
+                  idleLabel={"Save Changes"}
+                  chainId={Number(chainId)}
+                  abi={eventAbi.abi as Abi}
+                  address={eventAddress as `0x${string}`}
+                  functionName="updateEvent"
+                  args={[BigInt(eventData?.id || 0), values.title, values.location, values.start, values.end, values.maxAttendees, values.registrationFee]}
+                  btnClassName="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+                  onWriteSuccess={() => console.log("save")}
+                />
+
+                {/* <Button
                   onClick={onSave}
                   disabled={saving}
                   className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
                 >
                   {saving ? "Saving..." : "Save Changes"}
-                </Button>
+                </Button> */}
               </div>
             </div>
           )}
