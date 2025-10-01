@@ -188,7 +188,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                           <button
                             type="button"
                             onClick={autoFillMockData}
-                            className="px-4 py-2 bg-[var(--app-accent)] text-black dark:text-white text-sm font-medium rounded-lg hover:bg-[var(--app-accent-hover)] transition-colors min-h-[44px] text-nowrap"
+                            className="px-4 py-2 bg-[var(--app-accent)] text-black text-sm font-medium rounded-lg hover:bg-[var(--app-accent-hover)] transition-colors min-h-[44px] text-nowrap"
                           >
                             {isAutoFilled ? "✓ Auto-filled" : "Auto-fill"}
                           </button>
@@ -228,7 +228,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                                 setPreparedTicketContracts(null);
                                 setVerificationStatus('');
                               }}
-                              className="px-4 py-2 bg-[var(--app-gray)] text-[var(--app-foreground)] dark:text-white text-sm font-medium rounded-lg hover:bg-[var(--app-gray-hover)] transition-colors min-h-[44px]"
+                              className="px-4 py-2 bg-[var(--app-gray)] text-[var(--app-foreground)] text-sm font-medium rounded-lg hover:bg-[var(--app-gray-hover)] transition-colors min-h-[44px]"
                             >
                               Clear Form
                             </button>
@@ -257,7 +257,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                       type="text"
                       value={formData.title}
                       onChange={(e) => handleInputChange('title', e.target.value)}
-                      className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] dark:text-white placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                      className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                       placeholder="Enter event title"
                       required
                     />
@@ -272,7 +272,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                       value={formData.description}
                       onChange={(e) => handleInputChange('description', e.target.value)}
                       rows={4}
-                      className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] dark:text-white placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors resize-none text-sm"
+                      className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors resize-none text-sm"
                       placeholder="Describe your event..."
                       required
                     />
@@ -286,7 +286,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                     <select
                       value={formData.category}
                       onChange={(e) => handleInputChange('category', e.target.value)}
-                      className="w-full px-4 mt-2 py-3 bg-background border border-border rounded-xl text-[var(--app-foreground)] dark:text-white focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                      className="w-full px-4 mt-2 py-3 bg-background border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                       required
                     >
                       <option value="">Select a category</option>
@@ -304,7 +304,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                     <select
                       value={formData.eventType}
                       onChange={(e) => handleInputChange('eventType', e.target.value)}
-                      className="w-full px-4 mt-2 py-3 bg-background border border-border rounded-xl text-[var(--app-foreground)] dark:text-white focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                      className="w-full px-4 mt-2 py-3 bg-background border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                       required
                     >
                       <option value="">Select a event type</option>
@@ -332,7 +332,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                             .trim();
                           handleInputChange('slug', slug);
                         }}
-                        className="flex-1 px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] dark:text-white placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                        className="flex-1 px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                         placeholder="my-awesome-event"
                       />
                       <button
@@ -847,11 +847,11 @@ const FormSteps: React.FC<FormStepsProps> = ({
                   {/* Existing Ticket Types */}
                   {formData.tickets.available && formData.tickets.types.length > 0 && (
                     <div className="space-y-3">
-                      <h3 className="text-lg font-semibold text-black dark:text-white">Current Ticket Types</h3>
+                      <h3 className="text-lg font-semibold text-black">Current Ticket Types</h3>
                       {formData.tickets.types.map((ticket, index) => (
-                        <div key={index} className="flex items-center justify-between p-4 border border-border rounded-xl bg-white dark:bg-[var(--app-background)] text-black dark:text-white">
+                        <div key={index} className="flex items-center justify-between p-4 border border-border rounded-xl bg-white dark:bg-[var(--app-background)] text-black">
                           <div>
-                            <h4 className="font-semibold text-[var(--app-foreground)] dark:text-white">{ticket.type}</h4>
+                            <h4 className="font-semibold text-[var(--app-foreground)]">{ticket.type}</h4>
                             <p className="text-sm text-[var(--app-foreground-muted)]">
                               ${ticket.price} {ticket.currency} • {ticket.quantity} available
                             </p>
