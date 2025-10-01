@@ -521,9 +521,9 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
       {/* Hero Section */}
       <div className="relative h-[25rem] md:h-[25rem] overflow-hidden">
-        <div className="left-4 z-10 absolute">
-          <Button variant="ghost" className="gap-2 bg-transparent cursor-pointer text-background dark:text-white" onClick={() => router.back()}>
-            <ChevronLeft className="w-4 h-4" /> Back
+        <div className="left-4 top-4 z-10 absolute rounded-full bg-black/40 backdrop-blur-md cursor-pointer">
+          <Button variant="ghost" className="gap-2 bg-transparent cursor-pointer" onClick={() => router.back()}>
+            <ChevronLeft className="w-6 h-6 text-white" />
           </Button>
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}

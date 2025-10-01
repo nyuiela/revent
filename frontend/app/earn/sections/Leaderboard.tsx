@@ -107,7 +107,7 @@ export default function Leaderboard() {
             >
               <div className="text-sm font-semibold text-muted-foreground">#{rank}</div>
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full overflow-hidden border border-border bg-muted flex-shrink-0">
+                {/* <div className="h-10 w-10 rounded-full overflow-hidden border border-border bg-muted flex-shrink-0">
                   <Image
                     src={event.avatarUrl || "/icon.png"}
                     alt={event.title}
@@ -115,7 +115,7 @@ export default function Leaderboard() {
                     height={40}
                     className="h-full w-full object-cover"
                   />
-                </div>
+                </div> */}
                 <div>
                   <div className="text-clip">{event.title}</div>
                   <div className="text-xs text-muted-foreground">
