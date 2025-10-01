@@ -574,7 +574,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
       </div>
 
       {/* Content */}
-      <div className="p-6 px-4 max-w-7xl mx-auto space-y-12">
+      <div className="p-8 px-4 max-w-7xl mx-auto space-y-8">
 
         {/* Registration/Tickets Section */}
         <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
@@ -814,11 +814,11 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
         )} */}
 
         {/* Overview Content - All Sections Combined */}
-        <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-8">
           {/* Description */}
           <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
             <h2 className="text-xl font-semibold mb-2">About This Event</h2>
-            <p className="text-[var(--events-foreground-muted)] leading-relaxed text-sm">
+            <p className="text-[var(--events-foreground-muted)] leading-relaxed text-sm text-balance">
               {event.description}
             </p>
           </div>
