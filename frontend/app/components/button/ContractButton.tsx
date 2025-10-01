@@ -234,12 +234,12 @@ export function ContractButton(props: TxButtonProps) {
 
   return (
     <div className={`${className}`}>
-      {!account ? <button className={`rounded-xl px-3 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-10 ${btnClassName}`} onClick={() => setShowModalConnect(true)}>Connect Wallet</button> :
+      {!account ? <button className={`rounded-xl px-3 py-2 text-sm font-medium text-foreground hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-10 ${btnClassName}`} onClick={() => setShowModalConnect(true)}>Connect Wallet</button> :
         <button
           type="button"
           onClick={handleClick}
           disabled={Boolean(isDisabled)}
-          className={`rounded-xl px-3 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-10 ${btnClassName}`}
+          className={`rounded-xl px-3 py-2 text-sm font-medium text-foreground hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-10 ${btnClassName}`}
         >
           {label}
         </button>}

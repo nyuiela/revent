@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/app/components/DemoComponents";
 import { useAccount } from "wagmi";
+import { useRouter } from "next/navigation";
 
 type ManageEvent = {
   id: string;
@@ -26,6 +27,7 @@ interface EventBoardProps {
 
 export default function EventBoard({ onEventsLoaded }: EventBoardProps) {
   const { address } = useAccount();
+  const router = useRouter();
   const [events, setEvents] = useState<ManageEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -134,7 +136,7 @@ export default function EventBoard({ onEventsLoaded }: EventBoardProps) {
                   variant="secondary"
                   size="sm"
                   className="bg-muted rounded-md hover:bg-muted-hover cursor-pointer px-2 py-1"
-                  onClick={() => window.open(`/${event.slug}/manage`, '_blank')}
+                  onClick={() => router.push(`/${event.slug}/manage`)}
                 >
                   manage
                 </Button>

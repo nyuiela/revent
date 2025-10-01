@@ -36,7 +36,7 @@ export default function ParticipantsList() {
               abi={eventAbi.abi as Abi}
               functionName="markAttended"
               args={[BigInt(eventId || 0), "0xf0830060f836B8d54bF02049E5905F619487989e" as `0x${string}`]}
-              btnClassName="rounded-full px-2 text-xs capitalize ring-1 ring-border bg-background"
+              btnClassName="px-2 text-xs capitalize ring-1 ring-border bg-background"
               idleLabel={p.status}
               onWriteSuccess={() => {
                 console.log("Marked attended");
