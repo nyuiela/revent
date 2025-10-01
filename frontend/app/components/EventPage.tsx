@@ -19,6 +19,7 @@ import EventViewTracker from "../../components/EventViewTracker";
 import ViewCount from "../../components/ViewCount";
 import { useEventViews } from "../../hooks/useEventViews";
 import { useEventTickets } from "../../hooks/useEventTickets";
+import { useEventStatus } from "../../hooks/useEventStatus";
 import { EventDetails } from "@/utils/types";
 import RegistrationSuccessCard from "./RegistrationSuccessCard";
 import { Avatar, FollowersYouKnow, ProfileSocials } from "ethereum-identity-kit";
@@ -87,6 +88,8 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
   const numericEventId = eventId && typeof eventId === "string" ? Number(eventId) : eventId;
   const canTransact = Boolean(chainId && eventAddress);
   const canPurchaseTickets = Boolean(address && chainId && ticketAddress);
+  const { statusData } = useEventStatus(eventId || '');
+  const isPublished = (statusData?.statusName || '').toLowerCase() === 'published';
 
   // Debug logging
   console.log('EventPage Debug:', {
@@ -486,7 +489,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
 
   return (
-    <div className="min-h-screen mt-12 text-[var(--events-foreground)] bg-background relative z-[20]">
+    <div className="min-h-screen mt-0 text-[var(--events-foreground)] bg-background relative z-[20]">
       {/* Track view when page loads */}
       {eventId && <EventViewTracker eventId={eventId} />}
       {/* <StreamPublisher /> */}
@@ -518,8 +521,8 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
       {/* Hero Section */}
       <div className="relative h-[25rem] md:h-[25rem] overflow-hidden">
-        <div className="left-4 mt-4 z-10 absolute">
-          <Button variant="ghost" className="rounded-lg gap-2 bg-transparent cursor-pointer text-background dark:text-white" onClick={() => router.back()}>
+        <div className="left-4 z-10 absolute">
+          <Button variant="ghost" className="gap-2 bg-transparent cursor-pointer text-background dark:text-white" onClick={() => router.back()}>
             <ChevronLeft className="w-4 h-4" /> Back
           </Button>
         </div>
@@ -527,7 +530,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
         <Image
           src={event.image}
           alt={event.title}
-          className="w-full h-full object-cover rounded-lg"
+          className="w-full h-full object-cover"
           width={1000}
           height={1000}
         />
@@ -591,8 +594,12 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
             </div>
           )}
 
-          {/* Show tickets if available, otherwise show registration */}
-          {!ticketsError && hasTickets ? (
+          {/* Show tickets if available, otherwise show registration; gate by publish status */}
+          {!isPublished ? (
+            <div className="p-4 border border-border rounded-lg bg-muted text-muted-foreground ">
+              This event is currently in draft. Registration will open once it is published.
+            </div>
+          ) : !ticketsError && hasTickets ? (
             <>
               {/* Ticket types */}
               {ticketTypes.length > 0 ? (
