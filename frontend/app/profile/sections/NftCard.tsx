@@ -3,53 +3,28 @@
 import React from "react";
 import Image from "next/image";
 
+interface Nft {
+  name: string;
+  image: string;
+  description: string;
+  attributes: { name: string; value: string }[];
+}
+
+
 export default function NftCard() {
-  const nft = [
-    {
-      name: "Revent NFT",
-      image: "/image/nftcard.jpg",
-      description: "This is a description of the NFT",
-      attributes: [
-        {
-          name: "Attribute 1",
-          value: "Value 1"
-        }
-      ]
-    },
-    {
-      name: "Revent NFT",
-      image: "/image/nftcard.jpg",
-      description: "This is a description of the NFT",
-      attributes: [
-        {
-          name: "Attribute 1",
-          value: "Value 1"
-        }
-      ]
-    },
-    {
-      name: "Revent NFT",
-      image: "/image/nftcard.jpg",
-      description: "This is a description of the NFT",
-      attributes: [
-        {
-          name: "Attribute 1",
-          value: "Value 1"
-        }
-      ]
-    },
-    {
-      name: "Revent NFT",
-      image: "/image/nftcard.jpg",
-      description: "This is a description of the NFT",
-      attributes: [
-        {
-          name: "Attribute 1",
-          value: "Value 1"
-        }
-      ]
-    }
-  ]
+  const nft: Nft[] = []
+  // {
+  //   name: "Revent NFT",
+  //   image: "/image/nftcard.jpg",
+  //   description: "This is a description of the NFT",
+  //   attributes: [
+  //     {
+  //       name: "Attribute 1",
+  //       value: "Value 1"
+  //     }
+  //   ]
+  // }
+  // ]
 
   return (
     <div className="rounded-2xl bg-[#F7F6FF] dark:bg-background p-4 ring-1 ring-black/5">

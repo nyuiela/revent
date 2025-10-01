@@ -33,7 +33,7 @@ export default function WaitlistModal({ isOpen, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="relative w-full max-w-md mx-auto bg-background border border-[var(--app-card-border)] rounded-2xl shadow-xl p-6 m-4">
+      <div className="relative w-[94%] max-w-md mx-auto bg-background border border-border rounded-2xl shadow-xl p-6 m-4">
         {/* Close button */}
         <button
           type="button"

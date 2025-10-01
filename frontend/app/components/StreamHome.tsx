@@ -130,7 +130,7 @@ export default function StreamHome() {
       <StreamHeader />
 
       {/* Main viewport card */}
-      <div className="relative rounded-3xl overflow-hidden border-4 border-gray-200 dark:border-gray-700 h-[30rem] w-full shadow-none">
+      <div className="relative rounded-3xl overflow-hidden border-2 border-border h-[30rem] w-[96%] mx-auto shadow-none">
         {/* Mode preview background */}
         <div className="relative h-full">
           {mode === "map" && (

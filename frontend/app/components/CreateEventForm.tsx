@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Button } from "./DemoComponents";
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { ChevronLeft, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useAccount } from "wagmi";
 import { eventAbi, eventAddress, ticketAddress, ticketAbi } from "@/lib/contract";
 import { useRouter } from 'next/navigation';
@@ -806,14 +806,12 @@ const CreateEventForm = () => {
   };
 
   return (
-    <div className="relative bg-red-500">
-      <div className="fixed top-4 left-4 z-50 text-foreground bg-background">
-        <Button variant="ghost" className="cursor-pointer" onClick={() => router.back()}>
-          <ChevronLeftIcon className="w-5 h-5" />
-          Go Back
+    <div className="relative bg-red-500 flex flex-col align-center justify-center">
+      <div className="left-4 top-4 z-10 rounded-full bg-black/40 backdrop-blur-md cursor-pointer fixed">
+        <Button variant="ghost" className="gap-2 bg-transparent cursor-pointer" onClick={() => router.back()}>
+          <ChevronLeft className="w-6 h-6 text-white" />
         </Button>
       </div>
-
       {/* Form Steps Component */}
       {currentStep < 6 && (
         <FormSteps

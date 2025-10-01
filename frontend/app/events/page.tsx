@@ -129,7 +129,7 @@ const EventsPage = () => {
             <Link
               key={event.id}
               href={`/${event.slug || event.id}`} // Use slug if available, fallback to ID
-              className="block border-b-[1px] border-border rounded-xl p-4 bg-events-card-bg hover:bg-events-card-bg transition-colors"
+              className="block border-t-[1px] border-border rounded-md p-4 bg-events-card-bg hover:bg-events-card-bg transition-colors hover:border-t-2"
             >
               <div className="flex gap-4 items-center justify-between">
                 {/* Event Image */}
@@ -140,7 +140,7 @@ const EventsPage = () => {
                     alt={event.title}
                     width={100}
                     height={100}
-                    className="w-full h-full object-cover "
+                    className="w-full h-full object-cover"
                   />
                   {event.isLive && (
                     <div className="absolute top-1 left-1 bg-red-500 text-white text-xs px-1 py-0.5 rounded">

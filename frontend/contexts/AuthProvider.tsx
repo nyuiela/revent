@@ -61,7 +61,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children, fallback }) => {
 
     return (
       <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div className="relative w-[98%] max-w-md mx-auto rounded-2xl shadow-xl p-6 bg-background animate-in slide-in-from-bottom-4">
+        <div className="relative max-w-[98%] md:max-w-md mx-auto rounded-2xl shadow-xl p-6 bg-background animate-in slide-in-from-bottom-4">
           <div className="text-center">
             <h3 className="text-lg font-semibold mb-2">Connect Your Wallet</h3>
             <p className="text-sm text-muted-foreground mb-6">

@@ -6,7 +6,7 @@ import {
   Clock,
   ChevronLeft,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { useAccount, useChainId, useReadContract } from "wagmi";
 import { Transaction, TransactionButton, TransactionStatus, TransactionStatusAction, TransactionStatusLabel } from "@coinbase/onchainkit/transaction";
 import { WalletModal } from "@coinbase/onchainkit/wallet";
@@ -19,6 +19,7 @@ import EventViewTracker from "../../components/EventViewTracker";
 import ViewCount from "../../components/ViewCount";
 import { useEventViews } from "../../hooks/useEventViews";
 import { useEventTickets } from "../../hooks/useEventTickets";
+import { useEventStatus } from "../../hooks/useEventStatus";
 import { EventDetails } from "@/utils/types";
 import RegistrationSuccessCard from "./RegistrationSuccessCard";
 import { Avatar, FollowersYouKnow, ProfileSocials } from "ethereum-identity-kit";
@@ -26,6 +27,8 @@ import Image from "next/image";
 import { Button } from "./DemoComponents";
 import { useRouter } from "next/navigation";
 import { ticketAbi, ticketAddress } from "@/lib/contract";
+import { formatAddress } from "@/utils/farcaster";
+import ContractButton from "./button/ContractButton";
 // import EventManagement from "./EventManagement";
 
 
@@ -83,8 +86,10 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
   const [isRegistering, setIsRegistering] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const numericEventId = eventId && typeof eventId === "string" ? Number(eventId) : eventId;
-  const canTransact = Boolean(address && chainId && eventAddress);
+  const canTransact = Boolean(chainId && eventAddress);
   const canPurchaseTickets = Boolean(address && chainId && ticketAddress);
+  const { statusData } = useEventStatus(eventId || '');
+  const isPublished = (statusData?.statusName || '').toLowerCase() === 'published';
 
   // Debug logging
   console.log('EventPage Debug:', {
@@ -474,6 +479,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
 
 
+
   //  function onBack(): void {
   //   window.history.back();
   // }
@@ -483,7 +489,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
 
   return (
-    <div className="min-h-screen mt-12 text-[var(--events-foreground)] bg-background relative z-[20]">
+    <div className="min-h-screen mt-0 text-[var(--events-foreground)] bg-background relative z-[20]">
       {/* Track view when page loads */}
       {eventId && <EventViewTracker eventId={eventId} />}
       {/* <StreamPublisher /> */}
@@ -515,16 +521,16 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
       {/* Hero Section */}
       <div className="relative h-[25rem] md:h-[25rem] overflow-hidden">
-        <div className="left-4 mt-4 z-10 absolute">
-          <Button variant="ghost" className="rounded-lg gap-2 bg-transparent cursor-pointer text-background dark:text-white" onClick={() => router.back()}>
-            <ChevronLeft className="w-4 h-4" /> Back
+        <div className="left-4 top-4 z-10 absolute rounded-full bg-black/40 backdrop-blur-md cursor-pointer">
+          <Button variant="ghost" className="gap-2 bg-transparent cursor-pointer" onClick={() => router.back()}>
+            <ChevronLeft className="w-6 h-6 text-white" />
           </Button>
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <Image
           src={event.image}
           alt={event.title}
-          className="w-full h-full object-cover rounded-lg"
+          className="w-full h-full object-cover"
           width={1000}
           height={1000}
         />
@@ -568,7 +574,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
       </div>
 
       {/* Content */}
-      <div className="p-6 px-4 max-w-7xl mx-auto space-y-12">
+      <div className="p-8 px-4 max-w-7xl mx-auto space-y-8">
 
         {/* Registration/Tickets Section */}
         <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
@@ -588,8 +594,12 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
             </div>
           )}
 
-          {/* Show tickets if available, otherwise show registration */}
-          {!ticketsError && hasTickets ? (
+          {/* Show tickets if available, otherwise show registration; gate by publish status */}
+          {!isPublished ? (
+            <div className="p-4 border border-border rounded-lg bg-muted text-muted-foreground ">
+              This event is currently in draft. Registration will open once it is published.
+            </div>
+          ) : !ticketsError && hasTickets ? (
             <>
               {/* Ticket types */}
               {ticketTypes.length > 0 ? (
@@ -600,9 +610,9 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                         type="button"
                         key={t.type}
                         onClick={() => setSelectedTicketIndex(idx)}
-                        className={`text-left p-4 rounded-2xl transition-colors bg-muted-foreground border-none cursor-pointer ${selectedTicketIndex === idx
-                          ? "bg-[#edf6f9] dark:border-[var(--events-card-border)] dark:bg-gray-700"
-                          : "dark:border-[var(--events-card-border)] bg-transparent dark:bg-muted-foreground "}`}
+                        className={`text-left p-4 rounded-2xl transition-colors bg-muted border-none cursor-pointer ${selectedTicketIndex === idx
+                          ? "bg-muted-foreground/30"
+                          : "bg-muted-foreground/10"}`}
                       >
                         <div className="flex items-center justify-between">
                           <div>
@@ -647,8 +657,26 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
                   {/* Purchase button */}
                   {selectedTicket && canPurchaseTickets && tickets.length > 0 && safeSelectedTicketIndex < tickets.length && (
-                    <div className="flex items-center gap-1 mb-0 p-4 px-[0.2rem] rounded-xl pb-0">
-                      <Transaction
+                    <div className="flex items-center gap-1 mb-0 p-4 px-[0.2rem] rounded-xl pb-0 w-full">
+                      <ContractButton
+                        chainId={chainId}
+                        abi={eventAbi.abi as Abi}
+                        address={eventAddress as `0x${string}`}
+                        functionName="registerForEvent"
+                        args={[BigInt(numericEventId || 0), "0x"]}
+                        onReceiptSuccess={async () => {
+                        }}
+                        idleLabel={isPurchasing ? "Purchasing..." : `Purchase ${ticketQuantity} Ticket${ticketQuantity > 1 ? 's' : ''}`}
+                        successLabel="Tickets Purchased"
+                        errorLabel="Try Again"
+                        cancelLabel="Cancel"
+                        showCancel={true}
+                        showToast={true}
+                        successToastMessage="Registered for Event"
+                        btnClassName="w-full bg-emerald-600 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors cursor-pointer"
+                        className="w-full"
+                      />
+                      {/* <Transaction
                         chainId={chainId}
                         calls={[
                           {
@@ -677,7 +705,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                           <TransactionStatusLabel />
                           <TransactionStatusAction />
                         </TransactionStatus>
-                      </Transaction>
+                      </Transaction> */}
                     </div>
                   )}
                 </div>
@@ -687,36 +715,54 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
             </>
           ) : !ticketsError ? (
             /* Regular registration when no tickets */
-            <div className="border border-[var(--events-card-border)] border-none bg-transparent mb-2">
-              <div className="flex items-center gap-1 mb-0 p-4 px-[0.2rem] rounded-xl pb-0">
+            <div className="border border-[var(--events-card-border)] border-none bg-transparent">
+              <div className="flex items-center gap-1 mb-0 p-4 pt-0 px-[0.2rem] rounded-xl pb-0">
                 {canTransact ? (
-                  <Transaction
+                  <ContractButton
                     chainId={chainId}
-                    calls={[
-                      {
-                        abi: eventAbi.abi as Abi,
-                        address: eventAddress as `0x${string}`,
-                        functionName: "registerForEvent",
-                        args: [BigInt(numericEventId || 1), "0x"],
-                      },
-                    ]}
-                    onStatus={(s) => {
-                      console.log('Registration transaction status:', s);
-                      setIsRegistering(s.statusName === "transactionPending" || s.statusName === "buildingTransaction");
-                      if (s.statusName === "success") {
-                        setShowRegistrationSuccess(true);
-                      }
-                      if (s.statusName === "error") {
-                        console.error('Registration transaction error:', s);
-                      }
+                    abi={eventAbi.abi as Abi}
+                    address={eventAddress as `0x${string}`}
+                    functionName="registerForEvent"
+                    args={[BigInt(numericEventId || 0), "0x"]}
+                    onReceiptSuccess={async () => {
                     }}
-                  >
-                    <TransactionButton text={isRegistering ? "Registering..." : "Register for Event"} className="mb-0 p-2 font-medium rounded-xl" />
-                    <TransactionStatus>
-                      <TransactionStatusLabel />
-                      <TransactionStatusAction />
-                    </TransactionStatus>
-                  </Transaction>
+                    idleLabel="Register for Event"
+                    className="w-full"
+                    successLabel="Registered for Event"
+                    errorLabel="Try Again"
+                    cancelLabel="Cancel"
+                    showCancel={true}
+                    showToast={true}
+                    successToastMessage="Registered for Event"
+                    btnClassName="w-full bg-emerald-600 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors cursor-pointer"
+                  />
+                  // <Transaction
+                  //   chainId={chainId}
+                  //   calls={[
+                  //     {
+                  //       abi: eventAbi.abi as Abi,
+                  //       address: eventAddress as `0x${string}`,
+                  //       functionName: "registerForEvent",
+                  //       args: [BigInt(numericEventId || 1), "0x"],
+                  //     },
+                  //   ]}
+                  //   onStatus={(s) => {
+                  //     console.log('Registration transaction status:', s);
+                  //     setIsRegistering(s.statusName === "transactionPending" || s.statusName === "buildingTransaction");
+                  //     if (s.statusName === "success") {
+                  //       setShowRegistrationSuccess(true);
+                  //     }
+                  //     if (s.statusName === "error") {
+                  //       console.error('Registration transaction error:', s);
+                  //     }
+                  //   }}
+                  // >
+                  //   <TransactionButton text={isRegistering ? "Registering..." : "Register for Event"} className="mb-0 p-2 font-medium rounded-xl" />
+                  //   <TransactionStatus>
+                  //     <TransactionStatusLabel />
+                  //     <TransactionStatusAction />
+                  //   </TransactionStatus>
+                  // </Transaction>
                 ) : (
                   <></>
                 )}
@@ -768,11 +814,11 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
         )} */}
 
         {/* Overview Content - All Sections Combined */}
-        <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-8">
           {/* Description */}
           <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
             <h2 className="text-xl font-semibold mb-2">About This Event</h2>
-            <p className="text-[var(--events-foreground-muted)] leading-relaxed text-sm">
+            <p className="text-[var(--events-foreground-muted)] leading-relaxed text-sm text-balance">
               {event.description}
             </p>
           </div>
@@ -807,48 +853,8 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className=" font-medium text-[14px]">{host.name}</h3>
-                        <ProfileSocials userAddress={host.name as `0x${string}` || ""} records={host.social} style={{}} />
-                        {/* {host.social && (
-                          <div className="flex items-center gap-2">
-                          {host.social.twitter && (
-                            <a
-                            href={host.social.twitter}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[var(--events-foreground-muted)] hover:text-[var(--events-foreground)] transition-colors"
-                            >
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                            </svg>
-                            </a>
-                            )}
-                            {host.social.linkedin && (
-                              <a
-                              href={host.social.linkedin}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[var(--events-foreground-muted)] hover:text-[var(--events-foreground)] transition-colors"
-                              >
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                              </svg>
-                              </a>
-                              )}
-                              {host.social.website && (
-                                <a
-                                href={host.social.website}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[var(--events-foreground-muted)] hover:text-[var(--events-foreground)] transition-colors"
-                                >
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
-                                </svg>
-                                </a>
-                                )}
-                                </div>
-                                )} */}
+                        <h3 className=" font-medium text-[14px]">{formatAddress(host.name as `0x${string}` || "")}</h3>
+                        {/* <ProfileSocials userAddress={host.name as `0x${string}` || ""} records={host.social} style={{}} /> */}
                       </div>
                       <p className="text-xs text-[var(--events-accent)] font-medium mb-2">{host.role}</p>
                       <FollowersYouKnow connectedAddress={address as `0x${string}` || ""} lookupAddressOrName={host.name as `0x${string}` || ""} />
@@ -924,7 +930,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
       {/* Sticky Registration Button */}
       {
-        !isRegistered &&
+        false && !isRegistered &&
         (<div
           className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out bg-black/40 border-none ${isScrolling ? 'translate-y-full' : 'translate-y-0'
             }`}

@@ -188,7 +188,7 @@ export default function InfiniteScrollEvents({
                     </div>
 
                     {/* Platforms */}
-                    {event.platforms && event.platforms.length > 0 && (
+                    {/* {event.platforms && event.platforms.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {event.platforms.slice(0, 3).map((platform, idx) => (
                           <span
@@ -204,7 +204,7 @@ export default function InfiniteScrollEvents({
                           </span>
                         )}
                       </div>
-                    )}
+                    )} */}
                   </div>
                 </div>
               </Link>

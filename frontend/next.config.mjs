@@ -10,6 +10,7 @@ const nextConfig = {
     "https://revents.io",
     "https://localhost:3000",
     "http://192.168.100.135:3000",
+    "https://farcaster.xyz/",
   ],
   images: {
     remotePatterns: [

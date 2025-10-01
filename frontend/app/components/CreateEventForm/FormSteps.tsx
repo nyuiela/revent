@@ -99,14 +99,14 @@ const FormSteps: React.FC<FormStepsProps> = ({
   ];
 
   return (
-    <div className="min-h-screen text-foreground bg-background relative z-[20] -mt-28 pb-8">
+    <div className="min-h-screen text-foreground bg-background relative -mt-28 pb-8">
       <div className="max-w-5xl mx-auto py-6 sm:py-8 md:py-10 bg-red-00">
         <div className="min-h-screen bg-[var(--app-background)] relative z-[20] pt-14 pb-28">
           <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 md:py-10">
             {/* Progress Steps */}
             <div className="mb-0">
               {/* Desktop Steps */}
-              <div className="hidden md:block">
+              <div className="hidden md:hidden">
                 <div className="flex items-center justify-between">
                   {steps.map((step, index) => (
                     <div key={step.id} className="flex items-center">
@@ -144,9 +144,9 @@ const FormSteps: React.FC<FormStepsProps> = ({
               </div>
 
               {/* Mobile Steps */}
-              <div className="md:hidden">
-                <div className="relative h-24 flex items-center justify-center">
-                  {/* Current Step Icon */}
+              <div className="mt-[7.5rem]">
+                {/* <div className="relative h-24 flex items-center justify-center">
+
                   <div className="relative w-20 h-20 flex items-center justify-center">
                     <div className="absolute inset-0 rounded-full bg-[var(--app-accent)] shadow-lg animate-pulse"></div>
                     <div className="relative z-10 w-16 h-16 rounded-full bg-[var(--app-accent)] flex items-center justify-center text-white shadow-xl">
@@ -157,7 +157,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                       />
                     </div>
                   </div>
-                </div>
+                </div> */}
 
                 <div className="text-center mt-4">
                   <span className="text-lg font-semibold text-[var(--app-accent)]">
@@ -171,7 +171,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
             </div>
 
             {/* Form Content */}
-            <div className="bg-[var(--app-card-bg)] rounded-2xl p-6 sm:p-8 md:p-10">
+            <div className="bg-[var(--app-card-bg)] rounded-2xl p-6 sm:p-8 md:p-10 mt-10">
               {currentStep === 1 && (
                 <div className="space-y-4 sm:space-y-6">
                   {/* Auto-fill Mock Data Button */}
@@ -188,7 +188,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                           <button
                             type="button"
                             onClick={autoFillMockData}
-                            className="px-4 py-2 bg-[var(--app-accent)] text-black dark:text-white text-sm font-medium rounded-lg hover:bg-[var(--app-accent-hover)] transition-colors min-h-[44px] text-nowrap"
+                            className="px-4 py-2 bg-[var(--app-accent)] text-black text-sm font-medium rounded-lg hover:bg-[var(--app-accent-hover)] transition-colors min-h-[44px] text-nowrap"
                           >
                             {isAutoFilled ? "✓ Auto-filled" : "Auto-fill"}
                           </button>
@@ -228,7 +228,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                                 setPreparedTicketContracts(null);
                                 setVerificationStatus('');
                               }}
-                              className="px-4 py-2 bg-[var(--app-gray)] text-[var(--app-foreground)] dark:text-white text-sm font-medium rounded-lg hover:bg-[var(--app-gray-hover)] transition-colors min-h-[44px]"
+                              className="px-4 py-2 bg-[var(--app-gray)] text-[var(--app-foreground)] text-sm font-medium rounded-lg hover:bg-[var(--app-gray-hover)] transition-colors min-h-[44px]"
                             >
                               Clear Form
                             </button>
@@ -257,7 +257,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                       type="text"
                       value={formData.title}
                       onChange={(e) => handleInputChange('title', e.target.value)}
-                      className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] dark:text-white placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                      className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm mt-3"
                       placeholder="Enter event title"
                       required
                     />
@@ -272,7 +272,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                       value={formData.description}
                       onChange={(e) => handleInputChange('description', e.target.value)}
                       rows={4}
-                      className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] dark:text-white placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors resize-none text-sm"
+                      className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors resize-none text-sm mt-3"
                       placeholder="Describe your event..."
                       required
                     />
@@ -286,7 +286,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                     <select
                       value={formData.category}
                       onChange={(e) => handleInputChange('category', e.target.value)}
-                      className="w-full px-4 mt-2 py-3 bg-background border border-border rounded-xl text-[var(--app-foreground)] dark:text-white focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                      className="w-full px-4 mt-2 py-3 bg-background border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                       required
                     >
                       <option value="">Select a category</option>
@@ -304,7 +304,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                     <select
                       value={formData.eventType}
                       onChange={(e) => handleInputChange('eventType', e.target.value)}
-                      className="w-full px-4 mt-2 py-3 bg-background border border-border rounded-xl text-[var(--app-foreground)] dark:text-white focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                      className="w-full px-4 mt-2 py-3 bg-background border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                       required
                     >
                       <option value="">Select a event type</option>
@@ -332,7 +332,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                             .trim();
                           handleInputChange('slug', slug);
                         }}
-                        className="flex-1 px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] dark:text-white placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                        className="flex-1 px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
                         placeholder="my-awesome-event"
                       />
                       <button
@@ -368,7 +368,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                     </label>
 
                     {/* Drag and Drop Upload Area */}
-                    <div className="space-y-4">
+                    <div className="space-y-4 mt-3">
                       <input
                         ref={fileInputRef}
                         type="file"
@@ -494,7 +494,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                         type="datetime-local"
                         value={formData.startDateTime}
                         onChange={(e) => handleInputChange('startDateTime', e.target.value)}
-                        className="w-[90%] px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                        className="w-[90%] px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm mt-3"
                         required
                       />
                     </div>
@@ -506,7 +506,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                         type="datetime-local"
                         value={formData.endDateTime}
                         onChange={(e) => handleInputChange('endDateTime', e.target.value)}
-                        className="w-[90%] px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                        className="w-[90%] px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm mt-3"
                         required
                       />
                     </div>
@@ -527,7 +527,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                       type="text"
                       value={formData.onlinePlatformLink}
                       onChange={(e) => handleInputChange('onlinePlatformLink', e.target.value)}
-                      className="w-[90%] px-4 py-3 bg-[var(--app-ba ckground)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                      className="w-[90%] px-4 py-3 bg-[var(--app-ba ckground)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm mt-3"
                       required
                     />
                   </div>}
@@ -542,7 +542,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                       value={formData.maxParticipants}
                       onChange={(e) => handleInputChange('maxParticipants', parseInt(e.target.value))}
                       min="1"
-                      className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                      className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm mt-3"
                     />
                   </div>
                 </div>
@@ -599,7 +599,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                               tempHost: { ...prev.tempHost!, name: username }
                             }));
                           }}
-                          className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                          className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm mt-3"
                         />
                       </div>
 
@@ -617,7 +617,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                               tempHost: { ...prev.tempHost!, role: e.target.value }
                             }));
                           }}
-                          className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                          className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm mt-3"
                         />
                       </div>
                     </div>
@@ -707,7 +707,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                               tempAgenda: { ...prev.tempAgenda!, title: e.target.value }
                             }));
                           }}
-                          className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                          className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm mt-3"
                         />
                       </div>
 
@@ -725,7 +725,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                             }));
                           }}
                           rows={3}
-                          className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors resize-none text-sm"
+                          className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors resize-none text-sm mt-3"
                         />
                       </div>
 
@@ -743,7 +743,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                                 tempAgenda: { ...prev.tempAgenda!, startTime: e.target.value }
                               }));
                             }}
-                            className="w-[80%] px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                            className="w-[80%] px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm mt-3"
                             required
                           />
                         </div>
@@ -761,7 +761,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                                 tempAgenda: { ...prev.tempAgenda!, endTime: e.target.value }
                               }));
                             }}
-                            className="w-[80%] px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                            className="w-[80%] px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm mt-3"
                             required
                           />
                         </div>
@@ -782,7 +782,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                               tempAgenda: { ...prev.tempAgenda!, speakers }
                             }));
                           }}
-                          className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                          className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm mt-3"
                         />
                       </div>
                     </div>
@@ -847,11 +847,11 @@ const FormSteps: React.FC<FormStepsProps> = ({
                   {/* Existing Ticket Types */}
                   {formData.tickets.available && formData.tickets.types.length > 0 && (
                     <div className="space-y-3">
-                      <h3 className="text-lg font-semibold text-black dark:text-white">Current Ticket Types</h3>
+                      <h3 className="text-lg font-semibold text-black">Current Ticket Types</h3>
                       {formData.tickets.types.map((ticket, index) => (
-                        <div key={index} className="flex items-center justify-between p-4 border border-border rounded-xl bg-white dark:bg-[var(--app-background)] text-black dark:text-white">
+                        <div key={index} className="flex items-center justify-between p-4 border border-border rounded-xl bg-white dark:bg-[var(--app-background)] text-black">
                           <div>
-                            <h4 className="font-semibold text-[var(--app-foreground)] dark:text-white">{ticket.type}</h4>
+                            <h4 className="font-semibold text-[var(--app-foreground)]">{ticket.type}</h4>
                             <p className="text-sm text-[var(--app-foreground-muted)]">
                               ${ticket.price} {ticket.currency} • {ticket.quantity} available
                             </p>
@@ -893,7 +893,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                                 tempTicket: { ...prev.tempTicket!, type: e.target.value }
                               }));
                             }}
-                            className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                            className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] placeholder-[var(--app-foreground-muted)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm mt-3"
                           />
                         </div>
 
@@ -913,7 +913,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                             }}
                             min="0"
                             step="0.01"
-                            className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                            className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm mt-3"
                             required
                           />
                         </div>
@@ -932,7 +932,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                                 tempTicket: { ...prev.tempTicket!, currency: e.target.value }
                               }));
                             }}
-                            className="w-full px-4 py-3 bg-background border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                            className="w-full px-4 py-3 bg-background border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm mt-3"
                           >
                             <option value="USD">USD ($)</option>
                             <option value="EUR">EUR (€)</option>
@@ -956,7 +956,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                               }));
                             }}
                             min="1"
-                            className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm"
+                            className="w-full px-4 py-3 bg-[var(--app-background)] border border-border rounded-xl text-[var(--app-foreground)] focus:border-[var(--app-accent)] focus:outline-none transition-colors text-sm mt-3"
                             required
                           />
                         </div>
