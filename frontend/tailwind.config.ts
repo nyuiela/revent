@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import { fontConfig } from "./lib/fonts";
 
 const config: Config = {
   darkMode: ["class", 'string'],
@@ -10,9 +11,27 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-plus-jakarta)', 'Inter', 'system-ui', 'sans-serif'],
-        display: ['var(--font-plus-jakarta)', 'Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        // Primary fonts (currently active)
+        sans: fontConfig.families.sans,
+        display: fontConfig.families.display,
+        mono: fontConfig.families.mono,
+
+        // Placeholder fonts (ready to be activated)
+        alternative: fontConfig.families.alternative,
+        clean: fontConfig.families.clean,
+
+        // New custom fonts
+        modern: fontConfig.families.modern,
+        friendly: fontConfig.families.friendly,
+        elegant: fontConfig.families.elegant,
+        vercel: fontConfig.families.vercel,
+        serif: fontConfig.families.serif,
+        condensed: fontConfig.families.condensed,
+        futuristic: fontConfig.families.futuristic,
+
+        // Legacy support
+        body: fontConfig.families.sans,
+        heading: fontConfig.families.display,
       },
       colors: {
         // Core shadcn/ui colors
