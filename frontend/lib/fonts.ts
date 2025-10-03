@@ -1,5 +1,13 @@
-import { Plus_Jakarta_Sans, Inter, JetBrains_Mono, Poppins, Space_Grotesk, DM_Sans, Outfit, Manrope, Sora, Geist, Geist_Mono, Playfair_Display, Bebas_Neue, Orbitron } from 'next/font/google'
+import { Plus_Jakarta_Sans, Inter, JetBrains_Mono, Poppins, Space_Grotesk, DM_Sans, Outfit, Manrope, Sora, Geist, Geist_Mono, Playfair_Display, Bebas_Neue, Orbitron, Raleway } from 'next/font/google'
+import localFont from "next/font/local";
 
+export const raleway = Raleway({
+  subsets: ['latin'],
+  variable: '--font-raleway',
+  display: 'swap',
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+  style: ['normal', 'italic']
+})
 // Primary Font - Plus Jakarta Sans (Current)
 export const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -129,7 +137,7 @@ export const orbitron = Orbitron({
 // Font configuration object for easy management
 export const fontConfig = {
   // Primary fonts (currently active)
-  primary: plusJakarta,
+  primary: raleway,
   secondary: inter,
   mono: jetbrainsMono,
 
@@ -150,7 +158,7 @@ export const fontConfig = {
 
   // Font variables for CSS
   variables: {
-    primary: plusJakarta.variable,
+    primary: raleway.variable,
     secondary: inter.variable,
     mono: jetbrainsMono.variable,
     display: poppins.variable,
@@ -169,7 +177,7 @@ export const fontConfig = {
   // Font families for Tailwind config
   families: {
     sans: [
-      'var(--font-plus-jakarta)',
+      'var(--font-raleway)',
       'var(--font-inter)',
       'system-ui',
       'sans-serif'
@@ -247,6 +255,12 @@ export const fontConfig = {
       'var(--font-plus-jakarta)',
       'system-ui',
       'sans-serif'
+    ],
+    raleway: [
+      'var(--font-raleway)',
+      'var(--font-inter)',
+      'system-ui',
+      'sans-serif'
     ]
   }
 }
@@ -300,6 +314,18 @@ export const letterSpacings = {
   wider: '0.05em',
   widest: '0.1em',
 } as const
+
+// export const myLocalOutfit = localFont({
+//   src: [
+//     {
+//       path: "/fonts/Outfit/Outfit-Variable.woff2",
+//       style: "normal",
+//       weight: "100 900",
+//     },
+//   ],
+//   variable: "--font-outfit-local",
+//   display: "swap",
+// });
 
 export default fontConfig
 

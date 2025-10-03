@@ -29,6 +29,9 @@ const config: Config = {
         condensed: fontConfig.families.condensed,
         futuristic: fontConfig.families.futuristic,
 
+        // Explicit Raleway utility
+        raleway: fontConfig.families.raleway,
+
         // Legacy support
         body: fontConfig.families.sans,
         heading: fontConfig.families.display,

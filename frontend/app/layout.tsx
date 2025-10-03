@@ -153,7 +153,9 @@ export default async function RootLayout({
     }
   })
   return (
-    <html lang="en" className={`${fontConfig.variables.primary} ${fontConfig.variables.secondary} ${fontConfig.variables.mono} ${fontConfig.variables.display} ${fontConfig.variables.alternative} ${fontConfig.variables.clean} ${fontConfig.variables.modern} ${fontConfig.variables.friendly} ${fontConfig.variables.elegant} ${fontConfig.variables.vercel} ${fontConfig.variables.vercelMono} ${fontConfig.variables.serif} ${fontConfig.variables.condensed} ${fontConfig.variables.futuristic} light`}>
+    <html lang="en"
+    // className={`${fontConfig.variables.primary} ${fontConfig.variables.secondary} ${fontConfig.variables.mono} ${fontConfig.variables.display} ${fontConfig.variables.alternative} ${fontConfig.variables.clean} ${fontConfig.variables.modern} ${fontConfig.variables.friendly} ${fontConfig.variables.elegant} ${fontConfig.variables.vercel} ${fontConfig.variables.vercelMono} ${fontConfig.variables.serif} ${fontConfig.variables.condensed} ${fontConfig.variables.futuristic} light`}
+    >
       <head>
         {/* <meta name="fc:miniapp" content="<stringified MiniAppEmbed JSON>" /> */}
         {/* <meta name="fc:frame" content="<stringified MiniAppEmbed JSON>" /> */}
