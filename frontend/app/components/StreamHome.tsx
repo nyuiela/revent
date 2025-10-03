@@ -311,7 +311,7 @@ export default function StreamHome() {
       {/* Curations for you */}
       <section className="space-y-3 px-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium">Events for you</h3>
+          <h3 className="text-sm font-display">Events for you</h3>
           {location && (
             <div className="text-xs text-[var(--app-foreground-muted)] flex items-center gap-1">
               <MapPin className="w-3 h-3" />
