@@ -256,7 +256,7 @@ export function ContractButton(props: TxButtonProps) {
       {state === 'error' && Boolean(lastError) && (
         <span className="ml-2 text-xs text-red-500">{errorToastMessage}</span>
       )}
-      <WalletModal isOpen={showModalConnect} onClose={() => { setShowModalConnect(false) }} className="bg-black shadow-lg z-50" />
+      <WalletModal isOpen={showModalConnect} onClose={() => { setShowModalConnect(false) }} className="bg-black shadow-lg z-[9999]" />
     </div>
   )
 }

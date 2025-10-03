@@ -143,7 +143,7 @@ export default function StreamHeader() {
                 </WalletDropdown>
               </Wallet> */}
 
-              <WalletModal isOpen={showModalConnect} onClose={() => { setShowModalConnect(false) }} className="bg-black shadow-lg" />
+              <WalletModal isOpen={showModalConnect} onClose={() => { setShowModalConnect(false) }} className="bg-black shadow-lg z-[9999]" />
             </>
           )}
         </div>

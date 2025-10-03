@@ -150,7 +150,7 @@ export function MobileNavigation({ setActiveTab, sActiveTab }: { setActiveTab: (
 
   // ${isHidden ? 'translate-y-full opacity-0' : 'translate-y-0 opacity-100'}
   return (
-    <div className={`fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto p-0 shadow-2xl bg-background border-t border-border
+    <div className={`fixed bottom-0 left-0 right-0 z-40 max-w-md mx-auto p-0 shadow-2xl bg-background border-t border-border
      `}>
       <div className="relative backdrop-blur-[20px] backdrop-filter bg-muted">
         <div className="flex items-start justify-between px-4 py-2">

@@ -164,7 +164,7 @@ export default function CreateEventBottomSheet({ open, onOpenChange }: Props) {
   return (
     <div
       aria-hidden={!open}
-      className={`fixed inset-0 z-50 ${open ? "pointer-events-auto" : "pointer-events-none"}`}
+      className={`fixed inset-0 z-40 ${open ? "pointer-events-auto" : "pointer-events-none"}`}
     >
       {/* Overlay */}
       <div
@@ -604,7 +604,7 @@ function Hosts(props: {
                 setTempHost({ name: "", role: "" });
               }
             }}
-            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            className="w-full rounded-[1.5rem] bg-primary px-4 py-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 h-12"
           >
             Add Host
           </button>
@@ -699,7 +699,7 @@ function Agenda(props: {
                 setTempAgenda({ title: "", description: "", startTime: "", endTime: "", speakers: [] });
               }
             }}
-            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            className="w-full rounded-[1.5rem] bg-primary px-4 py-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 h-12"
           >
             Add Agenda Item
           </button>
@@ -804,7 +804,7 @@ function Tickets(props: {
                   setTempTicket({ type: "", price: 0, currency: "USD", quantity: 0, perks: [] });
                 }
               }}
-              className="w-full rounded-full bg-primary px-4 py-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              className="w-full rounded-[1.5rem] bg-primary px-4 py-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 h-12"
             >
               Add Ticket Type
             </button>
@@ -1207,13 +1207,14 @@ function Publish({ formData, setFormData, onClose }: { formData: any; setFormDat
 
       <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
 
-        {preparedContracts && preparedContracts.length > 0 ? (
+        {/* {preparedContracts && preparedContracts.length > 0 ? ( */}
+        {true ? (
           <div className="w-full">
             <MultiContractButton
               useMulticall={false}
               sequential={true}
               chainId={Number(chainId)}
-              contracts={preparedContracts}
+              contracts={preparedContracts || []}
               onReceiptSuccess={async () => {
                 try {
                   console.log('Transaction successful, creating event details...');
@@ -1238,14 +1239,14 @@ function Publish({ formData, setFormData, onClose }: { formData: any; setFormDat
               showToast={true}
               successToastMessage="Event & Tickets Created"
               preSubmitFunction={handleCreateEvent}
-              btnClassName="w-full bg-emerald-600 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-background font-medium py-3 px-4 rounded-lg transition-colors"
+              btnClassName="w-full bg-emerald-600 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-background font-medium py-4 px-4 transition-colors rounded-[15rem]"
             />
           </div>
         ) : (
           <button
             onClick={handleCreateEvent}
             disabled={isPreparingForTransaction}
-            className="w-full bg-emerald-600 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-background font-medium py-3 px-4 rounded-lg transition-colors"
+            className="w-full bg-emerald-600 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-background font-medium py-3 px-4 rounded-[1.5rem] transition-colors"
           >
             {isPreparingForTransaction ? 'Preparing...' : 'Prepare Event Creation'}
           </button>

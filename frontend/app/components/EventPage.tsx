@@ -1001,7 +1001,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
       <WalletModal
         isOpen={showWalletModal}
         onClose={() => setShowWalletModal(false)}
-        className="bg-black shadow-lg"
+        className="bg-black shadow-lg z-[9999]"
       />
 
       {/* Registration Success Card */}

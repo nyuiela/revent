@@ -216,7 +216,7 @@ const TransactionHandler: React.FC<TransactionHandlerProps> = ({
       <WalletModal
         isOpen={showWalletModal}
         onClose={() => setShowWalletModal(false)}
-        className="bg-black shadow-lg"
+        className="bg-black shadow-lg z-[9999]"
       />
     </>
   );

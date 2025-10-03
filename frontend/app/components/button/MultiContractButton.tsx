@@ -352,12 +352,12 @@ export function MultiContractButton(props: MultiContractButtonProps) {
 
   return (
     <div className={`${className}`}>
-      {!account ? <button className={`rounded-xl px-3 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-10 ${btnClassName}`} onClick={() => setShowModalConnect(true)}>Connect Wallet</button> :
+      {!account ? <button className={`rounded-[1.5rem] px-4 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-12 ${btnClassName}`} onClick={() => setShowModalConnect(true)}>Connect Wallet</button> :
         <button
           type="button"
           onClick={handleClick}
           disabled={Boolean(isDisabled) || loading}
-          className={`rounded-xl px-3 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-10 ${btnClassName} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`px-3 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-12 ${btnClassName} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           {loading ? 'Loading...' : `${label}${progressText}`}
         </button>
@@ -382,7 +382,7 @@ export function MultiContractButton(props: MultiContractButtonProps) {
               `Executing ${contracts.length} contract call${contracts.length > 1 ? 's' : ''}...`}
         </div>
       )}
-      <WalletModal isOpen={showModalConnect} onClose={() => { setShowModalConnect(false) }} className="bg-black shadow-lg z-50" />
+      <WalletModal isOpen={showModalConnect} onClose={() => { setShowModalConnect(false) }} className="bg-black shadow-lg z-[9999]" />
     </div>
   )
 }
