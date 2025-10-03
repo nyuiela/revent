@@ -1,10 +1,14 @@
+'use client'
 import CreateEventForm from '@/app/components/CreateEventForm'
-import React from 'react'
+import CreateEventBottomSheet from '@/components/CreateEventBottomSheet'
+import React, { useState } from 'react'
 
 
 
 const CreateEventPage = () => {
-  return <CreateEventForm />
+  // return <CreateEventForm />
+  const [open, setOpen] = useState(true);
+  return <CreateEventBottomSheet open={open} onOpenChange={setOpen} />
 }
 
 export default CreateEventPage

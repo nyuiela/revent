@@ -12,8 +12,9 @@ import { MobileNavigation } from "./components/mobileNavigation";
 import EventsPage from "./events/page";
 import EarnPage from "./earn/page";
 import ProfilePage from "./profile/page";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { sdk } from '@farcaster/miniapp-sdk'
+import CreateEventBottomSheet from "@/components/CreateEventBottomSheet";
 
 
 
@@ -22,7 +23,9 @@ export default function App() {
   // const [frameAdded, setFrameAdded] = useState(false);
   const [activeTab, setActiveTab] = useState("Home");
   const [showWaitlist, setShowWaitlist] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     async function getCapabilities() {
@@ -95,9 +98,23 @@ export default function App() {
 
   //   return null;
   // }, [context, frameAdded, handleAddFrame]);
+  // Handle URL parameters for create modal
+  useEffect(() => {
+    const createParam = searchParams.get('create');
+    if (createParam === 'true') {
+      setShowCreateModal(true);
+      setActiveTab("Home"); // Stay on home page
+    }
+  }, [searchParams]);
+
+  // Handle create tab click
   useEffect(() => {
     if (activeTab === "Create") {
-      router.push("/events/create");
+      // Update URL to show create modal
+      const url = new URL(window.location.href);
+      url.searchParams.set('create', 'true');
+      router.replace(url.pathname + url.search);
+      setShowCreateModal(true);
     }
   }, [activeTab, router]);
 
@@ -171,6 +188,21 @@ export default function App() {
       </div>
       {/* <Footer /> */}
       <MobileNavigation setActiveTab={setActiveTab} sActiveTab={activeTab} />
+
+      {/* Create Event Bottom Sheet */}
+      <CreateEventBottomSheet
+        open={showCreateModal}
+        onOpenChange={(open) => {
+          setShowCreateModal(open);
+          if (!open) {
+            // Remove create parameter from URL when modal closes
+            const url = new URL(window.location.href);
+            url.searchParams.delete('create');
+            router.replace(url.pathname + url.search);
+          }
+        }}
+      />
+
       {/* {!showWaitlist && ( */}
       <WaitlistModal
         isOpen={showWaitlist}
