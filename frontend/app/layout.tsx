@@ -9,18 +9,10 @@ import { request } from "graphql-request";
 import { headers, url } from "@/context/queryProvider";
 import { eventsCreatedQuery } from "@/context/queryProvider";
 import 'ethereum-identity-kit/css'
-import { Plus_Jakarta_Sans } from 'next/font/google'
 import DataPrefetcher from "../components/DataPrefetcher"
 import { OnchainKitProvider } from "@coinbase/onchainkit";
 import { baseSepolia } from "wagmi/chains";
-
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  variable: '--font-plus-jakarta',
-  display: 'swap',
-  weight: ['200', '300', '400', '500', '600', '700', '800'],
-  style: ['normal', 'italic']
-})
+import { fontConfig } from "../lib/fonts";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -161,7 +153,7 @@ export default async function RootLayout({
     }
   })
   return (
-    <html lang="en" className={`${plusJakarta.variable} light`}>
+    <html lang="en" className={`${fontConfig.variables.primary} ${fontConfig.variables.secondary} ${fontConfig.variables.mono} ${fontConfig.variables.display} ${fontConfig.variables.alternative} ${fontConfig.variables.clean} ${fontConfig.variables.modern} ${fontConfig.variables.friendly} ${fontConfig.variables.elegant} ${fontConfig.variables.vercel} ${fontConfig.variables.vercelMono} ${fontConfig.variables.serif} ${fontConfig.variables.condensed} ${fontConfig.variables.futuristic} light`}>
       <head>
         {/* <meta name="fc:miniapp" content="<stringified MiniAppEmbed JSON>" /> */}
         {/* <meta name="fc:frame" content="<stringified MiniAppEmbed JSON>" /> */}
