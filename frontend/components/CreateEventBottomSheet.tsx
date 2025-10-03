@@ -1,8 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import LocationPicker from "@/app/components/LocationPicker";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import MultiContractButton from "@/app/components/button/MultiContractButton";
+import { chainId, eventAbi, eventAddress, ticketAbi, ticketAddress } from "@/lib/contract";
+import { useRouter } from "next/navigation";
+import { getLastEventId } from "@/utils/subgraph";
+import { generateSlug } from "@/lib/slug-generator";
+import { EventDetails } from "@/utils/types";
 
 type Props = {
   open: boolean;
@@ -91,12 +97,53 @@ export default function CreateEventBottomSheet({ open, onOpenChange }: Props) {
   const [coordinates, setCoordinates] = React.useState<{ lat: number; lng: number }>({ lat: 0, lng: 0 });
   const [onlinePlatformLink, setOnlinePlatformLink] = React.useState<string>("");
 
-  // Tickets state
-  const [tickets, setTickets] = React.useState<{
-    available: boolean;
-    types: Array<{ type: string; price: number; currency: string; quantity: number; perks?: string[] }>;
-  }>({ available: false, types: [] });
+  // Temp state for forms
   const [tempTicket, setTempTicket] = React.useState<{ type: string; price: number; currency: string; quantity: number; perks?: string[] }>({ type: "", price: 0, currency: "USD", quantity: 0, perks: [] });
+
+  // Form state
+  const [topic, setTopic] = React.useState<string>("tech");
+  const [privacy, setPrivacy] = React.useState<string>("public");
+  const [timezone, setTimezone] = React.useState<string>("UTC");
+
+  // Main form data state
+  const [formData, setFormData] = React.useState({
+    title: '',
+    description: '',
+    category: '',
+    location: '',
+    onlinePlatformLink: '',
+    coordinates: { lat: 0, lng: 0 },
+    startDateTime: '',
+    endDateTime: '',
+    maxParticipants: 100,
+    image: '',
+    tickets: {
+      available: false,
+      types: [] as Array<{ type: string; price: number; currency: string; quantity: number; perks?: string[] }>
+    },
+    date: '',
+    time: '',
+    isLive: false,
+    platforms: [] as string[],
+    totalRewards: 0,
+    eventType: "In-Person" as "Online" | "In-Person" | "Hybrid",
+    hosts: [] as Array<{ name: string; role: string; avatar?: string; bio?: string; social?: any }>,
+    agenda: [] as Array<{ title: string; description: string; startTime: string; endTime: string; speakers: string[] }>,
+    sponsors: [] as any[],
+    socialLinks: {} as any,
+    slug: ''
+  });
+
+  // Sync location state with formData
+  React.useEffect(() => {
+    setFormData((prev: any) => ({
+      ...prev,
+      location: locationText,
+      coordinates,
+      onlinePlatformLink,
+      eventType: eventLocationType === "online" ? "Online" : eventLocationType === "venue" ? "In-Person" : "Hybrid"
+    }));
+  }, [locationText, coordinates, onlinePlatformLink, eventLocationType]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -152,9 +199,9 @@ export default function CreateEventBottomSheet({ open, onOpenChange }: Props) {
           ))}
         </div>
 
-        <div className="max-h-[70vh] overflow-y-auto px-4 pb-6">
-          {active === "basics" && <Basics />}
-          {active === "schedule" && <Schedule />}
+        <div className="max-h-[70vh] overflow-y-auto px-4 pt-4">
+          {active === "basics" && <Basics formData={formData} setFormData={setFormData} topic={topic} setTopic={setTopic} privacy={privacy} setPrivacy={setPrivacy} />}
+          {active === "schedule" && <Schedule formData={formData} setFormData={setFormData} timezone={timezone} setTimezone={setTimezone} />}
           {active === "location" && (
             <Location
               eventLocationType={eventLocationType}
@@ -171,45 +218,24 @@ export default function CreateEventBottomSheet({ open, onOpenChange }: Props) {
           )}
           {active === "hosts" && (
             <Hosts
-              hosts={hosts}
+              formData={formData}
+              setFormData={setFormData}
               tempHost={tempHost}
               setTempHost={setTempHost}
-              addHost={() => {
-                if (tempHost.name.trim()) {
-                  setHosts((prev) => [...prev, { name: tempHost.name.trim(), role: tempHost.role || "Host" }]);
-                  setTempHost({ name: "", role: "" });
-                }
-              }}
-              removeHost={(index) => setHosts((prev) => prev.filter((_, i) => i !== index))}
             />
           )}
           {active === "agenda" && (
             <Agenda
-              agenda={agenda}
+              formData={formData}
+              setFormData={setFormData}
               tempAgenda={tempAgenda}
               setTempAgenda={setTempAgenda}
-              addAgenda={() => {
-                if (tempAgenda.title && tempAgenda.startTime && tempAgenda.endTime) {
-                  setAgenda((prev) => [
-                    ...prev,
-                    {
-                      title: tempAgenda.title.trim(),
-                      description: tempAgenda.description || "",
-                      startTime: tempAgenda.startTime,
-                      endTime: tempAgenda.endTime,
-                      speakers: tempAgenda.speakers || [],
-                    },
-                  ]);
-                  setTempAgenda({ title: "", description: "", startTime: "", endTime: "", speakers: [] });
-                }
-              }}
-              removeAgenda={(index) => setAgenda((prev) => prev.filter((_, i) => i !== index))}
             />
           )}
           {active === "tickets" && (
             <Tickets
-              tickets={tickets}
-              setTickets={setTickets}
+              formData={formData}
+              setFormData={setFormData}
               tempTicket={tempTicket}
               setTempTicket={setTempTicket}
             />
@@ -228,11 +254,11 @@ export default function CreateEventBottomSheet({ open, onOpenChange }: Props) {
               isDragOver={isDragOver}
             />
           )}
-          {active === "publish" && <Publish onClose={() => onOpenChange(false)} />}
+          {active === "publish" && <Publish formData={formData} setFormData={setFormData} onClose={() => onOpenChange(false)} />}
         </div>
 
         {/* Navigation footer */}
-        <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t border-border bg-background/80 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="sticky bottom-0 flex items-center justify-between gap-3 bg-background/80 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <button
             type="button"
             onClick={goPrev}
@@ -378,19 +404,40 @@ function SelectField({
   );
 }
 
-function Basics() {
+function Basics(props: {
+  formData: any;
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  topic: string;
+  setTopic: (val: string) => void;
+  privacy: string;
+  setPrivacy: (val: string) => void
+}) {
+  const { formData, setFormData, topic, setTopic, privacy, setPrivacy } = props;
   return (
     <div>
       <Section title="Event details" description="Core info users see first.">
-        <Input label="Title" placeholder="Hackathon Night" />
+        <Input
+          label="Title"
+          placeholder="Hackathon Night"
+          value={formData.title}
+          onChange={(e) => setFormData((prev: any) => ({ ...prev, title: e.target.value }))}
+        />
         {/* <Input label="Slug" placeholder="hackathon-night" /> */}
-        <Textarea label="Description" placeholder="Tell people what to expect..." />
+        <Textarea
+          label="Description"
+          placeholder="Tell people what to expect..."
+          value={formData.description}
+          onChange={(e) => setFormData((prev: any) => ({ ...prev, description: e.target.value }))}
+        />
       </Section>
       <Section title="Topic & privacy">
         <SelectField
           label="Topic"
-          value={"tech"}
-          onChange={() => { }}
+          value={topic}
+          onChange={(val) => {
+            setTopic(val);
+            setFormData((prev: any) => ({ ...prev, category: val }));
+          }}
           options={[
             { value: 'tech', label: 'Tech' },
             { value: 'music', label: 'Music' },
@@ -400,8 +447,8 @@ function Basics() {
         />
         <SelectField
           label="Privacy"
-          value={"public"}
-          onChange={() => { }}
+          value={privacy}
+          onChange={setPrivacy}
           options={[
             { value: 'public', label: 'Public' },
             { value: 'unlisted', label: 'Unlisted' },
@@ -413,18 +460,34 @@ function Basics() {
   );
 }
 
-function Schedule() {
+function Schedule(props: {
+  formData: any;
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  timezone: string;
+  setTimezone: (val: string) => void
+}) {
+  const { formData, setFormData, timezone, setTimezone } = props;
   return (
     <div>
       <Section title="When" description="Dates and times.">
-        <Input type="datetime-local" label="Starts" />
-        <Input type="datetime-local" label="Ends" />
+        <Input
+          type="datetime-local"
+          label="Starts"
+          value={formData.startDateTime}
+          onChange={(e) => setFormData((prev: any) => ({ ...prev, startDateTime: e.target.value }))}
+        />
+        <Input
+          type="datetime-local"
+          label="Ends"
+          value={formData.endDateTime}
+          onChange={(e) => setFormData((prev: any) => ({ ...prev, endDateTime: e.target.value }))}
+        />
       </Section>
       <Section title="Timezone">
         <SelectField
           label="Timezone"
-          value={"UTC"}
-          onChange={() => { }}
+          value={timezone}
+          onChange={setTimezone}
           options={[
             { value: 'UTC', label: 'UTC' },
             { value: 'GMT', label: 'GMT' },
@@ -485,26 +548,25 @@ function Location(props: {
 }
 
 function Hosts(props: {
-  hosts: Array<{ name: string; role: string }>;
+  formData: any;
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
   tempHost: { name: string; role: string };
   setTempHost: React.Dispatch<React.SetStateAction<{ name: string; role: string }>>;
-  addHost: () => void;
-  removeHost: (index: number) => void;
 }) {
-  const { hosts, tempHost, setTempHost, addHost, removeHost } = props;
+  const { formData, setFormData, tempHost, setTempHost } = props;
   return (
     <div>
-      {hosts.length > 0 && (
+      {formData.hosts.length > 0 && (
         <Section title="Current Hosts">
           <div className="sm:col-span-2 space-y-2">
-            {hosts.map((h, i) => (
+            {formData.hosts.map((h: any, i: number) => (
               <div key={`${h.name}-${i}`} className="flex items-center justify-between rounded-xl border border-border bg-background p-3">
                 <div>
                   <p className="text-sm font-medium">@{h.name}</p>
                   <p className="text-xs text-muted-foreground">{h.role || "Host"}</p>
                 </div>
                 <button
-                  onClick={() => removeHost(i)}
+                  onClick={() => setFormData((prev: any) => ({ ...prev, hosts: prev.hosts.filter((_: any, idx: number) => idx !== i) }))}
                   className="rounded-md px-3 py-1 text-sm text-muted-foreground hover:bg-muted"
                 >
                   Remove
@@ -532,7 +594,18 @@ function Hosts(props: {
           onChange={(e) => setTempHost((prev) => ({ ...prev, role: (e.target as HTMLInputElement).value }))}
         />
         <div className="sm:col-span-2">
-          <button onClick={addHost} className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+          <button
+            onClick={() => {
+              if (tempHost.name.trim()) {
+                setFormData((prev: any) => ({
+                  ...prev,
+                  hosts: [...prev.hosts, { name: tempHost.name.trim(), role: tempHost.role || "Host" }]
+                }));
+                setTempHost({ name: "", role: "" });
+              }
+            }}
+            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
             Add Host
           </button>
         </div>
@@ -542,23 +615,22 @@ function Hosts(props: {
 }
 
 function Agenda(props: {
-  agenda: Array<{ title: string; description: string; startTime: string; endTime: string; speakers: string[] }>;
+  formData: any;
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
   tempAgenda: { title: string; description: string; startTime: string; endTime: string; speakers: string[] };
   setTempAgenda: React.Dispatch<React.SetStateAction<{ title: string; description: string; startTime: string; endTime: string; speakers: string[] }>>;
-  addAgenda: () => void;
-  removeAgenda: (index: number) => void;
 }) {
-  const { agenda, tempAgenda, setTempAgenda, addAgenda, removeAgenda } = props;
+  const { formData, setFormData, tempAgenda, setTempAgenda } = props;
   return (
     <div>
-      {agenda.length > 0 && (
+      {formData.agenda.length > 0 && (
         <Section title="Current Agenda">
           <div className="sm:col-span-2 space-y-2">
-            {agenda.map((item, index) => (
+            {formData.agenda.map((item: any, index: number) => (
               <div key={`${item.title}-${index}`} className="rounded-xl border border-border bg-background p-3">
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-sm font-semibold">{item.title}</p>
-                  <button onClick={() => removeAgenda(index)} className="rounded-md px-3 py-1 text-sm text-muted-foreground hover:bg-muted">Remove</button>
+                  <button onClick={() => setFormData((prev: any) => ({ ...prev, agenda: prev.agenda.filter((_: any, i: number) => i !== index) }))} className="rounded-md px-3 py-1 text-sm text-muted-foreground hover:bg-muted">Remove</button>
                 </div>
                 <p className="mb-2 text-xs text-muted-foreground">{item.description}</p>
                 <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
@@ -608,7 +680,27 @@ function Agenda(props: {
           }}
         />
         <div className="sm:col-span-2">
-          <button onClick={addAgenda} className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+          <button
+            onClick={() => {
+              if (tempAgenda.title && tempAgenda.startTime && tempAgenda.endTime) {
+                setFormData((prev: any) => ({
+                  ...prev,
+                  agenda: [
+                    ...prev.agenda,
+                    {
+                      title: tempAgenda.title.trim(),
+                      description: tempAgenda.description || "",
+                      startTime: tempAgenda.startTime,
+                      endTime: tempAgenda.endTime,
+                      speakers: tempAgenda.speakers || [],
+                    },
+                  ]
+                }));
+                setTempAgenda({ title: "", description: "", startTime: "", endTime: "", speakers: [] });
+              }
+            }}
+            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
             Add Agenda Item
           </button>
         </div>
@@ -617,12 +709,12 @@ function Agenda(props: {
   );
 }
 function Tickets(props: {
-  tickets: { available: boolean; types: Array<{ type: string; price: number; currency: string; quantity: number; perks?: string[] }> };
-  setTickets: React.Dispatch<React.SetStateAction<{ available: boolean; types: Array<{ type: string; price: number; currency: string; quantity: number; perks?: string[] }> }>>;
+  formData: any;
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
   tempTicket: { type: string; price: number; currency: string; quantity: number; perks?: string[] };
   setTempTicket: React.Dispatch<React.SetStateAction<{ type: string; price: number; currency: string; quantity: number; perks?: string[] }>>;
 }) {
-  const { tickets, setTickets, tempTicket, setTempTicket } = props;
+  const { formData, setFormData, tempTicket, setTempTicket } = props;
 
   return (
     <div>
@@ -635,19 +727,19 @@ function Tickets(props: {
         <label className="relative inline-flex cursor-pointer items-center">
           <input
             type="checkbox"
-            checked={tickets.available}
-            onChange={(e) => setTickets((prev) => ({ ...prev, available: e.target.checked }))}
+            checked={formData.tickets.available}
+            onChange={(e) => setFormData((prev: any) => ({ ...prev, tickets: { ...prev.tickets, available: e.target.checked } }))}
             className="peer sr-only"
           />
-          <div className="h-6 w-11 rounded-full bg-muted after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-muted-foreground after:transition-all peer-checked:bg-primary peer-checked:after:translate-x-full" />
+          <div className="h-6 w-11 rounded-full bg-muted after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-background after:transition-all peer-checked:bg-primary peer-checked:after:translate-x-full" />
         </label>
       </div>
 
       {/* Existing ticket types */}
-      {tickets.available && tickets.types.length > 0 && (
+      {formData.tickets.available && formData.tickets.types.length > 0 && (
         <Section title="Current Ticket Types">
           <div className="sm:col-span-2 space-y-2">
-            {tickets.types.map((ticket, index) => (
+            {formData.tickets.types.map((ticket: any, index: number) => (
               <div key={`${ticket.type}-${index}`} className="flex items-center justify-between rounded-xl border border-border bg-background p-3">
                 <div>
                   <p className="text-sm font-semibold">{ticket.type}</p>
@@ -655,7 +747,7 @@ function Tickets(props: {
                 </div>
                 <button
                   onClick={() => {
-                    setTickets((prev) => ({ ...prev, types: prev.types.filter((_, i) => i !== index) }));
+                    setFormData((prev: any) => ({ ...prev, tickets: { ...prev.tickets, types: prev.tickets.types.filter((_: any, i: number) => i !== index) } }));
                   }}
                   className="rounded-md px-3 py-1 text-sm text-muted-foreground hover:bg-muted"
                 >
@@ -668,7 +760,7 @@ function Tickets(props: {
       )}
 
       {/* Add ticket type */}
-      {tickets.available && (
+      {formData.tickets.available && (
         <Section title="Add Ticket Type">
           <Input
             label="Ticket Type"
@@ -708,11 +800,11 @@ function Tickets(props: {
             <button
               onClick={() => {
                 if (tempTicket.type && tempTicket.quantity > 0) {
-                  setTickets((prev) => ({ ...prev, types: [...prev.types, { ...tempTicket, type: tempTicket.type.trim() }] }));
+                  setFormData((prev: any) => ({ ...prev, tickets: { ...prev.tickets, types: [...prev.tickets.types, { ...tempTicket, type: tempTicket.type.trim() }] } }));
                   setTempTicket({ type: "", price: 0, currency: "USD", quantity: 0, perks: [] });
                 }
               }}
-              className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              className="w-full rounded-full bg-primary px-4 py-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
               Add Ticket Type
             </button>
@@ -822,7 +914,284 @@ function Media(props: {
   );
 }
 
-function Publish({ onClose }: { onClose: () => void }) {
+function Publish({ formData, setFormData, onClose }: { formData: any; setFormData: React.Dispatch<React.SetStateAction<any>>; onClose: () => void }) {
+  const [currentStep, setCurrentStep] = useState(1);
+
+  // Global error handler
+  React.useEffect(() => {
+    const handleError = (error: ErrorEvent) => {
+      console.error('Global error in Publish component:', error);
+      setVerificationStatus(`Error: ${error.message}`);
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('Unhandled promise rejection in Publish component:', event.reason);
+      setVerificationStatus(`Promise rejection: ${event.reason}`);
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+  const [transactionStep, setTransactionStep] = useState<'event' | 'tickets' | 'domain' | 'complete'>('event');
+  const [createdEventId, setCreatedEventId] = useState<string | null>(null);
+  const [preGeneratedEventId, setPreGeneratedEventId] = useState<string | null>(null);
+  const [transactionTimeout, setTransactionTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [useBatchedMode, setUseBatchedMode] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<string>('');
+  const [showSuccessCard, setShowSuccessCard] = useState(false);
+  const [createdEventDetails, setCreatedEventDetails] = useState<EventDetails | null>(null);
+  const [transactionSuccessful, setTransactionSuccessful] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [preparedContracts, setPreparedContracts] = useState<any[] | null>(null);
+  const [preparedTicketContracts, setPreparedTicketContracts] = useState<any[] | null>(null);
+  const [preparedDomainContracts, setPreparedDomainContracts] = useState<any[] | null>(null);
+  const [isPreparing, setIsPreparing] = useState(false);
+  const [isPreparingForTransaction, setIsPreparingForTransaction] = useState(false);
+  const [isAutoFilled, setIsAutoFilled] = useState(false);
+  const [domainName, setDomainName] = useState<string>('');
+  const [domainAvailable, setDomainAvailable] = useState<boolean | null>(null);
+  const [checkingDomain, setCheckingDomain] = useState(false);
+  const [, setIpfsHash] = useState<string | null>(null);
+  const router = useRouter()
+  // Function to get the next event ID from The Graph
+  const getNextEventId = async (): Promise<string> => {
+    try {
+      const lastEventId = await getLastEventId();
+      const nextEventId = lastEventId + 1;
+      console.log('Next event ID will be:', nextEventId);
+      return nextEventId.toString();
+    } catch (error) {
+      console.error('Error getting next event ID:', error);
+      // Fallback to timestamp-based ID
+      return Date.now().toString();
+    }
+  };
+  // Function to create event details from form data
+  const createEventDetails = (eventId: string): EventDetails => {
+    const startDate = formData.startDateTime ? new Date(formData.startDateTime) : new Date();
+
+    // Transform agenda items to include required id field
+    const transformedAgenda = (formData.agenda || []).map((item: any, index: number) => ({
+      id: `agenda-${index}`,
+      title: item.title || '',
+      description: item.description || '',
+      startTime: item.startTime || '',
+      endTime: item.endTime || '',
+      speakers: item.speakers || [],
+    }));
+
+    return {
+      id: eventId,
+      title: formData.title || '',
+      description: formData.description || '',
+      date: startDate.toLocaleDateString(),
+      time: startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      location: formData.location || '',
+      onlinePlatformLink: formData.onlinePlatformLink || '',
+      coordinates: formData.coordinates || { lat: 0, lng: 0 },
+      image: formData.image || '',
+      category: formData.category || '',
+      maxParticipants: formData.maxParticipants || 100,
+      currentParticipants: 0,
+      isLive: formData.isLive || false,
+      platforms: formData.platforms || [],
+      totalRewards: formData.totalRewards || 0,
+      participants: [],
+      media: [],
+      rewards: [],
+      agenda: transformedAgenda,
+      hosts: formData.hosts || [],
+      sponsors: formData.sponsors || [],
+      socialLinks: formData.socialLinks || {},
+    };
+  };
+  const createBatchedTickets = (eventId: string) => {
+    if (!formData.tickets || !formData.tickets.available || !formData.tickets.types || formData.tickets.types.length === 0) {
+      return null;
+    }
+
+    // Prepare arrays for the createTickets function
+    const names: string[] = [];
+    const ticketTypes: string[] = [];
+    const prices: bigint[] = [];
+    const currencies: string[] = [];
+    const totalQuantities: bigint[] = [];
+    const perks: string[][] = [];
+
+    // Populate arrays from form data
+    for (const ticketType of formData.tickets.types) {
+      names.push(ticketType.type);
+      ticketTypes.push(ticketType.type);
+      prices.push(BigInt(Math.floor(ticketType.price * 1000000000000000000))); // Convert to wei
+      currencies.push(ticketType.currency);
+      totalQuantities.push(BigInt(ticketType.quantity));
+      perks.push(ticketType.perks || []);
+    }
+
+    return {
+      abi: ticketAbi.abi,
+      address: ticketAddress as `0x${string}`,
+      functionName: "createTickets",
+      args: [
+        BigInt(eventId), // eventId
+        names, // name[]
+        ticketTypes, // ticketType[]
+        prices, // price[]
+        currencies, // currency[]
+        totalQuantities, // totalQuantity[]
+        perks // perks[][]
+      ],
+    };
+  };
+
+  // Build Transaction "contracts" for OnchainKit (uploads to IPFS, returns contract call)
+  const handleSubmit = async () => {
+    try {
+      console.log('Building metadata for IPFS upload...');
+      // Basic validations already handled in UI; build metadata
+      const metadata = {
+        title: formData.title || '',
+        description: formData.description || '',
+        location: formData.location || '',
+        image: formData.image || '',
+        category: formData.category || '',
+        maxParticipants: formData.maxParticipants || 100,
+        hosts: formData.hosts || [],
+        agenda: formData.agenda || [],
+        tickets: formData.tickets || { available: false, types: [] },
+        socialLinks: formData.socialLinks || {},
+        startISO: formData.startDateTime || '',
+        endISO: formData.endDateTime || '',
+      };
+
+      console.log('Uploading metadata to IPFS...');
+      const res = await fetch("/api/ipfs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: `event-${formData.title}`, content: metadata }),
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        console.error("IPFS upload failed:", t);
+        throw new Error("Failed to upload event metadata to IPFS");
+      }
+      const { uri } = await res.json();
+      setIpfsHash(uri);
+
+      // After IPFS, call registerEvent with computed times and IPFS hash
+      const startIso = formData.startDateTime || (formData.date && formData.time ? `${formData.date}T${formData.time}` : "");
+      let endIso = formData.endDateTime || "";
+      // Fallback: if end not provided, default to +3 hours from start
+      if (!endIso && startIso) {
+        const tentativeEnd = new Date(startIso);
+        if (!isNaN(tentativeEnd.getTime())) {
+          tentativeEnd.setHours(tentativeEnd.getHours() + 3);
+          endIso = tentativeEnd.toISOString();
+        }
+      }
+      if (!startIso || !endIso) {
+        throw new Error("Please set both start and end time");
+      }
+      const startTime = Math.floor(new Date(startIso).getTime() / 1000);
+      const endTime = Math.floor(new Date(endIso).getTime() / 1000);
+      if (startTime >= endTime) {
+        throw new Error("End time must be after start time");
+      }
+
+      // Generate a unique slug for this event
+      const eventSlug = generateSlug();
+      console.log('Generated event slug:', eventSlug);
+
+      // Store the slug in form data for reference
+      setFormData((prev: any) => ({ ...prev, slug: eventSlug }));
+
+      // Return a ContractFunctionParameters[] for OnchainKit <Transaction contracts={...}>
+      const contracts = [
+        {
+          abi: eventAbi.abi,
+          address: eventAddress as `0x${string}`,
+          functionName: "createEvent",
+          args: [
+            uri, // ipfsHash
+            BigInt(startTime), // startTime
+            BigInt(endTime), // endTime
+            BigInt(formData.maxParticipants), // maxAttendees
+            formData.tickets.available ? true : false, // isVIP (default to false, can be made configurable)
+            "0x", // data (empty bytes for now)
+            eventSlug, // slug
+          ],
+        },
+      ];
+
+      console.log('Successfully created contracts:', contracts);
+      return contracts;
+    } catch (e) {
+      console.error('Error in handleSubmit:', e);
+      throw e;
+    }
+  };
+
+  const createBatchedEventAndTickets = async (_eventId: string) => {
+    try {
+      const contracts: any[] = [];
+      const eventContract = await handleSubmit();
+      contracts.push(...eventContract);
+
+      const ticket = createBatchedTickets(_eventId);
+      if (ticket) contracts.push(ticket);
+
+      return contracts;
+    } catch (error) {
+      console.error('Error creating batched event and tickets:', error);
+      throw error;
+    }
+  };
+  const handleCreateEvent = async () => {
+    try {
+      console.log('Starting event creation preparation...');
+      setIsPreparingForTransaction(true);
+      setVerificationStatus('Preparing everything for event creation...');
+
+      // Validate required fields
+      if (!formData.title) {
+        throw new Error('Event title is required');
+      }
+      if (!formData.startDateTime) {
+        throw new Error('Event start time is required');
+      }
+      if (!formData.endDateTime) {
+        throw new Error('Event end time is required');
+      }
+
+      console.log('Form data validation passed:', {
+        title: formData.title,
+        startDateTime: formData.startDateTime,
+        endDateTime: formData.endDateTime,
+        tickets: formData.tickets
+      });
+
+      // First prepare all contracts (image upload, metadata upload, contract preparation)
+      const eventId = await getNextEventId();
+      console.log('Generated event ID:', eventId);
+
+      const contracts = await createBatchedEventAndTickets(eventId as string);
+      console.log('Created contracts:', contracts);
+      setPreparedContracts(contracts);
+
+      setVerificationStatus('Ready to create event! Click the transaction button below.');
+      return contracts;
+    } catch (error) {
+      console.error('Error preparing for event creation:', error);
+      setVerificationStatus(`Failed to prepare for event creation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsPreparingForTransaction(false);
+    }
+  };
   return (
     <div>
       <Section title="Review & publish" description="You can edit later." >
@@ -830,16 +1199,57 @@ function Publish({ onClose }: { onClose: () => void }) {
         <Input label="Contact email" placeholder="you@example.com" type="email" />
       </Section>
 
+      {verificationStatus && (
+        <div className="mb-4 rounded-md bg-muted p-3">
+          <p className="text-sm text-muted-foreground">{verificationStatus}</p>
+        </div>
+      )}
+
       <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
-        <button
-          className="rounded-md border border-input bg-background px-4 py-2 text-sm hover:bg-muted"
-          onClick={onClose}
-        >
-          Save draft
-        </button>
-        <button className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-          Publish
-        </button>
+
+        {preparedContracts && preparedContracts.length > 0 ? (
+          <div className="w-full">
+            <MultiContractButton
+              useMulticall={false}
+              sequential={true}
+              chainId={Number(chainId)}
+              contracts={preparedContracts}
+              onReceiptSuccess={async () => {
+                try {
+                  console.log('Transaction successful, creating event details...');
+                  setTransactionSuccessful(true);
+                  const eid = preGeneratedEventId || createdEventId || formData.slug || 'event';
+                  console.log('Event ID for details:', eid);
+                  const details = createEventDetails(eid);
+                  console.log('Event details created:', details);
+                  setCreatedEventDetails(details);
+                  setShowSuccessCard(true);
+                } catch (error) {
+                  console.error('Error creating event details:', error);
+                  setVerificationStatus('Event created but failed to load details');
+                }
+              }}
+              idleLabel="Create Event & Tickets"
+              className="mt-5"
+              successLabel="Event & Tickets Created"
+              errorLabel="Try Again"
+              cancelLabel="Cancel"
+              showCancel={true}
+              showToast={true}
+              successToastMessage="Event & Tickets Created"
+              preSubmitFunction={handleCreateEvent}
+              btnClassName="w-full bg-emerald-600 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-background font-medium py-3 px-4 rounded-lg transition-colors"
+            />
+          </div>
+        ) : (
+          <button
+            onClick={handleCreateEvent}
+            disabled={isPreparingForTransaction}
+            className="w-full bg-emerald-600 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-background font-medium py-3 px-4 rounded-lg transition-colors"
+          >
+            {isPreparingForTransaction ? 'Preparing...' : 'Prepare Event Creation'}
+          </button>
+        )}
       </div>
     </div>
   );
