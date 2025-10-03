@@ -254,7 +254,7 @@ export default function TxHistory({ events: propEvents }: TxHistoryProps) {
           </button>
 
           {isDropdownOpen && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-background rounded-lg shadow-lg border border-border max-h-64 overflow-y-auto z-10">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-background rounded-lg shadow-lg border border-border max-h-64 overflow-y-auto z-50">
               {/* Search Input */}
               <div className="p-3 border-b border-border">
                 <div className="relative">
