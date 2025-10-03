@@ -68,8 +68,11 @@ export default function EventBoard({ onEventsLoaded }: EventBoardProps) {
       }
     };
 
+
     fetchUserEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address]);
+
 
   if (!address) {
     return (

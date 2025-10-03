@@ -3,7 +3,7 @@
 import {
   useMiniKit,
 } from "@coinbase/onchainkit/minikit";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { Features } from "./components/DemoComponents";
 import StreamHome from "./components/StreamHome";
 import WaitlistModal from "./components/WaitlistModal";
@@ -18,14 +18,20 @@ import CreateEventBottomSheet from "@/components/CreateEventBottomSheet";
 
 
 
-export default function App() {
+// Component that uses useSearchParams - needs to be wrapped in Suspense
+function AppContent() {
   const { setFrameReady, isFrameReady } = useMiniKit();
   // const [frameAdded, setFrameAdded] = useState(false);
   const [activeTab, setActiveTab] = useState("Home");
   const [showWaitlist, setShowWaitlist] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     async function getCapabilities() {
@@ -100,20 +106,28 @@ export default function App() {
   // }, [context, frameAdded, handleAddFrame]);
   // Handle URL parameters for create modal
   useEffect(() => {
-    const createParam = searchParams.get('create');
-    if (createParam === 'true') {
-      setShowCreateModal(true);
-      setActiveTab("Home"); // Stay on home page
+    if (!isMounted) return;
+
+    try {
+      const createParam = searchParams?.get('create');
+      if (createParam === 'true') {
+        setShowCreateModal(true);
+        setActiveTab("Home"); // Stay on home page
+      }
+    } catch (error) {
+      console.warn('Error reading search params:', error);
     }
-  }, [searchParams]);
+  }, [searchParams, isMounted]);
 
   // Handle create tab click
   useEffect(() => {
     if (activeTab === "Create") {
       // Update URL to show create modal
-      const url = new URL(window.location.href);
-      url.searchParams.set('create', 'true');
-      router.replace(url.pathname + url.search);
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        url.searchParams.set('create', 'true');
+        router.replace(url.pathname + url.search);
+      }
       setShowCreateModal(true);
     }
   }, [activeTab, router]);
@@ -194,7 +208,7 @@ export default function App() {
         open={showCreateModal}
         onOpenChange={(open) => {
           setShowCreateModal(open);
-          if (!open) {
+          if (!open && typeof window !== 'undefined') {
             // Remove create parameter from URL when modal closes
             const url = new URL(window.location.href);
             url.searchParams.delete('create');
@@ -210,5 +224,21 @@ export default function App() {
       />
       {/* )} */}
     </div>
+  );
+}
+
+// Main App component with Suspense boundary
+export default function App() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="flex items-center gap-2">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"></div>
+          <span>Loading...</span>
+        </div>
+      </div>
+    }>
+      <AppContent />
+    </Suspense>
   );
 }
