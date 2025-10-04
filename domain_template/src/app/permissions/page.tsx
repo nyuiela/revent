@@ -1,11 +1,37 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
-import { MediaItem, PermissionRequest } from '@/components/MediaGrid';
+import WalletConnect from '@/components/WalletConnect';
+import PermissionRequestModal from '@/components/PermissionRequestModal';
+import { useUser } from '@/contexts/UserContext';
 import Image from 'next/image';
+
+interface PermissionRequest {
+  id: string;
+  mediaId: string;
+  requester: string;
+  requesterName: string;
+  amount: number;
+  accessRights: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: number;
+  txHash?: string;
+}
+
+interface MediaItem {
+  id: string;
+  url: string;
+  title: string;
+  price: number;
+  accessRights: string;
+  owner: string;
+  ownerName: string;
+  createdAt: number;
+  requests: PermissionRequest[];
+}
 
 const mockMedia: MediaItem[] = [
   {
@@ -61,15 +87,129 @@ const mockTransfers = [
 ];
 
 export default function PermissionsPage() {
+  const { user } = useUser();
   const [activeTab, setActiveTab] = useState<'requests' | 'transfers'>('requests');
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [isWalletConnected, setIsWalletConnected] = useState(false);
+  const [walletAddress, setWalletAddress] = useState<string>('');
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleApproveRequest = (requestId: string) => {
-    console.log('Approving request:', requestId);
+  // Fetch media items and requests
+  const fetchMediaItems = async () => {
+    try {
+      const response = await fetch('/api/permissions/requests');
+      if (response.ok) {
+        const data = await response.json();
+        setMediaItems(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch media items:', error);
+    }
   };
 
-  const handleRejectRequest = (requestId: string) => {
-    console.log('Rejecting request:', requestId);
+  // Poll for updates every 5 seconds
+  useEffect(() => {
+    fetchMediaItems();
+    const interval = setInterval(fetchMediaItems, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleWalletConnect = (address: string) => {
+    setWalletAddress(address);
+    setIsWalletConnected(true);
+  };
+
+  const handleWalletDisconnect = () => {
+    setWalletAddress('');
+    setIsWalletConnected(false);
+  };
+
+  const handleRequestPermission = (mediaItem: MediaItem) => {
+    setSelectedMedia(mediaItem);
+    setShowRequestModal(true);
+  };
+
+  const handleSubmitRequest = async (data: { amount: number; accessRights: string; txHash: string }) => {
+    try {
+      const response = await fetch('/api/permissions/requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mediaId: selectedMedia?.id,
+          requester: walletAddress,
+          requesterName: user?.name || 'Anonymous',
+          amount: data.amount,
+          accessRights: data.accessRights,
+          txHash: data.txHash
+        })
+      });
+
+      if (response.ok) {
+        fetchMediaItems(); // Refresh data
+      }
+    } catch (error) {
+      console.error('Failed to submit request:', error);
+    }
+  };
+
+  const handleApproveRequest = async (requestId: string) => {
+    setIsProcessing(true);
+    
+    // Simulate wallet transaction for approval
+    setTimeout(async () => {
+      const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`;
+      
+      try {
+        const response = await fetch('/api/permissions/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            requestId,
+            action: 'approve',
+            txHash: mockTxHash
+          })
+        });
+
+        if (response.ok) {
+          fetchMediaItems(); // Refresh data
+        }
+      } catch (error) {
+        console.error('Failed to approve request:', error);
+      }
+      
+      setIsProcessing(false);
+    }, 2000);
+  };
+
+  const handleRejectRequest = async (requestId: string) => {
+    setIsProcessing(true);
+    
+    // Simulate wallet transaction for rejection
+    setTimeout(async () => {
+      const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`;
+      
+      try {
+        const response = await fetch('/api/permissions/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            requestId,
+            action: 'reject',
+            txHash: mockTxHash
+          })
+        });
+
+        if (response.ok) {
+          fetchMediaItems(); // Refresh data
+        }
+      } catch (error) {
+        console.error('Failed to reject request:', error);
+      }
+      
+      setIsProcessing(false);
+    }, 1500);
   };
 
   return (
@@ -86,7 +226,15 @@ export default function PermissionsPage() {
           </Link>
         </div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Permissions Dashboard</h1>
-        <ThemeToggle />
+        <div className="flex items-center space-x-4">
+          <WalletConnect 
+            onConnect={handleWalletConnect}
+            onDisconnect={handleWalletDisconnect}
+            isConnected={isWalletConnected}
+            address={walletAddress}
+          />
+          <ThemeToggle />
+        </div>
       </div>
 
       {/* Tabs */}
@@ -116,9 +264,14 @@ export default function PermissionsPage() {
       {/* Content */}
       {activeTab === 'requests' && (
         <div className="space-y-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Pending Requests</h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Media Items & Requests</h2>
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              Auto-refreshing every 5 seconds
+            </div>
+          </div>
           
-          {mockMedia.map((media) => (
+          {mediaItems.map((media) => (
             <div key={media.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex items-start space-x-4">
                 <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
@@ -127,9 +280,20 @@ export default function PermissionsPage() {
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">{media.title}</h3>
                   <div className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                    <div>Owner: {media.owner}</div>
+                    <div>Owner: {media.ownerName} ({media.owner})</div>
                     <div>Current Price: {media.price} ETH</div>
                     <div>Access Rights: {media.accessRights}</div>
+                  </div>
+                  
+                  {/* Request Permission Button */}
+                  <div className="mb-4">
+                    <button
+                      onClick={() => handleRequestPermission(media)}
+                      disabled={!isWalletConnected}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm rounded-md transition-colors"
+                    >
+                      {!isWalletConnected ? 'Connect Wallet to Request' : 'Request Permission'}
+                    </button>
                   </div>
                   
                   {media.requests && media.requests.length > 0 ? (
@@ -139,34 +303,45 @@ export default function PermissionsPage() {
                           <div className="flex justify-between items-start mb-2">
                             <div>
                               <div className="font-medium text-gray-900 dark:text-gray-100">
-                                {request.requester}
+                                {request.requesterName} ({request.requester.slice(0, 6)}...{request.requester.slice(-4)})
                               </div>
                               <div className="text-sm text-gray-600 dark:text-gray-300">
                                 Offering: {request.amount} ETH for {request.accessRights} access
                               </div>
+                              {request.txHash && (
+                                <div className="text-xs text-blue-600 dark:text-blue-400">
+                                  TX: {request.txHash.slice(0, 10)}...
+                                </div>
+                              )}
                             </div>
                             <span className={`px-2 py-1 text-xs rounded-full ${
                               request.status === 'pending' 
                                 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                                : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                : request.status === 'approved'
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                             }`}>
-                              {/* {request.status} */}
+                              {request.status}
                             </span>
                           </div>
-                          {/* <div className="flex space-x-2 mt-3">
-                            <button
-                              onClick={() => handleApproveRequest(request.id)}
-                              className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
-                            >
-                              Approve
-                            </button>
-                            <button
-                              onClick={() => handleRejectRequest(request.id)}
-                              className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors"
-                            >
-                              Reject
-                            </button>
-                          </div> */}
+                          {request.status === 'pending' && isWalletConnected && (
+                            <div className="flex space-x-2 mt-3">
+                              <button
+                                onClick={() => handleApproveRequest(request.id)}
+                                disabled={isProcessing}
+                                className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:bg-gray-400 transition-colors"
+                              >
+                                {isProcessing ? 'Processing...' : 'Approve'}
+                              </button>
+                              <button
+                                onClick={() => handleRejectRequest(request.id)}
+                                disabled={isProcessing}
+                                className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 disabled:bg-gray-400 transition-colors"
+                              >
+                                {isProcessing ? 'Processing...' : 'Reject'}
+                              </button>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -248,6 +423,21 @@ export default function PermissionsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Permission Request Modal */}
+      {selectedMedia && (
+        <PermissionRequestModal
+          isOpen={showRequestModal}
+          onClose={() => {
+            setShowRequestModal(false);
+            setSelectedMedia(null);
+          }}
+          mediaItem={selectedMedia}
+          onSubmit={handleSubmitRequest}
+          walletAddress={walletAddress}
+          userName={user?.name}
+        />
       )}
     </div>
   );

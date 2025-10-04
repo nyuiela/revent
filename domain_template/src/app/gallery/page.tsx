@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ThemeToggle from '@/components/ThemeToggle';
+import WalletConnect from '@/components/WalletConnect';
+import PermissionRequestModal from '@/components/PermissionRequestModal';
+import InvestModal from '@/components/InvestModal';
+import { useUser } from '@/contexts/UserContext';
 import { MediaItem } from '@/components/MediaGrid';
 import Image from 'next/image';
 import GalleryGrid, { GalleryItem } from '@/components/GalleryGrid';
@@ -40,11 +44,12 @@ const mockMedia: MediaItem[] = [
 ];
 
 export default function GalleryPage() {
+  const { user } = useUser();
   const [filter, setFilter] = useState<'all' | 'images' | 'videos'>('all');
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [showInvest, setShowInvest] = useState(false);
-  const [investAmount, setInvestAmount] = useState<string>('');
+  const [showRequestModal, setShowRequestModal] = useState(false);
 
   const filteredMedia = mockMedia.filter(media => {
     if (filter === 'all') return true;
@@ -53,13 +58,39 @@ export default function GalleryPage() {
     return true;
   });
 
+
+  const handleRequestPermission = (mediaItem: MediaItem) => {
+    setSelectedMedia(mediaItem);
+    setShowRequestModal(true);
+  };
+
+  const handleSubmitRequest = async (data: { amount: number; accessRights: string; txHash: string }) => {
+    try {
+      const response = await fetch('/api/permissions/requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mediaId: selectedMedia?.id,
+          requester: '0x1234...5678', // This will be replaced with actual wallet address
+          requesterName: user?.name || 'Anonymous',
+          amount: data.amount,
+          accessRights: data.accessRights,
+          txHash: data.txHash
+        })
+      });
+
+      if (response.ok) {
+        setShowRequestModal(false);
+        setSelectedMedia(null);
+      }
+    } catch (error) {
+      console.error('Failed to submit request:', error);
+    }
+  };
+
   const handleMediaClick = (media: MediaItem) => {
     setSelectedMedia(media);
     setShowPreview(true);
-  };
-
-  const handleRequestPermission = (media: MediaItem) => {
-    console.log('Requesting permission for:', media);
   };
 
   return (
@@ -74,6 +105,7 @@ export default function GalleryPage() {
           >
             Invest in Event
           </button>
+                  <WalletConnect />
           <ThemeToggle />
         </div>
       </div>
@@ -117,7 +149,7 @@ export default function GalleryPage() {
         items={filteredMedia.map<GalleryItem>((m) => ({
           id: m.id,
           url: m.url || '/stream.jpg',
-          title: m.title,
+          title: m.title || 'Untitled Media',
           price: m.price,
           isVideo: Boolean(m.file?.type.startsWith('video')),
         }))}
@@ -129,7 +161,7 @@ export default function GalleryPage() {
 
       {/* Preview Modal */}
       {showPreview && selectedMedia && (
-        <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-4xl h-[80vh] flex overflow-hidden shadow-2xl relative">
             {/* Close Button */}
             <button
@@ -231,42 +263,29 @@ export default function GalleryPage() {
       )}
 
       {/* Invest Modal */}
-      {showInvest && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md p-6 border border-gray-200 dark:border-gray-700 shadow-2xl relative">
-            <button
-              onClick={() => setShowInvest(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
-              aria-label="Close invest"
-            >
-              ✕
-            </button>
-            <h2 className="text-xl font-semibold mb-2">Invest in Event</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">Support this event by investing a chosen amount.</p>
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount (ETH)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.001"
-                value={investAmount}
-                onChange={(e) => setInvestAmount(e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="0.05"
-              />
-              <button
-                onClick={() => {
-                  // integrate onchain/payment here
-                  setShowInvest(false);
-                  setInvestAmount('');
-                }}
-                className="w-full mt-2 px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
-              >
-                Invest
-              </button>
-            </div>
-          </div>
-        </div>
+      <InvestModal 
+        isOpen={showInvest} 
+        onClose={() => setShowInvest(false)}
+      />
+
+      {/* Permission Request Modal */}
+      {selectedMedia && (
+        <PermissionRequestModal
+          isOpen={showRequestModal}
+          onClose={() => {
+            setShowRequestModal(false);
+            setSelectedMedia(null);
+          }}
+          mediaItem={{
+            id: selectedMedia.id,
+            title: selectedMedia.title || 'Untitled Media',
+            price: selectedMedia.price || 0,
+            accessRights: selectedMedia.accessRights || 'read'
+          }}
+          onSubmit={handleSubmitRequest}
+          walletAddress="0x1234...5678"
+          userName={user?.name}
+        />
       )}
     </div>
   );
