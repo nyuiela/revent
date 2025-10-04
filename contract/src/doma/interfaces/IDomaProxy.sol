@@ -43,6 +43,9 @@ interface IDomaProxy {
 	) external payable;
 
 	function requestDetokenization(uint256 tokenId, bool isSynthetic) external;
+  function registrarOf(uint256 id) external view returns (uint256) {
+   return _registrarIanaIds[id];
+}
 }
 
 
