@@ -9,14 +9,14 @@ export default function Loading() {
     <div className="font-sans flex flex-col items-center justify-center min-h-screen p-8 bg-white">
       <div className="flex flex-col items-center gap-8">
         {/* Logo Image */}
-        <div className="relative w-48 h-48 sm:w-32 sm:h-32">
+        <div className="relative w-[900px] h-[500px]">
           <Image
             src={logoUrl}
             alt={`${appName} logo`}
             width={192}
             height={192}
             unoptimized
-            className="object-contain"
+            className="object-cover w-full h-full"
             priority
           />
         </div>

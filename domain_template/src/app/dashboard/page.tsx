@@ -5,10 +5,13 @@ import { graphqlClient } from "@/lib/graphqlClient";
 import { gql } from "graphql-request";
 import MediaGrid, { MediaItem } from "@/components/MediaGrid";
 import ThemeToggle from "@/components/ThemeToggle";
+import UserLogin from "@/components/UserLogin";
 import BridgeModal from "@/components/BridgeModal";
-import { useState } from "react";
+import { useUser } from "@/contexts/UserContext";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import PixelBlastBackground from "@/components/PixelBlastBackground";
+import Link from "next/link";
 // import ethAccra from "../../../public/illustration.svg"
 
 type Nameserver = { ldhName: string };
@@ -121,12 +124,21 @@ const namesQuery = gql`{
 
 
 export default function DashboardPage() {
+  const { user } = useUser();
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<Array<{ id: string; role: "user" | "system"; text: string }>>([
     { id: "m1", role: "system", text: "Welcome to your event dashboard. Discuss, negotiate, and coordinate here." },
   ]);
   const [isBridgeModalOpen, setIsBridgeModalOpen] = useState(false);
+  const [showUserLogin, setShowUserLogin] = useState(false);
+
+  // Show login modal if user is not authenticated
+  useEffect(() => {
+    if (!user?.isAuthenticated) {
+      setShowUserLogin(true);
+    }
+  }, [user]);
   const { data, isLoading, error } = useQuery({
     queryKey: ["domain-data"],
     queryFn: async () => {
@@ -152,7 +164,14 @@ export default function DashboardPage() {
     <div className="min-h-screen p-6 bg-transparent overflow-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
       {/* Header with Theme Toggle */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Domain Dashboard</h1>
+        <div className="flex items-center space-x-4">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Domain Dashboard</h1>
+          {user?.isAuthenticated && (
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              Welcome, {user.name}!
+            </div>
+          )}
+        </div>
         <div className="flex items-center space-x-4">
           <nav className="flex space-x-4">
             <a href="/permissions" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
@@ -314,7 +333,9 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold m-0">Event Chat</h2>
           <div className="flex gap-2">
-            <button className="px-2.5 py-1.5 border cursor-pointer hover:bg-gray-100 hover:text-gray-900 border-gray-200 rounded-md">Permission Trade</button>
+            <button className="px-2.5 py-1.5 border cursor-pointer hover:bg-gray-100 hover:text-gray-900 border-gray-200 rounded-md">
+              <Link href="/permissions">Permission Trade</Link>
+              </button>
             <button className="px-2.5 py-1.5 border cursor-pointer hover:bg-gray-100 hover:text-gray-900 border-gray-200 rounded-md">Buy</button>
           </div>
         </div>
@@ -346,6 +367,12 @@ export default function DashboardPage() {
         </form>
       </section>
 
+      {/* User Login Modal */}
+      {showUserLogin && (
+        <UserLogin
+          onClose={() => setShowUserLogin(false)}
+        />
+      )}
     </div>
   );
 }
