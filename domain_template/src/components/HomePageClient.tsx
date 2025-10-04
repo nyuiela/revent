@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import CountdownTimer from '@/components/CountdownTimer';
 import TVLSection from '@/components/TVLSection';
 import SpeakersSection from '@/components/SpeakersSection';
@@ -9,6 +9,148 @@ import ScheduleSection from '@/components/ScheduleSection';
 import SponsorsSection from '@/components/SponsorsSection';
 import InvestModal from '@/components/InvestModal';
 import WalletConnect from '@/components/WalletConnect';
+import { useWallet } from '@/components/WalletProvider';
+import { useNotifications } from '@/components/NotificationSystem';
+import heroSectionImage from '../../public/hero-section.png';
+import Image from 'next/image';
+
+// Custom Connect Button Component
+function CustomConnectButton() {
+  const { isConnected, address, connect, disconnect, isLoading } = useWallet();
+  const { addNotification } = useNotifications();
+  const appKitRef = useRef<HTMLElement>(null);
+
+  const handleConnect = async () => {
+    try {
+      // Try multiple approaches to trigger AppKit
+
+      // Method 1: Try to find and click any AppKit button
+      const appKitButtons = document.querySelectorAll('appkit-button, [data-appkit], .appkit-button');
+      let clicked = false;
+
+      for (const button of appKitButtons) {
+        try {
+          (button as any).click();
+          clicked = true;
+          break;
+        } catch (e) {
+          continue;
+        }
+      }
+
+      // Method 2: Try to trigger AppKit programmatically
+      if (!clicked && typeof window !== 'undefined') {
+        // Try to access AppKit global
+        if ((window as any).AppKit) {
+          (window as any).AppKit.open();
+          clicked = true;
+        }
+
+        // Try to dispatch a custom event
+        if (!clicked) {
+          const event = new CustomEvent('appkit:connect');
+          window.dispatchEvent(event);
+          clicked = true;
+        }
+      }
+
+      // Method 3: Fallback to direct connection
+      if (!clicked) {
+        await connect();
+      }
+
+    } catch (error) {
+      console.error('AppKit trigger failed:', error);
+      // Fallback to direct wallet connection
+      try {
+        await connect();
+      } catch (fallbackError) {
+        addNotification({
+          type: 'error',
+          title: 'Connection Failed',
+          message: 'Please install MetaMask or another Web3 wallet',
+          duration: 5000
+        });
+      }
+    }
+  };
+
+  const handleDisconnect = () => {
+    disconnect();
+    addNotification({
+      type: 'info',
+      title: 'Wallet Disconnected',
+      message: 'Your wallet has been disconnected.',
+      duration: 3000
+    });
+  };
+
+  if (isConnected && address) {
+    return (
+      <div className="space-y-2">
+        <button
+          onClick={handleDisconnect}
+          className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded border border-white transition-all duration-200 flex items-center justify-center space-x-2 relative transform hover:translate-y-[-1px] hover:translate-x-[1px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.4)] shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)]"
+        >
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          <span>Disconnect Wallet</span>
+        </button>
+        <div className="text-center">
+          <p className="text-sm text-white/80">
+            Connected: {address.slice(0, 6)}...{address.slice(-4)}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isConnected && address) {
+    return (
+      <div className="space-y-2">
+        <button
+          onClick={handleDisconnect}
+          className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded border border-white transition-all duration-200 flex items-center justify-center space-x-2 relative transform hover:translate-y-[-1px] hover:translate-x-[1px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.4)] shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)]"
+        >
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          <span>Disconnect Wallet</span>
+        </button>
+        <div className="text-center">
+          <p className="text-sm text-white/80">
+            Connected: {address.slice(0, 6)}...{address.slice(-4)}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      {/* Styled AppKit button */}
+      <appkit-button
+        label="Connect Wallet"
+        size="lg"
+        className="w-full bg-[#6A28D7] hover:bg-[#5A1FA6] text-white font-semibold py-3 px-6 rounded border border-white transition-all duration-200 flex items-center justify-center space-x-2 relative transform hover:translate-y-[-1px] hover:translate-x-[1px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.4)] shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)]"
+        style={{
+          backgroundColor: '#6A28D7',
+          '--appkit-button-background': '#6A28D7',
+          '--appkit-button-hover-background': '#5A1FA6',
+          '--appkit-button-color': 'white',
+          '--appkit-button-border': '1px solid white',
+          '--appkit-button-border-radius': '8px',
+          '--appkit-button-padding': '12px 24px',
+          '--appkit-button-font-weight': '600',
+          '--appkit-button-box-shadow': '3px 3px 0px 0px rgba(0,0,0,0.3)',
+          '--appkit-button-hover-box-shadow': '4px 4px 0px 0px rgba(0,0,0,0.4)',
+          '--appkit-button-transform': 'translateY(-1px) translateX(1px)',
+        } as any}
+      />
+    </div>
+  );
+}
 
 export default function HomePageClient() {
   const [showInvest, setShowInvest] = useState(false);
@@ -80,13 +222,13 @@ export default function HomePageClient() {
 
             {/* Right Side - CTA Buttons */}
             <div className="flex flex-col space-y-4">
-              <button className="bg-[#50C878] hover:bg-[#45B06A] text-white font-semibold py-4 px-8 rounded border border-white transition-colors flex items-center space-x-2">
+              <button className="bg-[#50C878] hover:bg-[#45B06A] text-white font-semibold py-4 px-8 rounded border border-white transition-all duration-200 flex items-center space-x-2 relative transform hover:translate-y-[-2px] hover:translate-x-[2px] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)] shadow-[6px_6px_0px_0px_rgba(0,0,0,0.6)]">
                 <span>Get Your Ticket</span>
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </button>
-              <button className="bg-[#FF8C00] hover:bg-[#E67E00] text-white font-semibold py-4 px-8 rounded border border-white transition-colors flex items-center space-x-2">
+              <button className="bg-[#FF8C00] hover:bg-[#E67E00] text-white font-semibold py-4 px-8 rounded border border-white transition-all duration-200 flex items-center space-x-2 relative transform hover:translate-y-[-2px] hover:translate-x-[2px] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)] shadow-[6px_6px_0px_0px_rgba(0,0,0,0.6)]">
                 <span>Become A Sponsor</span>
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -94,15 +236,18 @@ export default function HomePageClient() {
               </button>
               {/* Wallet Connect */}
               <div className="mt-4">
-                {/* <WalletConnect /> */}
-                <appkit-button
-                  label="Connect Wallet"
-                  size="lg"
-                />
+                <CustomConnectButton />
               </div>
             </div>
           </div>
         </div>
+      </div>
+
+
+
+      {/* Picture slideshow section */}
+      <div className='w-full h-[60vh] relative'>
+        <Image src={heroSectionImage} alt='slideshow' fill className='object-cover w-full h-[60vh]' />
       </div>
 
       {/* TVL Section */}

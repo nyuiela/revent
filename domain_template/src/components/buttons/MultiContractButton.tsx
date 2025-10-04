@@ -364,7 +364,8 @@ export function MultiContractButton(props: MultiContractButtonProps) {
           type="button"
           onClick={handleClick}
           disabled={Boolean(isDisabled) || loading}
-          className={`px-3 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-12 ${btnClassName} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`w-full py-4 px-6 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-xl transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center space-x-2 cursor-pointer ${btnClassName} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+        // className={`px-3 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-12 ${btnClassName} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           {loading ? 'Loading...' : `${label}${progressText}`}
         </button>
