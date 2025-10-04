@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import CountdownTimer from '@/components/CountdownTimer';
 import TVLSection from '@/components/TVLSection';
+import TradingSection from '@/components/TradingSection';
 import SpeakersSection from '@/components/SpeakersSection';
 import TicketsSection from '@/components/TicketsSection';
 import ScheduleSection from '@/components/ScheduleSection';
@@ -133,20 +134,6 @@ function CustomConnectButton() {
       <appkit-button
         label="Connect Wallet"
         size="lg"
-        className="w-full bg-[#6A28D7] hover:bg-[#5A1FA6] text-white font-semibold py-3 px-6 rounded border border-white transition-all duration-200 flex items-center justify-center space-x-2 relative transform hover:translate-y-[-1px] hover:translate-x-[1px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.4)] shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)]"
-        style={{
-          backgroundColor: '#6A28D7',
-          '--appkit-button-background': '#6A28D7',
-          '--appkit-button-hover-background': '#5A1FA6',
-          '--appkit-button-color': 'white',
-          '--appkit-button-border': '1px solid white',
-          '--appkit-button-border-radius': '8px',
-          '--appkit-button-padding': '12px 24px',
-          '--appkit-button-font-weight': '600',
-          '--appkit-button-box-shadow': '3px 3px 0px 0px rgba(0,0,0,0.3)',
-          '--appkit-button-hover-box-shadow': '4px 4px 0px 0px rgba(0,0,0,0.4)',
-          '--appkit-button-transform': 'translateY(-1px) translateX(1px)',
-        } as any}
       />
     </div>
   );
@@ -163,46 +150,46 @@ export default function HomePageClient() {
       {/* Hero Section */}
       <div className="relative min-h-screen moonshot-hero">
         {/* Navigation */}
-        <nav className="relative z-10 flex justify-end p-6">
-          <div className="flex items-center space-x-8 text-white">
-            <a href="#" className="flex items-center space-x-1 hover:text-gray-200 transition-colors">
+        <nav className="relative z-10 flex justify-end p-4 sm:p-6">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 md:gap-8 text-white">
+            <a href="#" className="flex items-center space-x-1 hover:text-gray-200 transition-colors text-sm sm:text-base">
               <span>Why Attend</span>
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             </a>
-            <a href="#" className="flex items-center space-x-1 hover:text-gray-200 transition-colors">
+            <a href="#" className="flex items-center space-x-1 hover:text-gray-200 transition-colors text-sm sm:text-base">
               <span>Plan Your Trip</span>
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             </a>
-            <a href="/gallery" className="hover:text-gray-200 transition-colors">Media</a>
-            <a href="#" className="hover:text-gray-200 transition-colors">FAQS</a>
+            <a href="/gallery" className="hover:text-gray-200 transition-colors text-sm sm:text-base">Media</a>
+            <a href="#" className="hover:text-gray-200 transition-colors text-sm sm:text-base">FAQS</a>
           </div>
         </nav>
 
         {/* Main Content */}
-        <div className="relative z-10 flex items-center min-h-[calc(100vh-120px)] px-6">
-          <div className="w-full flex items-center justify-between">
+        <div className="relative z-10 flex items-center min-h-[calc(100vh-120px)] px-4 sm:px-6">
+          <div className="w-full flex flex-col lg:flex-row items-center lg:justify-between space-y-8 lg:space-y-0">
             {/* Left Side - Logos and Headlines */}
-            <div className="flex-1">
+            <div className="flex-1 text-center lg:text-left">
               {/* Logos */}
-              <div className="mb-12">
-                <div className="flex items-center space-x-4 mb-4">
+              <div className="mb-8 sm:mb-12">
+                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
                   <div>
-                    <h1 className="text-4xl font-bold text-white">MOONSHOT</h1>
+                    <h1 className="text-3xl sm:text-4xl font-bold text-white">MOONSHOT</h1>
                     <p className="text-white/80 text-sm">by techcabal</p>
                   </div>
-                  <div className="text-white/60">×</div>
+                  <div className="text-white/60 hidden sm:block">×</div>
                   <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
-                      <svg className="w-5 h-5 text-[#6A28D7]" fill="currentColor" viewBox="0 0 20 20">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white rounded flex items-center justify-center">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#6A28D7]" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M8 5v10l6-5-6-5z" />
                       </svg>
                     </div>
                     <div>
-                      <p className="text-white font-bold">sabi</p>
+                      <p className="text-white font-bold text-sm sm:text-base">sabi</p>
                       <p className="text-white/60 text-xs">In partnership with</p>
                     </div>
                   </div>
@@ -210,32 +197,32 @@ export default function HomePageClient() {
               </div>
 
               {/* Main Headlines */}
-              <div className="mb-8">
-                <h2 className="text-6xl font-moonshot-bold text-white mb-2">MOONSHOT 2025</h2>
-                <h3 className="text-8xl font-moonshot-black text-white mb-4">BUILDING</h3>
-                <h3 className="text-8xl font-moonshot-black text-white mb-6">MOMENTUM</h3>
-                <p className="text-xl text-white/90 max-w-md">
+              <div className="mb-6 sm:mb-8">
+                <h2 className="text-4xl sm:text-5xl md:text-6xl font-moonshot-bold text-white mb-2">MOONSHOT 2025</h2>
+                <h3 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-moonshot-black text-white mb-2 sm:mb-4">BUILDING</h3>
+                <h3 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-moonshot-black text-white mb-4 sm:mb-6">MOMENTUM</h3>
+                <p className="text-lg sm:text-xl text-white/90 max-w-md mx-auto lg:mx-0">
                   Africa's tech ecosystem positions itself for its next big leap.
                 </p>
               </div>
             </div>
 
             {/* Right Side - CTA Buttons */}
-            <div className="flex flex-col space-y-4">
-              <button className="bg-[#50C878] hover:bg-[#45B06A] text-white font-semibold py-4 px-8 rounded border border-white transition-all duration-200 flex items-center space-x-2 relative transform hover:translate-y-[-2px] hover:translate-x-[2px] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)] shadow-[6px_6px_0px_0px_rgba(0,0,0,0.6)]">
+            <div className="flex flex-col space-y-3 sm:space-y-4 w-full sm:w-auto">
+              <button className="bg-[#50C878] hover:bg-[#45B06A] text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded border border-white transition-all duration-200 flex items-center justify-center space-x-2 relative transform hover:translate-y-[-2px] hover:translate-x-[2px] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)] shadow-[6px_6px_0px_0px_rgba(0,0,0,0.6)] text-sm sm:text-base">
                 <span>Get Your Ticket</span>
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </button>
-              <button className="bg-[#FF8C00] hover:bg-[#E67E00] text-white font-semibold py-4 px-8 rounded border border-white transition-all duration-200 flex items-center space-x-2 relative transform hover:translate-y-[-2px] hover:translate-x-[2px] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)] shadow-[6px_6px_0px_0px_rgba(0,0,0,0.6)]">
+              <button className="bg-[#FF8C00] hover:bg-[#E67E00] text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded border border-white transition-all duration-200 flex items-center justify-center space-x-2 relative transform hover:translate-y-[-2px] hover:translate-x-[2px] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)] shadow-[6px_6px_0px_0px_rgba(0,0,0,0.6)] text-sm sm:text-base">
                 <span>Become A Sponsor</span>
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </button>
               {/* Wallet Connect */}
-              <div className="mt-4">
+              <div className="mt-2 sm:mt-4">
                 <CustomConnectButton />
               </div>
             </div>
@@ -246,12 +233,15 @@ export default function HomePageClient() {
 
 
       {/* Picture slideshow section */}
-      <div className='w-full h-[60vh] relative'>
-        <Image src={heroSectionImage} alt='slideshow' fill className='object-cover w-full h-[60vh]' />
+      <div className='w-full h-[40vh] sm:h-[50vh] md:h-[60vh] relative'>
+        <Image src={heroSectionImage} alt='slideshow' fill className='object-cover w-full h-full' />
       </div>
 
       {/* TVL Section */}
       <TVLSection onInvestClick={() => setShowInvest(true)} />
+
+      {/* Trading Section */}
+      <TradingSection />
 
       {/* Speaker Image Section */}
       <div className="relative bg-gray-900 min-h-[500px] flex items-center justify-center">
@@ -281,12 +271,12 @@ export default function HomePageClient() {
       </div>
 
       {/* Event Details Section */}
-      <div className="bg-white py-16 px-6">
+      <div className="bg-white py-8 sm:py-12 md:py-16 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
             EKO CONVENTION CENTRE, LAGOS
           </h2>
-          <h3 className="text-6xl font-black text-gray-900">
+          <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900">
             15TH - 16TH, OCTOBER, 2025
           </h3>
         </div>
@@ -294,17 +284,17 @@ export default function HomePageClient() {
 
       {/* Sponsors Section */}
       <div className="bg-white">
-        <div className="flex">
+        <div className="flex flex-col lg:flex-row">
           {/* Left Panel - Green */}
-          <div className="w-1/3 bg-[#50C878] relative overflow-hidden">
+          <div className="w-full lg:w-1/3 bg-[#50C878] relative overflow-hidden">
             <div className="absolute inset-0 opacity-20">
               <div className="absolute inset-0" style={{
                 backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)',
               }}></div>
             </div>
-            <div className="relative z-10 flex items-center justify-center h-64">
+            <div className="relative z-10 flex items-center justify-center h-32 sm:h-48 lg:h-64 py-8">
               <div className="text-white text-center">
-                <div className="text-6xl font-black leading-tight">
+                <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight">
                   <div>2025</div>
                   <div>SPONSORS</div>
                 </div>
@@ -313,43 +303,43 @@ export default function HomePageClient() {
           </div>
 
           {/* Right Panel - Sponsor Logos */}
-          <div className="w-2/3 bg-white p-8">
-            <div className="flex items-center justify-between h-64">
-              <div className="flex items-center space-x-8">
+          <div className="w-full lg:w-2/3 bg-white p-4 sm:p-6 lg:p-8">
+            <div className="flex flex-wrap items-center justify-center lg:justify-between h-auto lg:h-64 gap-4 sm:gap-6 lg:gap-8">
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 lg:gap-8">
                 {/* Sponsor 1 - ethnos */}
                 <div className="text-center">
-                  <div className="w-24 h-16 bg-red-500 rounded flex items-center justify-center mb-2">
-                    <span className="text-white font-bold text-sm">ethnos</span>
+                  <div className="w-16 h-12 sm:w-20 sm:h-14 lg:w-24 lg:h-16 bg-red-500 rounded flex items-center justify-center mb-2">
+                    <span className="text-white font-bold text-xs sm:text-sm">ethnos</span>
                   </div>
                 </div>
 
                 {/* Sponsor 2 - wimbart */}
                 <div className="text-center">
-                  <div className="w-24 h-16 bg-orange-400 rounded flex items-center justify-center mb-2">
-                    <span className="text-white font-bold text-sm">wimbart</span>
+                  <div className="w-16 h-12 sm:w-20 sm:h-14 lg:w-24 lg:h-16 bg-orange-400 rounded flex items-center justify-center mb-2">
+                    <span className="text-white font-bold text-xs sm:text-sm">wimbart</span>
                   </div>
                 </div>
 
                 {/* Sponsor 3 - MacTAY */}
                 <div className="text-center">
-                  <div className="w-24 h-16 bg-red-600 rounded flex items-center justify-center mb-2">
-                    <span className="text-white font-bold text-sm">MacTAY</span>
+                  <div className="w-16 h-12 sm:w-20 sm:h-14 lg:w-24 lg:h-16 bg-red-600 rounded flex items-center justify-center mb-2">
+                    <span className="text-white font-bold text-xs sm:text-sm">MacTAY</span>
                   </div>
                   <div className="text-xs text-gray-600">...improving performance</div>
                 </div>
 
                 {/* Sponsor 4 - AllON */}
                 <div className="text-center">
-                  <div className="w-24 h-16 bg-orange-500 rounded flex items-center justify-center mb-2">
-                    <span className="text-white font-bold text-sm">AllON</span>
+                  <div className="w-16 h-12 sm:w-20 sm:h-14 lg:w-24 lg:h-16 bg-orange-500 rounded flex items-center justify-center mb-2">
+                    <span className="text-white font-bold text-xs sm:text-sm">AllON</span>
                   </div>
                   <div className="text-xs text-gray-600">Energy innovations. Powerful collaborations.</div>
                 </div>
 
                 {/* Sponsor 5 - Sofri */}
                 <div className="text-center">
-                  <div className="w-24 h-16 bg-green-500 rounded flex items-center justify-center mb-2">
-                    <span className="text-white font-bold text-sm">Sofri</span>
+                  <div className="w-16 h-12 sm:w-20 sm:h-14 lg:w-24 lg:h-16 bg-green-500 rounded flex items-center justify-center mb-2">
+                    <span className="text-white font-bold text-xs sm:text-sm">Sofri</span>
                   </div>
                 </div>
               </div>
@@ -368,7 +358,7 @@ export default function HomePageClient() {
       <ScheduleSection />
 
       {/* Sponsors Section */}
-      <SponsorsSection />
+      {/* <SponsorsSection /> */}
 
       {/* Decorative Footer with CTA */}
       <div className="relative bg-gradient-to-r from-[#6A28D7] to-[#50C878] min-h-[200px] overflow-hidden">

@@ -44,18 +44,18 @@ export default function SpeakersSection() {
   };
 
   return (
-    <div className="bg-white py-8">
+    <div className="bg-white py-4 sm:py-6 md:py-8">
       {/* Marquee Header */}
-      <div className="bg-gray-900 py-4 overflow-hidden mb-8">
+      <div className="bg-gray-900 py-3 sm:py-4 overflow-hidden mb-6 sm:mb-8">
         <div className="flex animate-marquee whitespace-nowrap">
-          <span className="text-4xl font-black text-white italic mx-4">
+          <span className="text-2xl sm:text-3xl md:text-4xl font-black text-white italic mx-2 sm:mx-4">
             SPEAKERS • MEET OUR SPEAKERS • MEET OUR SPEAKERS • MEET OUR SPEAKERS • MEET OUR SPEAKERS •
           </span>
         </div>
       </div>
 
       {/* Speakers Carousel */}
-      <div className="relative bg-[#6A28D7] py-16 px-8">
+      <div className="relative bg-[#6A28D7] py-8 sm:py-12 md:py-16 px-4 sm:px-6 md:px-8">
         {/* Purple Background with Stripes */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
@@ -64,26 +64,26 @@ export default function SpeakersSection() {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto">
-          <div className="grid grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {/* Speaker Cards */}
             {speakers.slice(0, 4).map((speaker, index) => (
               <div key={index} className={speaker.featured ? "col-span-1" : "col-span-1"}>
                 {speaker.featured ? (
                   /* Featured Speaker Card */
-                  <div className="bg-[#6A28D7] text-white p-6 rounded-lg relative">
-                    <div className="mb-4">
-                      <div className="w-full h-48 bg-gray-300 rounded-lg mb-4 flex items-center justify-center">
-                        <span className="text-gray-600">Speaker Photo</span>
+                  <div className="bg-[#6A28D7] text-white p-4 sm:p-6 rounded-lg relative">
+                    <div className="mb-3 sm:mb-4">
+                      <div className="w-full h-32 sm:h-40 md:h-48 bg-gray-300 rounded-lg mb-3 sm:mb-4 flex items-center justify-center">
+                        <span className="text-gray-600 text-sm sm:text-base">Speaker Photo</span>
                       </div>
                     </div>
-                    <h3 className="text-2xl font-bold mb-2">{speaker.name}</h3>
-                    <p className="text-sm mb-4">{speaker.title}</p>
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-2">{speaker.name}</h3>
+                    <p className="text-xs sm:text-sm mb-3 sm:mb-4">{speaker.title}</p>
                     {speaker.tag && (
-                      <div className="bg-yellow-500 text-black px-3 py-1 rounded font-bold text-xs inline-block mb-4">
+                      <div className="bg-yellow-500 text-black px-2 sm:px-3 py-1 rounded font-bold text-xs inline-block mb-3 sm:mb-4">
                         {speaker.tag}
                       </div>
                     )}
-                    <button className="text-white flex items-center space-x-2">
+                    <button className="text-white flex items-center space-x-2 text-sm">
                       <span>↓</span>
                       <span>View Bio</span>
                     </button>
@@ -92,12 +92,12 @@ export default function SpeakersSection() {
                   /* Regular Speaker Card */
                   <div className="bg-white rounded-lg overflow-hidden shadow-lg">
                     <div className="relative">
-                      <div className="w-full h-64 bg-gray-300 flex items-center justify-center">
-                        <span className="text-gray-600">Speaker Photo</span>
+                      <div className="w-full h-40 sm:h-48 md:h-64 bg-gray-300 flex items-center justify-center">
+                        <span className="text-gray-600 text-sm sm:text-base">Speaker Photo</span>
                       </div>
                       {/* Wave Pattern Overlay */}
                       <div className="absolute bottom-0 left-0 right-0">
-                        <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="w-full h-16">
+                        <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="w-full h-12 sm:h-16">
                           {Array.from({ length: 5 }).map((_, i) => (
                             <g key={i}>
                               <path
@@ -110,9 +110,9 @@ export default function SpeakersSection() {
                         </svg>
                       </div>
                     </div>
-                    <div className="bg-[#6A28D7] text-white p-4 text-center">
-                      <h3 className="font-bold text-lg mb-1">{speaker.name}</h3>
-                      <p className="text-xs">{speaker.title}</p>
+                    <div className="bg-[#6A28D7] text-white p-3 sm:p-4 text-center">
+                      <h3 className="font-bold text-sm sm:text-base md:text-lg mb-1">{speaker.name}</h3>
+                      <p className="text-xs sm:text-sm">{speaker.title}</p>
                     </div>
                   </div>
                 )}
@@ -121,23 +121,23 @@ export default function SpeakersSection() {
           </div>
 
           {/* Navigation */}
-          <div className="flex items-center justify-center mt-8 space-x-4">
+          <div className="flex items-center justify-center mt-6 sm:mt-8 space-x-3 sm:space-x-4">
             <button
               onClick={prevSlide}
-              className="bg-[#50C878] hover:bg-[#45B06A] text-white p-3 rounded transition-colors"
+              className="bg-[#50C878] hover:bg-[#45B06A] text-white p-2 sm:p-3 rounded transition-colors"
             >
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
             </button>
 
             {/* Pagination Dots */}
-            <div className="flex space-x-2">
+            <div className="flex space-x-1 sm:space-x-2">
               {speakers.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentSlide(index)}
-                  className={`w-3 h-3 rounded-full transition-colors ${index === currentSlide ? 'bg-yellow-500' : 'bg-gray-400'
+                  className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-colors ${index === currentSlide ? 'bg-yellow-500' : 'bg-gray-400'
                     }`}
                 />
               ))}
@@ -145,9 +145,9 @@ export default function SpeakersSection() {
 
             <button
               onClick={nextSlide}
-              className="bg-[#50C878] hover:bg-[#45B06A] text-white p-3 rounded transition-colors"
+              className="bg-[#50C878] hover:bg-[#45B06A] text-white p-2 sm:p-3 rounded transition-colors"
             >
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
               </svg>
             </button>
@@ -156,15 +156,15 @@ export default function SpeakersSection() {
       </div>
 
       {/* View All Speakers Section */}
-      <div className="relative bg-[#6A28D7] py-8 px-8">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="bg-white rounded px-8 py-4">
-            <button className="text-2xl font-bold text-black hover:text-[#6A28D7] transition-colors">
+      <div className="relative bg-[#6A28D7] py-6 sm:py-8 px-4 sm:px-6 md:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+          <div className="bg-white rounded px-4 sm:px-6 md:px-8 py-3 sm:py-4">
+            <button className="text-lg sm:text-xl md:text-2xl font-bold text-black hover:text-[#6A28D7] transition-colors">
               View all speakers
             </button>
           </div>
-          <button className="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-4 px-8 rounded flex items-center space-x-3 transition-colors">
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+          <button className="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded flex items-center space-x-2 sm:space-x-3 transition-colors text-sm sm:text-base">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 20 20">
               <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4V5h12v10z" />
               <path d="M6 7h8v2H6V7zm0 3h8v2H6v-2z" />
             </svg>

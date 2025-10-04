@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useReadContract } from 'wagmi';
 import MultiContractButton from './buttons/MultiContractButton';
 import { eventId, reventTradingAbi, reventTradingAddress } from '@/contract/abi/contract';
+import { useEventData } from '@/hooks/useEventData';
+import { useWallet } from '@/components/WalletProvider';
 
 interface TVLData {
   totalValue: number;
@@ -11,6 +13,9 @@ interface TVLData {
 }
 
 export default function TVLSection({ onInvestClick }: { onInvestClick: () => void }) {
+  const { address } = useWallet();
+  const { data: eventData, isLoading: eventLoading, error: eventError, refetch: refetchEvent } = useEventData(address || undefined);
+
   const [tvl, setTvl] = useState<TVLData>({
     totalValue: 0,
     lastUpdated: new Date().toISOString()
@@ -70,7 +75,7 @@ export default function TVLSection({ onInvestClick }: { onInvestClick: () => voi
     // refetchInterval: 10000, // Refetch every 10 seconds
     // }
   });
-  console.log(totalInvestedWei);
+
 
   // Fetch ETH price on component mount
   useEffect(() => {
@@ -84,15 +89,18 @@ export default function TVLSection({ onInvestClick }: { onInvestClick: () => voi
 
   // Convert wei to ETH and then to USD, update TVL
   useEffect(() => {
-    if (totalInvestedWei !== undefined && ethPrice > 0) {
-      const totalInvestedEth = Number(totalInvestedWei) / 1e18;
+    // Use event data if available, otherwise fall back to direct contract call
+    const totalInvestedWeiValue = eventData?.totalInvested || totalInvestedWei;
+
+    if (totalInvestedWeiValue !== undefined && ethPrice > 0) {
+      const totalInvestedEth = Number(totalInvestedWeiValue) / 1e18;
       const totalInvestedUsd = totalInvestedEth * ethPrice;
       setTvl({
         totalValue: totalInvestedUsd,
         lastUpdated: new Date().toISOString()
       });
     }
-  }, [totalInvestedWei, ethPrice]);
+  }, [eventData?.totalInvested, totalInvestedWei, ethPrice]);
 
   // Format TVL value with proper formatting
   const formatTVL = (value: number) => {
@@ -105,23 +113,31 @@ export default function TVLSection({ onInvestClick }: { onInvestClick: () => voi
     }
   };
 
+  // Format wei to ETH
+  const formatWeiToEth = (wei: bigint) => {
+    return (Number(wei) / 1e18).toFixed(6);
+  };
+
   return (
-    <div className="bg-[#6A28D7] min-h-screen flex items-center">
-      <div className="max-w-7xl mx-auto w-full">
+    <div className="bg-[#6A28D7] min-h-screen flex items-center py-8">
+      <div className="max-w-7xl mx-auto w-full px-4">
         {/* Main Heading */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center space-x-4">
-            <h2 className="text-4xl font-bold text-white">
+        <div className="text-center mb-8 md:mb-12">
+          <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center">
               TOTAL VALUE INVESTED
             </h2>
             <div className="flex items-center space-x-2">
               <button
-                onClick={() => refetch()}
-                disabled={isLoading}
+                onClick={() => {
+                  refetch();
+                  refetchEvent();
+                }}
+                disabled={isLoading || eventLoading}
                 className="text-white/60 hover:text-white transition-colors"
                 title="Refresh TVL data"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </button>
@@ -131,7 +147,7 @@ export default function TVLSection({ onInvestClick }: { onInvestClick: () => voi
                 className="text-white/60 hover:text-white transition-colors"
                 title="Refresh ETH price"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </button>
@@ -140,25 +156,25 @@ export default function TVLSection({ onInvestClick }: { onInvestClick: () => voi
         </div>
 
         {/* Large TVL Display */}
-        <div className="">
+        <div className="mb-8">
           <div className="text-center">
-            <div className="bg-[#4A1A8A] p-8 shadow-2xl">
-              <div className="text-8xl font-black text-white countdown-display mb-4 font-serif">
-                {isLoading ? (
+            <div className="bg-[#4A1A8A] p-4 sm:p-6 md:p-8 shadow-2xl rounded-lg">
+              <div className="text-4xl sm:text-6xl md:text-8xl font-black text-white countdown-display mb-4 font-serif break-words">
+                {(isLoading || eventLoading) ? (
                   <div className="flex items-center justify-center">
-                    <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
                   </div>
-                ) : error ? (
-                  <div className="text-4xl text-red-300">Error Loading</div>
+                ) : (error || eventError) ? (
+                  <div className="text-2xl sm:text-4xl text-red-300">Error Loading</div>
                 ) : (
                   formatTVL(tvl.totalValue)
                 )}
               </div>
-              <div className="text-2xl text-white/80 font-medium">
+              <div className="text-lg sm:text-xl md:text-2xl text-white/80 font-medium">
                 Total Event Investment (USD)
               </div>
               {!isLoading && !error && (
-                <div className="text-sm text-white/60 mt-2 space-y-1">
+                <div className="text-xs sm:text-sm text-white/60 mt-2 space-y-1">
                   <div>Last updated: {new Date(tvl.lastUpdated).toLocaleTimeString()}</div>
                   <div className="flex items-center justify-center space-x-2">
                     <span>ETH Price: ${ethPrice.toLocaleString()}</span>
@@ -169,13 +185,13 @@ export default function TVLSection({ onInvestClick }: { onInvestClick: () => voi
                 </div>
               )}
               {error && (
-                <div className="text-sm text-red-300 mt-2">
+                <div className="text-xs sm:text-sm text-red-300 mt-2">
                   Failed to load TVL data. Please check your connection.
                 </div>
               )}
               {/* Debug info for development */}
               {process.env.NODE_ENV === 'development' && (
-                <div className="text-xs text-white/40 mt-2 space-y-1">
+                <div className="text-xs text-white/40 mt-2 space-y-1 break-words">
                   <div>Contract: {reventTradingAddress} | Event ID: {eventId}</div>
                   {totalInvestedWei ? (
                     <div>
@@ -190,32 +206,36 @@ export default function TVLSection({ onInvestClick }: { onInvestClick: () => voi
         </div>
 
         {/* Investment CTA */}
-        <div className="text-center px-6 scroll-py-6">
+        <div className="text-center mb-8">
           <button
             onClick={onInvestClick}
-            className="bg-[#50C878] hover:bg-[#45B06A] text-white font-bold py-4 px-12 rounded-lg text-xl transition-colors shadow-lg transform hover:scale-105"
+            className="bg-[#50C878] hover:bg-[#45B06A] text-white font-bold py-3 px-6 sm:py-4 sm:px-12 rounded-lg text-lg sm:text-xl transition-colors shadow-lg transform hover:scale-105 w-full sm:w-auto"
           >
             Invest in Event
           </button>
           {/* <MultiContractButton contracts={[]} /> */}
-          <p className="text-white/70 mt-4 text-lg">
+          <p className="text-white/70 mt-4 text-sm sm:text-lg">
             Join the community and support MOONSHOT 2025
           </p>
         </div>
 
         {/* Additional Info */}
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-          <div className="bg-white/10 rounded-lg p-6">
-            <div className="text-3xl font-bold text-white mb-2">24</div>
-            <div className="text-white/80">Days Remaining</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 text-center">
+          <div className="bg-white/10 rounded-lg p-4 sm:p-6">
+            <div className="text-2xl sm:text-3xl font-bold text-white mb-2">24</div>
+            <div className="text-white/80 text-sm sm:text-base">Days Remaining</div>
           </div>
-          <div className="bg-white/10 rounded-lg p-6">
-            <div className="text-3xl font-bold text-white mb-2">150+</div>
-            <div className="text-white/80">Investors</div>
+          <div className="bg-white/10 rounded-lg p-4 sm:p-6">
+            <div className="text-2xl sm:text-3xl font-bold text-white mb-2">
+              {eventData ? eventData.eventInvestors.length : '0'}
+            </div>
+            <div className="text-white/80 text-sm sm:text-base">Investors</div>
           </div>
-          <div className="bg-white/10 rounded-lg p-6">
-            <div className="text-3xl font-bold text-white mb-2">5.2%</div>
-            <div className="text-white/80">Expected ROI</div>
+          <div className="bg-white/10 rounded-lg p-4 sm:p-6 sm:col-span-2 md:col-span-1">
+            <div className="text-2xl sm:text-3xl font-bold text-white mb-2">
+              {eventData ? formatWeiToEth(eventData.revenueAccrued) : '0'}
+            </div>
+            <div className="text-white/80 text-sm sm:text-base">Revenue Accrued (ETH)</div>
           </div>
         </div>
       </div>
