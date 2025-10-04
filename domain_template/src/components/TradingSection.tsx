@@ -198,7 +198,8 @@ export default function TradingSection() {
               <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Market Momentum</h3>
               <div className="text-center">
                 <div className={`text-2xl sm:text-3xl md:text-4xl font-bold mb-2 ${getMomentumColor(tradingData.momentumFactor)}`}>
-                  {getMomentumIcon(tradingData.momentumFactor)} {formatBasisPoints(tradingData.momentumFactor)}%
+                  {/* {getMomentumIcon(tradingData.momentumFactor)}  */}
+                  {formatBasisPoints(tradingData.momentumFactor)}%
                 </div>
                 <div className="text-white/80 text-sm sm:text-base">Momentum Factor</div>
               </div>
