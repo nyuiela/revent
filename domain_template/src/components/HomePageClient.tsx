@@ -7,9 +7,9 @@ import TradingSection from '@/components/TradingSection';
 import SpeakersSection from '@/components/SpeakersSection';
 import TicketsSection from '@/components/TicketsSection';
 import ScheduleSection from '@/components/ScheduleSection';
-import SponsorsSection from '@/components/SponsorsSection';
+// import SponsorsSection from '@/components/SponsorsSection';
 import InvestModal from '@/components/InvestModal';
-import WalletConnect from '@/components/WalletConnect';
+// import WalletConnect from '@/components/WalletConnect';
 import { useWallet } from '@/components/WalletProvider';
 import { useNotifications } from '@/components/NotificationSystem';
 import heroSectionImage from '../../public/hero-section.png';
@@ -17,9 +17,9 @@ import Image from 'next/image';
 
 // Custom Connect Button Component
 function CustomConnectButton() {
-  const { isConnected, address, connect, disconnect, isLoading } = useWallet();
+  const { isConnected, address, connect, disconnect } = useWallet();
   const { addNotification } = useNotifications();
-  const appKitRef = useRef<HTMLElement>(null);
+  // const appKitRef = useRef<HTMLElement>(null);
 
   const handleConnect = async () => {
     try {
@@ -66,12 +66,7 @@ function CustomConnectButton() {
       try {
         await connect();
       } catch (fallbackError) {
-        addNotification({
-          type: 'error',
-          title: 'Connection Failed',
-          message: 'Please install MetaMask or another Web3 wallet',
-          duration: 5000
-        });
+        console.error('Connection failed:', fallbackError);
       }
     }
   };
@@ -202,7 +197,7 @@ export default function HomePageClient() {
                 <h3 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-moonshot-black text-white mb-2 sm:mb-4">BUILDING</h3>
                 <h3 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-moonshot-black text-white mb-4 sm:mb-6">MOMENTUM</h3>
                 <p className="text-lg sm:text-xl text-white/90 max-w-md mx-auto lg:mx-0">
-                  Africa's tech ecosystem positions itself for its next big leap.
+                  Africa&apos;s tech ecosystem positions itself for its next big leap.
                 </p>
               </div>
             </div>

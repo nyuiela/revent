@@ -41,11 +41,14 @@ const mockMedia: MediaItem[] = [
     price: 0.5,
     accessRights: 'read',
     owner: '0x1234...5678',
+    ownerName: 'John Doe',
     createdAt: Date.now() - 86400000,
     requests: [
       {
         id: 'req1',
+        mediaId: '1',
         requester: '0x9876...5432',
+        requesterName: 'Alice Johnson',
         amount: 0.6,
         accessRights: 'ownership',
         status: 'pending',
@@ -60,6 +63,7 @@ const mockMedia: MediaItem[] = [
     price: 1.2,
     accessRights: 'write',
     owner: '0xabcd...efgh',
+    ownerName: 'Jane Smith',
     createdAt: Date.now() - 172800000,
     requests: []
   }
@@ -227,12 +231,7 @@ export default function PermissionsPage() {
         </div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Permissions Dashboard</h1>
         <div className="flex items-center space-x-4">
-          <WalletConnect
-            onConnect={handleWalletConnect}
-            onDisconnect={handleWalletDisconnect}
-            isConnected={isWalletConnected}
-            address={walletAddress}
-          />
+          <WalletConnect />
           <ThemeToggle />
         </div>
       </div>
@@ -242,8 +241,8 @@ export default function PermissionsPage() {
         <button
           onClick={() => setActiveTab('requests')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'requests'
-              ? 'bg-blue-600 text-white'
-              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            ? 'bg-blue-600 text-white'
+            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
             }`}
         >
           Permission Requests
@@ -251,8 +250,8 @@ export default function PermissionsPage() {
         <button
           onClick={() => setActiveTab('transfers')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'transfers'
-              ? 'bg-blue-600 text-white'
-              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            ? 'bg-blue-600 text-white'
+            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
             }`}
         >
           Ownership Transfers
@@ -313,10 +312,10 @@ export default function PermissionsPage() {
                               )}
                             </div>
                             <span className={`px-2 py-1 text-xs rounded-full ${request.status === 'pending'
-                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                                : request.status === 'approved'
-                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                  : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                              : request.status === 'approved'
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                               }`}>
                               {request.status}
                             </span>

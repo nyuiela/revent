@@ -98,7 +98,7 @@ export default function TicketsSection() {
         <div className="text-center mt-8 sm:mt-10 md:mt-12">
           <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 md:p-8 max-w-2xl mx-auto">
             <h3 className="text-xl sm:text-2xl font-bold text-[#2C3E50] mb-3 sm:mb-4">
-              Ready to Join Africa's Tech Revolution?
+              Ready to Join Africa&apos;s Tech Revolution?
             </h3>
             <p className="text-sm sm:text-base text-gray-700 mb-4 sm:mb-6">
               Choose your pass and be part of the most important tech event in Africa.

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // In-memory storage for TVL (in production, use a database)
-let tvlData = {
+const tvlData = {
   totalValue: 125000, // Starting value
   lastUpdated: new Date().toISOString()
 };

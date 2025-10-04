@@ -25,7 +25,7 @@ interface MediaItem {
 }
 
 // In-memory storage (use database in production)
-let mediaItems: MediaItem[] = [
+const mediaItems: MediaItem[] = [
   {
     id: '1',
     url: '/stream.jpg',

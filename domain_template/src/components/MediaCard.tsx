@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MediaItem, PermissionRequest } from './MediaGrid';
+import Image from 'next/image';
 
 interface MediaCardProps {
   isOpen: boolean;
@@ -12,13 +13,13 @@ interface MediaCardProps {
   onSelectMedia: (media: MediaItem) => void;
 }
 
-export default function MediaCard({ 
-  isOpen, 
-  onClose, 
-  media, 
-  allMedia, 
-  onUpdateMedia, 
-  onSelectMedia 
+export default function MediaCard({
+  isOpen,
+  onClose,
+  media,
+  allMedia,
+  onUpdateMedia,
+  onSelectMedia
 }: MediaCardProps) {
   const [name, setName] = useState(media?.title || '');
   const [price, setPrice] = useState(media?.price || 0);
@@ -79,17 +80,16 @@ export default function MediaCard({
               <div
                 key={item.id}
                 onClick={() => onSelectMedia(item)}
-                className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                  item.id === media.id
-                    ? 'bg-blue-100 dark:bg-blue-900 border-2 border-blue-500'
-                    : 'bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-500'
-                }`}
+                className={`p-3 rounded-lg cursor-pointer transition-colors ${item.id === media.id
+                  ? 'bg-blue-100 dark:bg-blue-900 border-2 border-blue-500'
+                  : 'bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-500'
+                  }`}
               >
                 <div className="aspect-square rounded overflow-hidden mb-2">
                   {item.file?.type.startsWith('video') ? (
                     <video src={item.url} className="w-full h-full object-cover" />
                   ) : (
-                    <img src={item.url} alt={item.title} className="w-full h-full object-cover" />
+                    <Image src={item.url} alt={item.title as string} className="w-full h-full object-cover" />
                   )}
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-300 truncate">
@@ -107,15 +107,15 @@ export default function MediaCard({
         <div className="flex-1 p-4 flex flex-col">
           <div className="flex-1 bg-gray-100 dark:bg-gray-600 rounded-lg overflow-hidden mb-4">
             {media.file?.type.startsWith('video') ? (
-              <video 
-                src={media.url} 
-                controls 
+              <video
+                src={media.url}
+                controls
                 className="w-full h-full object-contain"
               />
             ) : (
-              <img 
-                src={media.url} 
-                alt={media.title} 
+              <Image
+                src={media.url}
+                alt={media.title as string}
                 className="w-full h-full object-contain"
               />
             )}
@@ -145,7 +145,7 @@ export default function MediaCard({
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-600 dark:text-white"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Price (ETH)
@@ -199,13 +199,12 @@ export default function MediaCard({
                       <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         {request.requester}
                       </div>
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        request.status === 'pending' 
-                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                          : request.status === 'approved'
+                      <span className={`px-2 py-1 text-xs rounded-full ${request.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                        : request.status === 'approved'
                           ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                           : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                      }`}>
+                        }`}>
                         {request.status}
                       </span>
                     </div>

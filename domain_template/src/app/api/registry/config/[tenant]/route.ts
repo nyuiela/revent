@@ -67,33 +67,33 @@ Object.entries(exampleConfigs).forEach(([tenant, config]) => {
 
 export async function GET(
   request: Request,
-  { params }: { params: { tenant: string } }
+  { params }: { params: Promise<{ tenant: string }> }
 ) {
-  const { tenant } = params;
-  
+  const { tenant } = await params;
+
   try {
     const config = registry.get(tenant);
-    
+
     if (!config) {
       return new NextResponse(
         JSON.stringify({ error: 'Tenant not found' }),
-        { 
+        {
           status: 404,
           headers: { 'Content-Type': 'application/json' }
         }
       );
     }
-    
+
     return NextResponse.json(config, {
       headers: {
         'Cache-Control': 's-maxage=60, stale-while-revalidate=300',
       }
     });
-    
+
   } catch (error: any) {
     return new NextResponse(
       JSON.stringify({ error: error.message }),
-      { 
+      {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       }
@@ -103,13 +103,13 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { tenant: string } }
+  { params }: { params: Promise<{ tenant: string }> }
 ) {
-  const { tenant } = params;
-  
+  const { tenant } = await params;
+
   try {
     const config = await request.json();
-    
+
     // Validate required fields
     if (!config.owner || !config.chainId) {
       return new NextResponse(
@@ -117,26 +117,26 @@ export async function PUT(
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
-    
+
     // Update config
     const updatedConfig = {
       ...config,
       updatedAt: new Date().toISOString(),
       configSource: 'registry'
     };
-    
+
     registry.set(tenant, updatedConfig);
-    
+
     return NextResponse.json(updatedConfig, {
       headers: {
         'Cache-Control': 'no-cache',
       }
     });
-    
+
   } catch (error: any) {
     return new NextResponse(
       JSON.stringify({ error: error.message }),
-      { 
+      {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       }
@@ -146,29 +146,29 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { tenant: string } }
+  { params }: { params: Promise<{ tenant: string }> }
 ) {
-  const { tenant } = params;
-  
+  const { tenant } = await params;
+
   try {
     const deleted = registry.delete(tenant);
-    
+
     if (!deleted) {
       return new NextResponse(
         JSON.stringify({ error: 'Tenant not found' }),
-        { 
+        {
           status: 404,
           headers: { 'Content-Type': 'application/json' }
         }
       );
     }
-    
+
     return NextResponse.json({ success: true });
-    
+
   } catch (error: any) {
     return new NextResponse(
       JSON.stringify({ error: error.message }),
-      { 
+      {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       }

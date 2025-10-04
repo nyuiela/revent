@@ -141,7 +141,7 @@ export default function SponsorsSection() {
               Become a Sponsor
             </h3>
             <p className="text-sm sm:text-base text-gray-700 mb-4 sm:mb-6">
-              Join Africa's most important tech event and connect with the continent's leading innovators, entrepreneurs, and investors.
+              Join Africa&apos;s most important tech event and connect with the continent&apos;s leading innovators, entrepreneurs, and investors.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <button className="bg-[#FF8C00] hover:bg-[#E67E00] text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-colors text-sm sm:text-base">

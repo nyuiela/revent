@@ -3,16 +3,18 @@
 import { useState } from 'react';
 import { useTradingData } from '@/hooks/useTradingData';
 import { useWallet } from '@/components/WalletProvider';
-import { useEventData } from '@/hooks/useEventData';
+// import { useEventData } from '@/hooks/useEventData';
 import CreateBuyOrderModal from './CreateBuyOrderModal';
+import CreateSellOrderModal from './CreateSellOrderModal';
 
 export default function TradingSection() {
   const { address } = useWallet();
   const { data: tradingData, isLoading, error, refetch } = useTradingData(address || undefined);
-  const { data: eventData } = useEventData(address || undefined);
+  // const { data: eventData } = useEventData(address || undefined);
 
   const [activeTab, setActiveTab] = useState<'pricing' | 'volume' | 'orders'>('pricing');
   const [isCreateBuyOrderModalOpen, setIsCreateBuyOrderModalOpen] = useState(false);
+  const [isCreateSellOrderModalOpen, setIsCreateSellOrderModalOpen] = useState(false);
 
   const formatWeiToEth = (wei: bigint) => {
     return (Number(wei) / 1e18).toFixed(6);
@@ -242,7 +244,10 @@ export default function TradingSection() {
                 >
                   <span>Create Buy Order</span>
                 </button>
-                <button className="w-full bg-[#FF6B6B] hover:bg-[#FF5252] text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 relative transform hover:translate-y-[-2px] hover:translate-x-[2px] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)] shadow-[6px_6px_0px_0px_rgba(0,0,0,0.6)] text-sm sm:text-base">
+                <button
+                  onClick={() => setIsCreateSellOrderModalOpen(true)}
+                  className="w-full bg-[#FF6B6B] hover:bg-[#FF5252] text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 relative transform hover:translate-y-[-2px] hover:translate-x-[2px] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)] shadow-[6px_6px_0px_0px_rgba(0,0,0,0.6)] text-sm sm:text-base"
+                >
                   <span>Create Sell Order</span>
                 </button>
                 <button className="w-full bg-[#6A28D7] hover:bg-[#5A1FA6] text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 relative transform hover:translate-y-[-2px] hover:translate-x-[2px] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)] shadow-[6px_6px_0px_0px_rgba(0,0,0,0.6)] text-sm sm:text-base">
@@ -299,6 +304,12 @@ export default function TradingSection() {
       <CreateBuyOrderModal
         isOpen={isCreateBuyOrderModalOpen}
         onClose={() => setIsCreateBuyOrderModalOpen(false)}
+      />
+
+      {/* Create Sell Order Modal */}
+      <CreateSellOrderModal
+        isOpen={isCreateSellOrderModalOpen}
+        onClose={() => setIsCreateSellOrderModalOpen(false)}
       />
     </div>
   );

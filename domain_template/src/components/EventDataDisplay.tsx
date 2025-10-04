@@ -5,7 +5,7 @@ import { useWallet } from '@/components/WalletProvider';
 
 export default function EventDataDisplay() {
   const { address } = useWallet();
-  const { data, isLoading, error, refetch } = useEventData(address);
+  const { data, isLoading, error, refetch } = useEventData(address || undefined);
 
   if (isLoading) {
     return (

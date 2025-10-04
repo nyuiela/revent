@@ -247,7 +247,7 @@ export default function DashboardPage() {
       {/* Show message when no data is available */}
       {!isLoading && !error && data && data.names.items.length === 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-          <p className="text-blue-600">No domain data available. This is normal if you haven't created any domains yet.</p>
+          <p className="text-blue-600">No domain data available. This is normal if you haven&apos;t created any domains yet.</p>
         </div>
       )}
       {/* {data && (

@@ -7,10 +7,11 @@ import MultiContractButton from './buttons/MultiContractButton';
 import { eventId, reventTradingAbi, reventTradingAddress } from '@/contract/abi/contract';
 import { parseEther } from 'viem';
 
-export default function CreateBuyOrderModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export default function CreateSellOrderModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { isConnected, address } = useWallet();
 
   // State for order parameters
+  const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [currency, setCurrency] = useState('0x0000000000000000000000000000000000000001'); // ETH address
   const [expirationTime, setExpirationTime] = useState('');
@@ -139,6 +140,11 @@ export default function CreateBuyOrderModal({ isOpen, onClose }: { isOpen: boole
     return (parseFloat(maxPrice) * ethPrice).toFixed(2);
   };
 
+  const calculateMinPriceUsd = () => {
+    if (!minPrice) return '0';
+    return (parseFloat(minPrice) * ethPrice).toFixed(2);
+  };
+
   const calculateExpirationTimestamp = () => {
     if (!expirationTime) return 0;
     const now = Math.floor(Date.now() / 1000);
@@ -157,7 +163,7 @@ export default function CreateBuyOrderModal({ isOpen, onClose }: { isOpen: boole
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl relative overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">Create Buy Order</h2>
+          <h2 className="text-xl font-bold text-gray-900">Create Sell Order</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -171,6 +177,32 @@ export default function CreateBuyOrderModal({ isOpen, onClose }: { isOpen: boole
 
         {/* Main Content */}
         <div className="p-6">
+          {/* Min Price Input */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Minimum Price ({isEthCurrency ? 'ETH' : 'USD'})
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                min="0"
+                step={isEthCurrency ? "0.000001" : "0.01"}
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+                className="w-full px-4 py-3 text-lg font-medium text-gray-900 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="0.00"
+              />
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                <span className="text-gray-500 font-medium">{isEthCurrency ? 'ETH' : 'USD'}</span>
+              </div>
+            </div>
+            <div className="text-sm text-gray-600 mt-1">
+              {isEthCurrency
+                ? `≈ $${calculateMinPriceUsd()} USD`
+                : `≈ ${minPrice ? (parseFloat(minPrice) / ethPrice).toFixed(6) : '0'} ETH`
+              }
+            </div>
+          </div>
 
           {/* Max Price Input */}
           <div className="mb-4">
@@ -313,7 +345,14 @@ export default function CreateBuyOrderModal({ isOpen, onClose }: { isOpen: boole
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                 </svg>
               </div>
-              <span className="text-sm font-medium text-gray-900">Buy Order</span>
+              <span className="text-sm font-medium text-gray-900">Sell Order</span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Minimum Price</span>
+              <span className="text-sm font-medium text-gray-900">
+                {minPrice || '0'} {isEthCurrency ? 'ETH' : 'USD'}
+              </span>
             </div>
 
             <div className="flex items-center justify-between">
@@ -326,7 +365,7 @@ export default function CreateBuyOrderModal({ isOpen, onClose }: { isOpen: boole
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Currency</span>
               <span className="text-sm font-medium text-gray-900">
-                {currency === '0x0000000000000000000000000000000000000000' ? 'ETH' : 'USDC'}
+                {currency === '0x0000000000000000000000000000000000000001' ? 'ETH' : 'USDC'}
               </span>
             </div>
 
@@ -348,23 +387,26 @@ export default function CreateBuyOrderModal({ isOpen, onClose }: { isOpen: boole
             </div>
           </div> */}
 
-          {/* MultiContractButton for creating buy order */}
+          {/* MultiContractButton for creating sell order */}
           <MultiContractButton
             contracts={
               maxPrice && parseFloat(maxPrice) > 0 ? [
                 {
                   address: reventTradingAddress as `0x${string}`,
                   abi: reventTradingAbi as any,
-                  functionName: 'createBuyOrder',
+                  functionName: 'createSellOrder',
                   args: [
                     eventId,
+                    isEthCurrency
+                      ? parseEther(minPrice || '0')
+                      : parseEther((parseFloat(minPrice || '0') / ethPrice).toString()),
                     isEthCurrency
                       ? parseEther(maxPrice)
                       : parseEther((parseFloat(maxPrice) / ethPrice).toString()),
                     currency as `0x${string}`,
                     expirationTime ? calculateExpirationTimestamp() : 0
                   ],
-                  value: isEthCurrency ? parseEther(maxPrice) : BigInt(0),
+                  value: BigInt(0), // Sell orders don't require ETH value
                 }
               ] : []
             }
@@ -372,7 +414,7 @@ export default function CreateBuyOrderModal({ isOpen, onClose }: { isOpen: boole
             idleLabel={
               !maxPrice
                 ? 'Enter maximum price'
-                : `Create Buy Order - ${maxPrice} ${isEthCurrency ? 'ETH' : 'USD'}`
+                : `Create Sell Order - ${minPrice || '0'} to ${maxPrice} ${isEthCurrency ? 'ETH' : 'USD'}`
             }
           />
         </div>

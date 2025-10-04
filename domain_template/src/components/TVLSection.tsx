@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useReadContract } from 'wagmi';
-import MultiContractButton from './buttons/MultiContractButton';
+// import MultiContractButton from './buttons/MultiContractButton';
 import { eventId, reventTradingAbi, reventTradingAddress } from '@/contract/abi/contract';
 import { useEventData } from '@/hooks/useEventData';
 import { useWallet } from '@/components/WalletProvider';

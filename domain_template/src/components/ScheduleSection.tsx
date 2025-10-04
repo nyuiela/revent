@@ -1,4 +1,4 @@
-import CountdownSection from '@/components/CountdownSection';
+// import CountdownSection from '@/components/CountdownSection';
 
 export default function ScheduleSection() {
   const scheduleData = [

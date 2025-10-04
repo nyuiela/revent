@@ -61,11 +61,11 @@ export default function MediaGrid({
       hour: '2-digit',
       minute: '2-digit'
     });
-    
+
     const fileType = file.type.startsWith('video') ? 'Video' : 'Image';
     const quality = file.size > 5 * 1024 * 1024 ? 'HD' : file.size > 1 * 1024 * 1024 ? 'SD' : 'Low';
     const randomId = Math.random().toString(36).substring(2, 8);
-    
+
     return `${fileType}_${quality}_${timestamp.replace(/[^\w\s]/g, '')}_${randomId}`;
   };
 
@@ -77,10 +77,10 @@ export default function MediaGrid({
       const file = files.item(i)!;
       const objectUrl = URL.createObjectURL(file);
       const intelligentName = generateIntelligentName(file);
-      added.push({ 
-        id: `${Date.now()}-${i}-${file.name}`, 
-        url: objectUrl, 
-        file, 
+      added.push({
+        id: `${Date.now()}-${i}-${file.name}`,
+        url: objectUrl,
+        file,
         objectUrl,
         title: intelligentName,
         price: 0,
@@ -111,7 +111,7 @@ export default function MediaGrid({
   };
 
   const handleUpdateMedia = (updatedMedia: MediaItem) => {
-    const updatedItems = items.map(item => 
+    const updatedItems = items.map(item =>
       item.id === updatedMedia.id ? updatedMedia : item
     );
     updateItems(updatedItems);
@@ -172,17 +172,17 @@ export default function MediaGrid({
             >
               <div className="aspect-square overflow-hidden">
                 {m.file && m.file.type.startsWith("video") ? (
-                  <video 
-                    src={m.url} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" 
+                  <video
+                    src={m.url}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                   />
                 ) : (
-                  <Image 
-                    src={m.url} 
-                    alt={m.title || 'Media item'} 
+                  <Image
+                    src={m.url}
+                    alt={m.title || 'Media item'}
                     width={100}
                     height={100}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                   />
                 )}
               </div>
@@ -238,7 +238,7 @@ export default function MediaGrid({
               {preview.file && preview.file.type.startsWith("video") ? (
                 <video src={preview.url} controls style={{ width: "100%", maxHeight: 520, display: "block" }} />
               ) : (
-                <img src={preview.url} alt={preview.title ?? "preview"} style={{ width: "100%", height: "auto", display: "block" }} />
+                <Image src={preview.url} alt={preview.title as string} style={{ width: "100%", height: "auto", display: "block" }} width={100} height={100} />
               )}
             </div>
             <div style={{ padding: 12, borderTop: "1px solid #e5e7eb", display: "flex", gap: 8, justifyContent: "flex-end" }}>

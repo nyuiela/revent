@@ -86,25 +86,25 @@ export function useTradingData(userAddress?: string) {
   // Process the data into a structured format
   const processedData: TradingData | null = data ? {
     // Price Manager Data
-    basePrice: data[0]?.result?.[0] as bigint || BigInt(0),
-    currentMultiplier: data[0]?.result?.[1] as bigint || BigInt(0),
-    currentPrice: data[0]?.result?.[2] as bigint || BigInt(0),
-    totalValue: data[0]?.result?.[3] as bigint || BigInt(0),
-    shareSupply: data[0]?.result?.[4] as bigint || BigInt(0),
+    basePrice: (data as any)[0]?.result?.[0] as bigint || BigInt(0),
+    currentMultiplier: (data as any)[0]?.result?.[1] as bigint || BigInt(0),
+    currentPrice: (data as any)[0]?.result?.[2] as bigint || BigInt(0),
+    totalValue: (data as any)[0]?.result?.[3] as bigint || BigInt(0),
+    shareSupply: (data as any)[0]?.result?.[4] as bigint || BigInt(0),
 
     // Volume Manager Data
-    totalVolume: data[1]?.result?.[0] as bigint || BigInt(0),
-    buyVolume: data[1]?.result?.[1] as bigint || BigInt(0),
-    sellVolume: data[1]?.result?.[2] as bigint || BigInt(0),
-    momentumFactor: data[1]?.result?.[3] as bigint || BigInt(0),
-    buyRatio: data[1]?.result?.[4] as bigint || BigInt(0),
-    sellRatio: data[1]?.result?.[5] as bigint || BigInt(0),
+    totalVolume: (data as any)[1]?.result?.[0] as bigint || BigInt(0),
+    buyVolume: (data as any)[1]?.result?.[1] as bigint || BigInt(0),
+    sellVolume: (data as any)[1]?.result?.[2] as bigint || BigInt(0),
+    momentumFactor: (data as any)[1]?.result?.[3] as bigint || BigInt(0),
+    buyRatio: (data as any)[1]?.result?.[4] as bigint || BigInt(0),
+    sellRatio: (data as any)[1]?.result?.[5] as bigint || BigInt(0),
 
     // Order Manager Data
-    activeBuyOrders: data[2]?.result as bigint[] || [],
-    activeSellOrders: data[3]?.result as bigint[] || [],
-    eventOrders: data[4]?.result as bigint[] || [],
-    userOrders: userAddress ? (data[5]?.result as bigint[] || []) : [],
+    activeBuyOrders: (data as any)[2]?.result as bigint[] || [],
+    activeSellOrders: (data as any)[3]?.result as bigint[] || [],
+    eventOrders: (data as any)[4]?.result as bigint[] || [],
+    userOrders: userAddress ? ((data as any)[5]?.result as bigint[] || []) : [],
   } : null;
 
   return {
