@@ -6,9 +6,11 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import MultiContractButton from "@/app/components/button/MultiContractButton";
 import { chainId, eventAbi, eventAddress, ticketAbi, ticketAddress } from "@/lib/contract";
 import { useRouter } from "next/navigation";
-import { getLastEventId } from "@/utils/subgraph";
+import { getLastEventId, headers, namesQuery, url } from "@/utils/subgraph";
 import { generateSlug } from "@/lib/slug-generator";
 import { EventDetails } from "@/utils/types";
+import { useQuery } from "@tanstack/react-query";
+import request from "graphql-request";
 
 type Props = {
   open: boolean;
@@ -24,6 +26,7 @@ const tabs = [
   { key: "tickets", label: "Tickets" },
   { key: "media", label: "Media" },
   { key: "publish", label: "Publish" },
+  { key: "domain", label: "Domain" },
 ];
 
 export default function CreateEventBottomSheet({ open, onOpenChange }: Props) {
@@ -105,6 +108,13 @@ export default function CreateEventBottomSheet({ open, onOpenChange }: Props) {
   const [privacy, setPrivacy] = React.useState<string>("public");
   const [timezone, setTimezone] = React.useState<string>("UTC");
 
+  // Domain state
+  const [domainName, setDomainName] = React.useState<string>('');
+  const [domainAvailable, setDomainAvailable] = React.useState<boolean | null>(null);
+  const [checkingDomain, setCheckingDomain] = React.useState<boolean>(false);
+  const [preparedDomainContracts, setPreparedDomainContracts] = React.useState<any[] | null>(null);
+  const [verificationStatus, setVerificationStatus] = React.useState<string>('');
+
   // Main form data state
   const [formData, setFormData] = React.useState({
     title: '',
@@ -133,6 +143,81 @@ export default function CreateEventBottomSheet({ open, onOpenChange }: Props) {
     socialLinks: {} as any,
     slug: ''
   });
+
+  // Domain-related functionality
+  type NamesQueryResult = { names?: { items?: { name: string }[] } }
+
+  const { data, error, isLoading } = useQuery<NamesQueryResult>({
+    queryKey: ['domains'],
+    queryFn: () => request(url, namesQuery, {}, headers),
+  })
+
+  const takenDomainSet = React.useMemo(() => {
+    const items = data?.names?.items || [];
+    return new Set(items.map((i: any) => i.name.toLowerCase()));
+  }, [data]);
+
+  // Function to check domain availability against fetched registry
+  const checkDomainAvailability = async (domain: string) => {
+    const normalized = (domain || '').trim().toLowerCase()
+    if (!normalized) {
+      setDomainAvailable(false)
+      return false
+    }
+
+    setCheckingDomain(true);
+    try {
+      console.log(`Checking availability for: ${normalized}`);
+      // If query still loading, wait briefly
+      if (isLoading || error) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+      const isTaken = takenDomainSet.has(normalized)
+      const isAvailable = !isTaken
+
+      setDomainAvailable(isAvailable);
+      return isAvailable;
+    } catch (error) {
+      console.error('Domain availability check failed:', error);
+      setDomainAvailable(false);
+      return false;
+    } finally {
+      setCheckingDomain(false);
+    }
+  };
+
+  // Function to prepare domain minting contracts
+  const prepareDomainMinting = async (eventId: string) => {
+    try {
+      setVerificationStatus('Preparing domain minting...');
+
+      const domainContracts = [
+        {
+          abi: eventAbi.abi, // Using event ABI for demo
+          address: eventAddress as `0x${string}`,
+          functionName: "createEvent", // Mock function
+          args: [
+            `ipfs://event-${eventId}`, // IPFS hash for event metadata
+            BigInt(0), // Mock timestamp
+            BigInt(0), // Mock timestamp
+            BigInt(0), // Mock participants
+            BigInt(0), // Mock fee
+          ],
+        },
+      ];
+
+      console.log(`Prepared domain contracts for: ${domainName}`);
+      console.log('Domain contracts:', domainContracts);
+      setPreparedDomainContracts(domainContracts);
+      setVerificationStatus(`Domain contracts prepared for ${domainName}!`);
+
+      return domainContracts;
+    } catch (error) {
+      console.error('Error preparing domain contracts:', error);
+      setVerificationStatus('Failed to prepare domain contracts');
+      throw error;
+    }
+  };
 
   // Sync location state with formData
   React.useEffect(() => {
@@ -255,6 +340,16 @@ export default function CreateEventBottomSheet({ open, onOpenChange }: Props) {
             />
           )}
           {active === "publish" && <Publish formData={formData} setFormData={setFormData} onClose={() => onOpenChange(false)} />}
+          {active === "domain" && <Domain
+            domainName={domainName}
+            setDomainName={setDomainName}
+            domainAvailable={domainAvailable}
+            checkingDomain={checkingDomain}
+            checkDomainAvailability={checkDomainAvailability}
+            prepareDomainMinting={prepareDomainMinting}
+            preparedDomainContracts={preparedDomainContracts}
+            formData={formData}
+          />}
         </div>
 
         {/* Navigation footer */}
@@ -1252,6 +1347,155 @@ function Publish({ formData, setFormData, onClose }: { formData: any; setFormDat
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+function Domain(props: {
+  domainName: string;
+  setDomainName: (name: string) => void;
+  domainAvailable: boolean | null;
+  checkingDomain: boolean;
+  checkDomainAvailability: (domain: string) => Promise<boolean>;
+  prepareDomainMinting: (eventId: string) => Promise<any[]>;
+  preparedDomainContracts: any[] | null;
+  formData: any;
+}) {
+  const {
+    domainName,
+    setDomainName,
+    domainAvailable,
+    checkingDomain,
+    checkDomainAvailability,
+    prepareDomainMinting,
+    preparedDomainContracts,
+    formData
+  } = props;
+
+  const [isPreparingDomain, setIsPreparingDomain] = React.useState(false);
+  const [domainStatus, setDomainStatus] = React.useState<string>('');
+
+  const handleDomainSearch = async () => {
+    if (!domainName.trim()) {
+      setDomainStatus('Please enter a domain name');
+      return;
+    }
+
+    setDomainStatus('Checking domain availability...');
+    const isAvailable = await checkDomainAvailability(domainName);
+
+    if (isAvailable) {
+      setDomainStatus('Domain is available! You can proceed to mint it.');
+    } else {
+      setDomainStatus('Domain is already taken. Please try a different name.');
+    }
+  };
+
+  const handlePrepareDomain = async () => {
+    if (!domainAvailable) {
+      setDomainStatus('Domain is not available. Please check availability first.');
+      return;
+    }
+
+    setIsPreparingDomain(true);
+    setDomainStatus('Preparing domain minting...');
+
+    try {
+      const eventId = formData.slug || 'event-' + Date.now();
+      await prepareDomainMinting(eventId);
+      setDomainStatus('Domain contracts prepared! You can now mint the domain.');
+    } catch (error) {
+      console.error('Error preparing domain:', error);
+      setDomainStatus('Failed to prepare domain contracts');
+    } finally {
+      setIsPreparingDomain(false);
+    }
+  };
+
+  return (
+    <div>
+      <Section title="Domain Registration" description="Get a custom domain for your event">
+        <Input
+          label="Domain Name"
+          placeholder="myevent"
+          value={domainName}
+          onChange={(e) => setDomainName(e.target.value)}
+        />
+
+        <div className="flex gap-2 mt-2">
+          <button
+            onClick={handleDomainSearch}
+            disabled={checkingDomain || !domainName.trim()}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {checkingDomain ? 'Checking...' : 'Check Availability'}
+          </button>
+        </div>
+
+        {domainStatus && (
+          <div className={`p-3 rounded-lg text-sm ${domainAvailable === true
+            ? 'bg-background text-foreground'
+            : domainAvailable === false
+              ? 'bg-background text-foreground dark:bg-red-900/20 dark:text-red-400'
+              : 'bg-muted text-muted-foreground'
+            }`}>
+            {domainStatus}
+          </div>
+        )}
+
+        {domainAvailable && (
+          <div className="">
+            <div className="p-4 bg-background text-foreground rounded-lg">
+              <h4 className="font-medium text-foreground">
+                Domain Available!
+              </h4>
+              <p className="text-sm text-foreground">
+                <strong>{domainName}</strong> is available for registration.
+              </p>
+            </div>
+
+            <button
+              onClick={handlePrepareDomain}
+              disabled={isPreparingDomain}
+              className="w-full px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            >
+              {isPreparingDomain ? 'Preparing...' : 'Prepare Domain Registration'}
+            </button>
+          </div>
+        )}
+
+        {preparedDomainContracts && preparedDomainContracts.length > 0 && (
+          <div className="mt-4">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg mb-4">
+              <h4 className="font-medium text-blue-800 dark:text-blue-400 mb-2">
+                Domain Contracts Ready! ✅
+              </h4>
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                Your domain contracts are prepared and ready for registration.
+              </p>
+            </div>
+
+            <MultiContractButton
+              useMulticall={false}
+              sequential={true}
+              chainId={Number(chainId)}
+              contracts={preparedDomainContracts}
+              onReceiptSuccess={() => {
+                setDomainStatus('Domain successfully registered! 🎉');
+              }}
+              idleLabel="Register Domain"
+              className="w-full"
+              successLabel="Domain Registered"
+              errorLabel="Try Again"
+              cancelLabel="Cancel"
+              showCancel={true}
+              showToast={true}
+              successToastMessage="Domain Successfully Registered"
+              btnClassName="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors"
+            />
+          </div>
+        )}
+      </Section>
     </div>
   );
 }

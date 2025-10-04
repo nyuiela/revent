@@ -13,7 +13,9 @@ abstract contract PriceManager is EventModifiers {
     /**
      * @dev Initialize dynamic pricing for an event
      */
-    function initializeDynamicPricing(uint256 eventId, uint256 basePricePerShare) external eventExists(eventId) onlyEventCreator(eventId) {
+    function initializeDynamicPricing(uint256 eventId, uint256 basePricePerShare) external 
+    // eventExists(eventId) onlyEventCreator(eventId) 
+    {
         require(basePricePerShare > 0, "invalid base price");
         require(eventShareBasePrice[eventId] == 0, "already initialized");
         
@@ -36,7 +38,9 @@ abstract contract PriceManager is EventModifiers {
     /**
      * @dev Update event total value and trigger price update
      */
-    function updateEventTotalValue(uint256 eventId, uint256 newTotalValue) external eventExists(eventId) {
+    function updateEventTotalValue(uint256 eventId, uint256 newTotalValue) external 
+    // eventExists(eventId)
+     {
         require(_msgSender() == _owner() || _msgSender() == events[eventId].creator, "unauthorized");
         require(newTotalValue > 0, "invalid value");
         

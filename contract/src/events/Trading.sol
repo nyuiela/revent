@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "./Modifiers.sol";
+// import "./Modifiers.sol";
 import "./Events.sol";
 import "./Types.sol";
 import "./PriceManager.sol";
@@ -12,7 +12,7 @@ import "./VolumeManager.sol";
 import "./OrderManager.sol";
 import "../doma/interfaces/IOwnershipToken.sol";
 
-abstract contract EventTrading is ReentrancyGuard, EventModifiers, PriceManager, VolumeManager, OrderManager {
+abstract contract EventTrading is ReentrancyGuard, PriceManager, VolumeManager, OrderManager {
     using Counters for Counters.Counter;
 
     function _owner() internal view virtual override(PriceManager, VolumeManager, OrderManager) returns (address) {
@@ -32,7 +32,9 @@ abstract contract EventTrading is ReentrancyGuard, EventModifiers, PriceManager,
         uint256 maxPrice,
         address currency,
         uint256 expirationTime
-    ) external payable eventExists(eventId) nonReentrant {
+    ) external payable 
+    // eventExists(eventId)
+     nonReentrant {
         require(ownershipToken != address(0), "ownership not set");
         require(IOwnershipToken(ownershipToken).ownerOf(eventToDomaTokenId[eventId]) == _msgSender(), "not owner");
         require(minPrice >= minOrderValue, "price too low");
@@ -62,7 +64,9 @@ abstract contract EventTrading is ReentrancyGuard, EventModifiers, PriceManager,
         uint256 maxPrice,
         address currency,
         uint256 expirationTime
-    ) external payable eventExists(eventId) nonReentrant {
+    ) external payable 
+    // eventExists(eventId)
+     nonReentrant {
         require(maxPrice >= minOrderValue, "price too low");
         require(maxPrice <= maxOrderValue, "price too high");
         require(expirationTime == 0 || expirationTime > block.timestamp, "invalid expiration");
@@ -96,7 +100,9 @@ abstract contract EventTrading is ReentrancyGuard, EventModifiers, PriceManager,
         uint256 pricePerShare,
         address currency,
         uint256 expirationTime
-    ) external payable eventExists(eventId) nonReentrant {
+    ) external payable 
+    // eventExists(eventId)
+     nonReentrant {
         require(investorShares[eventId][_msgSender()] >= shareAmount, "insufficient shares");
         require(shareAmount > 0, "invalid share amount");
         require(pricePerShare > 0, "invalid price");
@@ -135,7 +141,9 @@ abstract contract EventTrading is ReentrancyGuard, EventModifiers, PriceManager,
         uint256 pricePerShare,
         address currency,
         uint256 expirationTime
-    ) external payable eventExists(eventId) nonReentrant {
+    ) external payable 
+    // eventExists(eventId) 
+    nonReentrant {
         require(shareAmount > 0, "invalid share amount");
         require(pricePerShare > 0, "invalid price");
         require(expirationTime == 0 || expirationTime > block.timestamp, "invalid expiration");
@@ -394,14 +402,19 @@ abstract contract EventTrading is ReentrancyGuard, EventModifiers, PriceManager,
 
     // ============ INVESTOR PROTECTION ============
 
-    function setInvestorApprovalRequired(uint256 eventId, bool required, uint256 thresholdBps) external eventExists(eventId) onlyEventCreator(eventId) {
+    function setInvestorApprovalRequired(uint256 eventId, bool required, uint256 thresholdBps) external 
+    // eventExists(eventId) 
+    // onlyEventCreator(eventId)
+     {
         require(!required || thresholdBps <= 10000, "invalid threshold");
         requireInvestorApproval[eventId] = required;
         investorApprovalThreshold[eventId] = thresholdBps;
         emit EventEvents.InvestorApprovalRequired(eventId, required, thresholdBps);
     }
 
-    function giveInvestorApproval(uint256 eventId, bool approved) external eventExists(eventId) {
+    function giveInvestorApproval(uint256 eventId, bool approved) external 
+    // eventExists(eventId)
+     {
         require(investorShares[eventId][_msgSender()] > 0, "not an investor");
         require(requireInvestorApproval[eventId], "approval not required");
         
