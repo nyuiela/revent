@@ -6,6 +6,7 @@ import { useWallet } from '@/components/WalletProvider';
 // import { useEventData } from '@/hooks/useEventData';
 import CreateBuyOrderModal from './CreateBuyOrderModal';
 import CreateSellOrderModal from './CreateSellOrderModal';
+import CreateInvestorShareSellOrderModal from './CreateInvestorShareSellOrderModal';
 
 export default function TradingSection() {
   const { address } = useWallet();
@@ -15,6 +16,7 @@ export default function TradingSection() {
   const [activeTab, setActiveTab] = useState<'pricing' | 'volume' | 'orders'>('pricing');
   const [isCreateBuyOrderModalOpen, setIsCreateBuyOrderModalOpen] = useState(false);
   const [isCreateSellOrderModalOpen, setIsCreateSellOrderModalOpen] = useState(false);
+  const [isCreateInvestorShareSellOrderModalOpen, setIsCreateInvestorShareSellOrderModalOpen] = useState(false);
 
   const formatWeiToEth = (wei: bigint) => {
     return (Number(wei) / 1e18).toFixed(6);
@@ -251,6 +253,12 @@ export default function TradingSection() {
                 >
                   <span>Create Sell Order</span>
                 </button>
+                <button
+                  onClick={() => setIsCreateInvestorShareSellOrderModalOpen(true)}
+                  className="w-full bg-[#FF8C00] hover:bg-[#FF7A00] text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 relative transform hover:translate-y-[-2px] hover:translate-x-[2px] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)] shadow-[6px_6px_0px_0px_rgba(0,0,0,0.6)] text-sm sm:text-base"
+                >
+                  <span>Sell Investor Shares</span>
+                </button>
                 <button className="w-full bg-[#6A28D7] hover:bg-[#5A1FA6] text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 relative transform hover:translate-y-[-2px] hover:translate-x-[2px] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)] shadow-[6px_6px_0px_0px_rgba(0,0,0,0.6)] text-sm sm:text-base">
                   <span>View All Orders</span>
                 </button>
@@ -311,6 +319,12 @@ export default function TradingSection() {
       <CreateSellOrderModal
         isOpen={isCreateSellOrderModalOpen}
         onClose={() => setIsCreateSellOrderModalOpen(false)}
+      />
+
+      {/* Create Investor Share Sell Order Modal */}
+      <CreateInvestorShareSellOrderModal
+        isOpen={isCreateInvestorShareSellOrderModalOpen}
+        onClose={() => setIsCreateInvestorShareSellOrderModalOpen(false)}
       />
     </div>
   );
