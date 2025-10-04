@@ -1,8 +1,8 @@
-# REVENT
+# Revent
+<img width="5464" height="3072" alt="revent-board-1-2@4x" src="https://github.com/user-attachments/assets/69bf45c0-44c7-43c7-845c-c6d6dd24b3cc" />
 
 REVENT transforms events into investable digital economies by leveraging the **DOMA Protocol**, smart contracts, and decentralized storage. This repository contains the contracts, frontend applications, domain templates, and subgraph indexing setup for the REVENT ecosystem.
 
----
 
 ## Repository Structure
 
@@ -13,14 +13,12 @@ REVENT transforms events into investable digital economies by leveraging the **D
 /graph            # The Graph subgraph configuration
 ```
 
----
 
 ## Deployed Contracts (Base Sepolia)
 
 - **ReventTrading**: `0xD9EA83c725F9Bfafc452de4Ca907A8280E7d802B`
 - **Events Contract**: `0x0A46eB850A04D1B1a6A1385307a23cB9f4f08C70`
 
----
 
 ## Environment Variables
 
@@ -36,7 +34,6 @@ OWNERSHIP_TOKEN=0x2f45DfC5f4c9473fa72aBdFbd223d0979B265046
 DOMA_PROXY=0xa40aA710F0C77DF3De6CEe7493d1FfF3715D59Da
 ```
 
----
 
 ## Setup Instructions
 
