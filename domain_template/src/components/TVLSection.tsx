@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import MultiContractButton from './buttons/MultiContractButton';
 
 interface TVLData {
   totalValue: number;
@@ -32,10 +33,10 @@ export default function TVLSection({ onInvestClick }: { onInvestClick: () => voi
   // Set up polling for real-time updates
   useEffect(() => {
     fetchTVL();
-    
+
     // Poll every 5 seconds for updates
     const interval = setInterval(fetchTVL, 5000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -82,6 +83,7 @@ export default function TVLSection({ onInvestClick }: { onInvestClick: () => voi
           >
             Invest in Event
           </button>
+          {/* <MultiContractButton contracts={[]} /> */}
           <p className="text-white/70 mt-4 text-lg">
             Join the community and support MOONSHOT 2025
           </p>

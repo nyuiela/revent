@@ -94,7 +94,11 @@ export default function HomePageClient() {
               </button>
               {/* Wallet Connect */}
               <div className="mt-4">
-                <WalletConnect />
+                {/* <WalletConnect /> */}
+                <appkit-button
+                  label="Connect Wallet"
+                  size="lg"
+                />
               </div>
             </div>
           </div>
@@ -243,8 +247,8 @@ export default function HomePageClient() {
       </div>
 
       {/* Invest Modal */}
-      <InvestModal 
-        isOpen={showInvest} 
+      <InvestModal
+        isOpen={showInvest}
         onClose={() => setShowInvest(false)}
       />
     </div>

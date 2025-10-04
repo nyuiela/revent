@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { useUser } from '@/contexts/UserContext';
+import { useUser } from '@/context/UserContext';
 
 interface UserLoginProps {
   onClose: () => void;
@@ -29,9 +29,9 @@ export default function UserLogin({ onClose }: UserLoginProps) {
         >
           ✕
         </button>
-        
+
         <h2 className="text-xl font-semibold mb-4">Enter Your Name</h2>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

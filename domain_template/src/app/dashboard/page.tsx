@@ -7,7 +7,7 @@ import MediaGrid, { MediaItem } from "@/components/MediaGrid";
 import ThemeToggle from "@/components/ThemeToggle";
 import UserLogin from "@/components/UserLogin";
 import BridgeModal from "@/components/BridgeModal";
-import { useUser } from "@/contexts/UserContext";
+import { useUser } from "@/context/UserContext";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import PixelBlastBackground from "@/components/PixelBlastBackground";
@@ -235,15 +235,15 @@ export default function DashboardPage() {
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
           <p className="text-red-600">Failed to load domain data: {error.message}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
           >
             Retry
           </button>
         </div>
       )}
-      
+
       {/* Show message when no data is available */}
       {!isLoading && !error && data && data.names.items.length === 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
@@ -335,7 +335,7 @@ export default function DashboardPage() {
           <div className="flex gap-2">
             <button className="px-2.5 py-1.5 border cursor-pointer hover:bg-gray-100 hover:text-gray-900 border-gray-200 rounded-md">
               <Link href="/permissions">Permission Trade</Link>
-              </button>
+            </button>
             <button className="px-2.5 py-1.5 border cursor-pointer hover:bg-gray-100 hover:text-gray-900 border-gray-200 rounded-md">Buy</button>
           </div>
         </div>

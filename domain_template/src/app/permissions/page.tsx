@@ -6,7 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import WalletConnect from '@/components/WalletConnect';
 import PermissionRequestModal from '@/components/PermissionRequestModal';
-import { useUser } from '@/contexts/UserContext';
+import { useUser } from '@/context/UserContext';
 import Image from 'next/image';
 
 interface PermissionRequest {
@@ -156,11 +156,11 @@ export default function PermissionsPage() {
 
   const handleApproveRequest = async (requestId: string) => {
     setIsProcessing(true);
-    
+
     // Simulate wallet transaction for approval
     setTimeout(async () => {
       const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-      
+
       try {
         const response = await fetch('/api/permissions/approve', {
           method: 'POST',
@@ -178,18 +178,18 @@ export default function PermissionsPage() {
       } catch (error) {
         console.error('Failed to approve request:', error);
       }
-      
+
       setIsProcessing(false);
     }, 2000);
   };
 
   const handleRejectRequest = async (requestId: string) => {
     setIsProcessing(true);
-    
+
     // Simulate wallet transaction for rejection
     setTimeout(async () => {
       const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-      
+
       try {
         const response = await fetch('/api/permissions/approve', {
           method: 'POST',
@@ -207,7 +207,7 @@ export default function PermissionsPage() {
       } catch (error) {
         console.error('Failed to reject request:', error);
       }
-      
+
       setIsProcessing(false);
     }, 1500);
   };
@@ -217,8 +217,8 @@ export default function PermissionsPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-4">
-          <Link 
-            href="/dashboard" 
+          <Link
+            href="/dashboard"
             className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -227,7 +227,7 @@ export default function PermissionsPage() {
         </div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Permissions Dashboard</h1>
         <div className="flex items-center space-x-4">
-          <WalletConnect 
+          <WalletConnect
             onConnect={handleWalletConnect}
             onDisconnect={handleWalletDisconnect}
             isConnected={isWalletConnected}
@@ -241,21 +241,19 @@ export default function PermissionsPage() {
       <div className="flex space-x-1 mb-6">
         <button
           onClick={() => setActiveTab('requests')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            activeTab === 'requests'
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'requests'
               ? 'bg-blue-600 text-white'
               : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-          }`}
+            }`}
         >
           Permission Requests
         </button>
         <button
           onClick={() => setActiveTab('transfers')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            activeTab === 'transfers'
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'transfers'
               ? 'bg-blue-600 text-white'
               : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-          }`}
+            }`}
         >
           Ownership Transfers
         </button>
@@ -270,7 +268,7 @@ export default function PermissionsPage() {
               Auto-refreshing every 5 seconds
             </div>
           </div>
-          
+
           {mediaItems.map((media) => (
             <div key={media.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex items-start space-x-4">
@@ -284,7 +282,7 @@ export default function PermissionsPage() {
                     <div>Current Price: {media.price} ETH</div>
                     <div>Access Rights: {media.accessRights}</div>
                   </div>
-                  
+
                   {/* Request Permission Button */}
                   <div className="mb-4">
                     <button
@@ -295,7 +293,7 @@ export default function PermissionsPage() {
                       {!isWalletConnected ? 'Connect Wallet to Request' : 'Request Permission'}
                     </button>
                   </div>
-                  
+
                   {media.requests && media.requests.length > 0 ? (
                     <div className="space-y-3">
                       {media.requests.map((request) => (
@@ -314,13 +312,12 @@ export default function PermissionsPage() {
                                 </div>
                               )}
                             </div>
-                            <span className={`px-2 py-1 text-xs rounded-full ${
-                              request.status === 'pending' 
+                            <span className={`px-2 py-1 text-xs rounded-full ${request.status === 'pending'
                                 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
                                 : request.status === 'approved'
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                            }`}>
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                  : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                              }`}>
                               {request.status}
                             </span>
                           </div>
@@ -358,7 +355,7 @@ export default function PermissionsPage() {
       {activeTab === 'transfers' && (
         <div className="space-y-6">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Recent Transfers</h2>
-          
+
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">

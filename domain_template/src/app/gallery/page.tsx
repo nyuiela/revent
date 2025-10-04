@@ -5,7 +5,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 import WalletConnect from '@/components/WalletConnect';
 import PermissionRequestModal from '@/components/PermissionRequestModal';
 import InvestModal from '@/components/InvestModal';
-import { useUser } from '@/contexts/UserContext';
+import { useUser } from '@/context/UserContext';
 import { MediaItem } from '@/components/MediaGrid';
 import Image from 'next/image';
 import GalleryGrid, { GalleryItem } from '@/components/GalleryGrid';
@@ -105,7 +105,7 @@ export default function GalleryPage() {
           >
             Invest in Event
           </button>
-                  <WalletConnect />
+          <WalletConnect />
           <ThemeToggle />
         </div>
       </div>
@@ -114,31 +114,28 @@ export default function GalleryPage() {
       <div className="flex space-x-2 mb-6">
         <button
           onClick={() => setFilter('all')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            filter === 'all'
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'all'
               ? 'bg-blue-600 text-white'
               : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-          }`}
+            }`}
         >
           All Media
         </button>
         <button
           onClick={() => setFilter('images')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            filter === 'images'
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'images'
               ? 'bg-blue-600 text-white'
               : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-          }`}
+            }`}
         >
           Images
         </button>
         <button
           onClick={() => setFilter('videos')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            filter === 'videos'
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'videos'
               ? 'bg-blue-600 text-white'
               : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-          }`}
+            }`}
         >
           Videos
         </button>
@@ -177,13 +174,13 @@ export default function GalleryPage() {
             <div className="flex-1 p-6 flex flex-col">
               <div className="relative flex-1 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden mb-4">
                 {selectedMedia.file?.type.startsWith('video') ? (
-                  <video 
-                    src={selectedMedia.url || '/stream.jpg'} 
-                    controls 
+                  <video
+                    src={selectedMedia.url || '/stream.jpg'}
+                    controls
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <Image 
+                  <Image
                     src={selectedMedia.url || '/stream.jpg'}
                     alt={`${selectedMedia.title}`}
                     fill
@@ -217,7 +214,7 @@ export default function GalleryPage() {
                       <option value="ownership">Full Ownership</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Your Offer (ETH)
@@ -263,8 +260,8 @@ export default function GalleryPage() {
       )}
 
       {/* Invest Modal */}
-      <InvestModal 
-        isOpen={showInvest} 
+      <InvestModal
+        isOpen={showInvest}
         onClose={() => setShowInvest(false)}
       />
 

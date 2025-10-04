@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useWallet } from '@/components/WalletProvider';
 import { useNotifications } from '@/components/NotificationSystem';
+import MultiContractButton from './buttons/MultiContractButton';
 
 export default function InvestModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { isConnected, address, connect } = useWallet();
@@ -35,7 +36,11 @@ export default function InvestModal({ isOpen, onClose }: { isOpen: boolean; onCl
             className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="0.05"
           />
-          {!isConnected ? (
+          <MultiContractButton
+            contracts={[]}
+            btnClassName="w-full mt-2 px-4 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700"
+          />
+          {/* {!isConnected ? (
             <button
               onClick={async () => {
                 try {
@@ -77,14 +82,14 @@ export default function InvestModal({ isOpen, onClose }: { isOpen: boolean; onCl
                   try {
                     // Simulate wallet transaction for investment
                     const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-                    
+
                     // Update TVL on server
                     await fetch('/api/tvl', {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',
                       },
-                      body: JSON.stringify({ 
+                      body: JSON.stringify({
                         amount: parseFloat(investAmount) || 0,
                         txHash: mockTxHash,
                         investor: address
@@ -110,7 +115,7 @@ export default function InvestModal({ isOpen, onClose }: { isOpen: boolean; onCl
                       duration: 5000
                     });
                   }
-                  
+
                   setIsProcessing(false);
                 }}
                 disabled={!investAmount || isProcessing}
@@ -126,7 +131,7 @@ export default function InvestModal({ isOpen, onClose }: { isOpen: boolean; onCl
                 )}
               </button>
             </>
-          )}
+          )} */}
         </div>
       </div>
     </div>

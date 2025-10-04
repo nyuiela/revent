@@ -4,6 +4,7 @@ import "./globals.css";
 import Providers from "./providers";
 import { headers } from 'next/headers';
 import { getTenantConfig } from '@/lib/config';
+import { ContextProvider } from "@/context/ContextProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,7 +19,7 @@ const geistMono = Geist_Mono({
 export async function generateMetadata(): Promise<Metadata> {
   const headersList = await headers();
   const tenant = headersList.get('x-tenant');
-  
+
   try {
     const config = await getTenantConfig(null, tenant || undefined);
     return {
@@ -56,11 +57,14 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersObj = await headers();
+  const cookies = headersObj.get('cookie')
+
   return (
     <html lang="en">
       <head>
@@ -82,9 +86,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers>
-          {children}
-        </Providers>
+        <ContextProvider cookies={null}>
+          <Providers>
+            {children}
+          </Providers>
+        </ContextProvider>
       </body>
     </html>
   );
