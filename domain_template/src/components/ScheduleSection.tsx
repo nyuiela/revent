@@ -1,3 +1,5 @@
+import CountdownSection from '@/components/CountdownSection';
+
 export default function ScheduleSection() {
   const scheduleData = [
     {
@@ -50,14 +52,18 @@ export default function ScheduleSection() {
   ];
 
   return (
-    <div className="bg-white py-16 px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Main Heading */}
-        <div className="text-center mb-12">
-          <h2 className="text-6xl font-black text-[#2C3E50] mb-4">
-            Schedule of Events
-          </h2>
-        </div>
+    <div className="bg-white">
+      {/* Countdown Section */}
+      <CountdownSection />
+      
+      <div className="py-16 px-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Main Heading */}
+          <div className="text-center mb-12">
+            <h2 className="text-6xl font-black text-[#2C3E50] mb-4">
+              Schedule of Events
+            </h2>
+          </div>
 
         {/* Schedule Table */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -150,6 +156,7 @@ export default function ScheduleSection() {
               </button>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
