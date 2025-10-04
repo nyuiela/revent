@@ -330,9 +330,6 @@ export default function InvestModal({ isOpen, onClose }: { isOpen: boolean; onCl
                 {balanceLoading && (
                   <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                 )}
-                {ethAmount && parseFloat(ethAmount) > parseFloat(ethBalance) && (
-                  <span className="text-red-500 text-xs">⚠️ Insufficient balance</span>
-                )}
               </div>
               <button
                 onClick={fetchUserBalance}
@@ -426,13 +423,11 @@ export default function InvestModal({ isOpen, onClose }: { isOpen: boolean; onCl
                 }
               ] : []
             }
-            disabled={!ethAmount || parseFloat(ethAmount) <= 0 || parseFloat(ethAmount) > parseFloat(ethBalance)}
+            disabled={!ethAmount || parseFloat(ethAmount) <= 0}
             idleLabel={
               !ethAmount
                 ? 'Enter amount to invest'
-                : parseFloat(ethAmount) > parseFloat(ethBalance)
-                  ? 'Insufficient balance'
-                  : `Invest ${ethAmount} ETH`
+                : `Invest ${ethAmount} ETH`
             }
           />
 
