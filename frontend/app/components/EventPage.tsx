@@ -9,7 +9,7 @@ import {
 import { useState, useEffect, ReactNode } from "react";
 import { useAccount, useChainId, useReadContract } from "wagmi";
 import { Transaction, TransactionButton, TransactionStatus, TransactionStatusAction, TransactionStatusLabel } from "@coinbase/onchainkit/transaction";
-import { WalletModal } from "@coinbase/onchainkit/wallet";
+// import { WalletModal } from "@coinbase/onchainkit/wallet";
 import { eventAbi, eventAddress } from "@/lib/contract";
 import type { Abi } from "viem";
 import StaticLocationMap from "./StaticLocationMap";
@@ -79,7 +79,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
   const [ipfsData, setIpfsData] = useState<Record<string, unknown> | null>(null);
   const [ipfsLoading, setIpfsLoading] = useState<boolean>(false);
   const [ipfsError, setIpfsError] = useState<string | null>(null);
-  const [showWalletModal, setShowWalletModal] = useState(false);
+  // const [showWalletModal, setShowWalletModal] = useState(false);
   const [showRegistrationSuccess, setShowRegistrationSuccess] = useState(false);
   const { address } = useAccount();
   const chainId = useChainId();
@@ -983,12 +983,13 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                       </TransactionStatus>
                     </Transaction>
                   ) : (
-                    <button
-                      onClick={() => setShowWalletModal(true)}
-                      className="bg-transparent hover:bg-transparent text-foreground dark:text-foreground p-0 underline text-sm font-medium cursor-pointer"
-                    >
-                      Connect
-                    </button>
+                    // <button
+                    //   onClick={() => setShowWalletModal(true)}
+                    //   className="bg-transparent hover:bg-transparent text-foreground dark:text-foreground p-0 underline text-sm font-medium cursor-pointer"
+                    // >
+                    //   Connect
+                    // </button>
+                    <appkit-connect-button label="Login" size="sm" />
                   )}
                 </div>
               </div>
@@ -998,11 +999,11 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
       }
 
       {/* Wallet Modal */}
-      <WalletModal
+      {/* <WalletModal
         isOpen={showWalletModal}
         onClose={() => setShowWalletModal(false)}
         className="bg-black shadow-lg z-[9999]"
-      />
+      /> */}
 
       {/* Registration Success Card */}
       {

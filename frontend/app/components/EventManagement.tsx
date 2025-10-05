@@ -5,7 +5,7 @@ import { useAccount, useChainId } from "wagmi";
 import { Transaction, TransactionStatus, TransactionStatusAction, TransactionStatusLabel } from "@coinbase/onchainkit/transaction";
 import { eventAbi, eventAddress } from "@/lib/contract";
 import type { Abi } from "viem";
-import { ConnectWallet } from "@coinbase/onchainkit/wallet";
+// import { ConnectWallet } from "@coinbase/onchainkit/wallet";
 import QRCodeBottomSheet from "./QRCodeBottomSheet";
 import { QrCode } from "lucide-react";
 
@@ -140,7 +140,7 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
                       </TransactionStatus>
                     </Transaction>
                   ) : (
-                    <ConnectWallet />
+                    <appkit-connect-button label="Login" size="sm" />
                   )}
                 </div>
               </div>
@@ -174,7 +174,7 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
                       </TransactionStatus>
                     </Transaction>
                   ) : (
-                    <ConnectWallet />
+                    <appkit-connect-button label="Login" size="sm" />
                   )}
                 </div>
               </div>
@@ -208,7 +208,7 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
                       </TransactionStatus>
                     </Transaction>
                   ) : (
-                    <ConnectWallet />
+                    <appkit-connect-button label="Login" size="sm" />
                   )}
                 </div>
               </div>
@@ -356,7 +356,7 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
                     </TransactionStatus>
                   </Transaction>
                 ) : (
-                  <ConnectWallet />
+                  <appkit-connect-button label="Login" size="sm" />
                 )}
               </div>
             </div>
@@ -426,7 +426,7 @@ export default function EventManagement({ eventId, defaultIpfsHash }: Props) {
                       </TransactionStatus>
                     </Transaction>
                   ) : (
-                    <ConnectWallet />
+                    <appkit-connect-button label="Login" size="sm" />
                   )}
 
                   {canTransact ? (

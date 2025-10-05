@@ -4,8 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createAppKit } from '@reown/appkit/react'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { baseSepolia } from '@reown/appkit/networks'
-import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi'
-
+import { cookieToInitialState, injected, WagmiProvider, type Config } from 'wagmi'
+import { farcasterMiniApp as miniAppConnector } from '@farcaster/miniapp-wagmi-connector'
 
 import { cookieStorage, createStorage, http } from '@wagmi/core'
 
@@ -20,11 +20,14 @@ export const networks = [baseSepolia]
 //Set up the Wagmi Adapter (Config)
 export const wagmiAdapter = new WagmiAdapter({
   storage: createStorage({
-    storage: cookieStorage as any
+    storage: cookieStorage
   }),
   transports: {
     [baseSepolia.id]: http(),
   },
+  connectors: [
+    miniAppConnector(),
+  ],
   ssr: true,
   projectId,
   networks
@@ -40,10 +43,10 @@ if (!projectId) {
 
 // Set up metadata
 const metadata = {
-  name: 'appkit-example',
-  description: 'AppKit Example',
-  url: 'https://appkitexampleapp.com', // origin must match your domain & subdomain
-  icons: ['https://avatars.githubusercontent.com/u/179229932']
+  name: 'Revent',
+  description: 'Event tokenization platform',
+  url: 'https://revents.io', // origin must match your domain & subdomain
+  icons: ['https://revents.io/icon.png']
 }
 
 // Create the modal
@@ -67,3 +70,4 @@ export function ContextProvider({ children, cookies }: { children: ReactNode; co
     </WagmiProvider>
   )
 }
+

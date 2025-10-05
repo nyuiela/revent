@@ -7,7 +7,7 @@ import {
 
   LogOut
 } from "lucide-react";
-import { WalletModal } from "@coinbase/onchainkit/wallet";
+// import { WalletModal } from "@coinbase/onchainkit/wallet";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { ThemeSwitcher } from "../../components/ThemeSwitcher";
 import { useSendCalls } from "wagmi";
@@ -141,7 +141,7 @@ export default function StreamHeader() {
                 </WalletDropdown>
               </Wallet> */}
 
-              <WalletModal isOpen={showModalConnect} onClose={() => { setShowModalConnect(false) }} className="bg-black shadow-lg z-[9999]" />
+              {/* <WalletModal isOpen={showModalConnect} onClose={() => { setShowModalConnect(false) }} className="bg-black shadow-lg z-[9999]" /> */}
             </>
           )}
         </div>

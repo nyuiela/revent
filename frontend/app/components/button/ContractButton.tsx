@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi'
 import type { Abi } from 'viem'
 import { toast } from 'react-hot-toast'
-import { WalletModal } from "@coinbase/onchainkit/wallet";
+// import { WalletModal } from "@coinbase/onchainkit/wallet";
 
 type HexAddress = `0x${string}`
 
@@ -234,7 +234,10 @@ export function ContractButton(props: TxButtonProps) {
 
   return (
     <div className={`${className}`}>
-      {!account ? <button className={`rounded-xl px-3 py-2 text-sm font-medium text-foreground hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-10 ${btnClassName}`} onClick={() => setShowModalConnect(true)}>Connect Wallet</button> :
+      {!account ?
+        // <button className={`rounded-xl px-3 py-2 text-sm font-medium text-foreground hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-10 ${btnClassName}`} onClick={() => setShowModalConnect(true)}>Connect Wallet</button>
+        <appkit-connect-button label="Login" size="sm" />
+        :
         <button
           type="button"
           onClick={handleClick}
@@ -256,7 +259,7 @@ export function ContractButton(props: TxButtonProps) {
       {state === 'error' && Boolean(lastError) && (
         <span className="ml-2 text-xs text-red-500">{errorToastMessage}</span>
       )}
-      <WalletModal isOpen={showModalConnect} onClose={() => { setShowModalConnect(false) }} className="bg-black shadow-lg z-[9999]" />
+      {/* <WalletModal isOpen={showModalConnect} onClose={() => { setShowModalConnect(false) }} className="bg-black shadow-lg z-[9999]" /> */}
     </div>
   )
 }

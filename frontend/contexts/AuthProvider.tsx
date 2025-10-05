@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useAccount } from 'wagmi';
-import { WalletModal } from '@coinbase/onchainkit/wallet';
+// import { WalletModal } from '@coinbase/onchainkit/wallet';
 import { useState } from 'react';
 
 interface AuthContextType {
@@ -26,7 +26,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { address, isConnected } = useAccount();
-  const [showWalletModal, setShowWalletModal] = useState(false);
+  // const [showWalletModal, setShowWalletModal] = useState(false);
 
   const value = {
     isAuthenticated: isConnected,
@@ -36,11 +36,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   return (
     <AuthContext.Provider value={value}>
       {children}
-      <WalletModal
+      {/* <WalletModal
         isOpen={showWalletModal}
         onClose={() => setShowWalletModal(false)}
         className="bg-black shadow-lg"
-      />
+      /> */}
+      <appkit-connect-button label="Login" size="sm" />
     </AuthContext.Provider>
   );
 };
@@ -52,7 +53,7 @@ interface AuthGuardProps {
 
 export const AuthGuard: React.FC<AuthGuardProps> = ({ children, fallback }) => {
   const { isAuthenticated } = useAuth();
-  const [showWalletModal, setShowWalletModal] = useState(false);
+  // const [showWalletModal, setShowWalletModal] = useState(false);
 
   if (!isAuthenticated) {
     if (fallback) {
@@ -67,20 +68,21 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children, fallback }) => {
             <p className="text-sm text-muted-foreground mb-6">
               Please connect your wallet to access this page
             </p>
-            <div
+            {/* <div
               className="flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-app-card-bg border border-app-card-border text-sm cursor-pointer hover:bg-app-gray transition-colors mx-auto"
               onClick={() => setShowWalletModal(true)}
             >
               Connect Wallet
-            </div>
+              </div> */}
+            <appkit-connect-button label="Login" size="sm" />
           </div>
           <div className="mt-4 text-[11px] text-muted-foreground text-center">powered by revent</div>
         </div>
-        <WalletModal
+        {/* <WalletModal
           isOpen={showWalletModal}
           onClose={() => setShowWalletModal(false)}
           className="bg-black shadow-lg z-50"
-        />
+        /> */}
       </div>
     );
   }

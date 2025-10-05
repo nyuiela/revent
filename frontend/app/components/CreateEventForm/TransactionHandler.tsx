@@ -3,7 +3,7 @@
 import React from "react";
 import { Transaction, TransactionButton, TransactionResponseType, TransactionSponsor, TransactionStatus, TransactionStatusAction, TransactionStatusLabel } from "@coinbase/onchainkit/transaction";
 import { useNotification } from "@coinbase/onchainkit/minikit";
-import { WalletModal } from "@coinbase/onchainkit/wallet";
+// import { WalletModal } from "@coinbase/onchainkit/wallet";
 import { Loader2 } from "lucide-react";
 import { EventFormData } from "@/utils/types";
 import { useNotificationHelpers } from "@/hooks/useNotifications";
@@ -213,11 +213,11 @@ const TransactionHandler: React.FC<TransactionHandlerProps> = ({
       )} */}
 
       {/* Wallet Modal */}
-      <WalletModal
+      {/* <WalletModal
         isOpen={showWalletModal}
         onClose={() => setShowWalletModal(false)}
         className="bg-black shadow-lg z-[9999]"
-      />
+      /> */}
     </>
   );
 };

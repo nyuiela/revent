@@ -14,7 +14,7 @@ import { Abi } from "viem";
 import { chainId, eventAbi, eventAddress } from "@/lib/contract";
 import ContractButton from "@/app/components/button/ContractButton";
 import { AuthGuard } from "@/contexts/AuthProvider";
-import { ConnectWallet } from "@coinbase/onchainkit/wallet";
+// import { ConnectWallet } from "@coinbase/onchainkit/wallet";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -133,7 +133,8 @@ export default function ManagePage({ params }: Props) {
           <h1 className="text-2xl font-bold text-destructive mb-4">⚠️</h1>
           <h1 className="text-2xl font-bold text-destructive mb-4">Not Authorized</h1>
           <h1 className="mb-4">You are not the creator of this event</h1>
-          <ConnectWallet />
+          {/* <ConnectWallet /> */}
+          <appkit-connect-button label="Login" size="sm" />
           <Button onClick={() => window.location.href = `/`} className="cursor-pointer">Go Back</Button>
         </div>
       </div>

@@ -24,10 +24,10 @@ export function Providers(props: { children: ReactNode }) {
       enableSystem
     // disableTransitionOnChange
     >
-      <WagmiProvider config={config}>
-        <QueryClientProvider client={queryClient}>
-          <QueryProvider>
-            {/* <MiniKitProvider
+      {/* <WagmiProvider config={config}> */}
+      <QueryClientProvider client={queryClient}>
+        <QueryProvider>
+          {/* <MiniKitProvider
               apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
               chain={baseSepolia} // change to baseSepolia later
               config={{
@@ -39,41 +39,41 @@ export function Providers(props: { children: ReactNode }) {
                 },
               }}
             > */}
-            <OnchainKitProvider
-              apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
-              chain={baseSepolia}
-              miniKit={{
-                enabled: true, // Add this
-              }}
-              config={{
-                appearance: {
-                  mode: "auto",
-                  theme: "mini-app-theme",
-                  name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
-                  logo: process.env.NEXT_PUBLIC_ICON_URL,
-                },
-                wallet: {
-                  display: 'modal', // 'modal' | 'drawer'
-                  preference: 'all', // 'all' | 'smartWalletOnly' | 'eoaOnly'
-                },
+          <OnchainKitProvider
+            apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
+            chain={baseSepolia}
+            miniKit={{
+              enabled: true, // Add this
+            }}
+            config={{
+              appearance: {
+                mode: "auto",
+                theme: "mini-app-theme",
+                name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
+                logo: process.env.NEXT_PUBLIC_ICON_URL,
+              },
+              wallet: {
+                display: 'modal', // 'modal' | 'drawer'
+                preference: 'all', // 'all' | 'smartWalletOnly' | 'eoaOnly'
+              },
 
-              }
-              }
-            >
-              <TransactionProvider>
-                <NotificationsProvider>
-                  <BannerToastProvider>
-                    <AuthProvider>
-                      {props.children}
-                    </AuthProvider>
-                  </BannerToastProvider>
-                </NotificationsProvider>
-              </TransactionProvider>
-            </OnchainKitProvider>
-            {/* </MiniKitProvider> */}
-          </QueryProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
+            }
+            }
+          >
+            <TransactionProvider>
+              <NotificationsProvider>
+                <BannerToastProvider>
+                  <AuthProvider>
+                    {props.children}
+                  </AuthProvider>
+                </BannerToastProvider>
+              </NotificationsProvider>
+            </TransactionProvider>
+          </OnchainKitProvider>
+          {/* </MiniKitProvider> */}
+        </QueryProvider>
+      </QueryClientProvider>
+      {/* </WagmiProvider> */}
     </ThemeProvider>
   );
 }

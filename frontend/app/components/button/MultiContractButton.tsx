@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId, useSwitchChain } from 'wagmi'
 import type { Abi } from 'viem'
 import { toast } from 'react-hot-toast'
-import { WalletModal } from '@coinbase/onchainkit/wallet'
+// import { WalletModal } from '@coinbase/onchainkit/wallet'
 
 type HexAddress = `0x${string}`
 
@@ -96,7 +96,7 @@ export function MultiContractButton(props: MultiContractButtonProps) {
   const [hasClicked, setHasClicked] = React.useState(false)
   const [fallbackSuccess, setFallbackSuccess] = React.useState(false)
   const [completedCalls, setCompletedCalls] = React.useState(0)
-  const [showModalConnect, setShowModalConnect] = useState(false);
+  // const [showModalConnect, setShowModalConnect] = useState(false);
   const { address: account } = useAccount()
   const currentChainId = useChainId()
   const { switchChainAsync } = useSwitchChain()
@@ -352,7 +352,10 @@ export function MultiContractButton(props: MultiContractButtonProps) {
 
   return (
     <div className={`${className}`}>
-      {!account ? <button className={`rounded-[1.5rem] px-4 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-12 ${btnClassName}`} onClick={() => setShowModalConnect(true)}>Connect Wallet</button> :
+      {!account ?
+        // <button className={`rounded-[1.5rem] px-4 py-2 text-sm font-medium text-white hover:opacity-90 flex items-center justify-center gap-2 w-[92%] mx-auto h-12 ${btnClassName}`} onClick={() => setShowModalConnect(true)}>Connect Wallet</  button> 
+        <appkit-connect-button label="Login" size="sm" />
+        :
         <button
           type="button"
           onClick={handleClick}
@@ -382,7 +385,7 @@ export function MultiContractButton(props: MultiContractButtonProps) {
               `Executing ${contracts.length} contract call${contracts.length > 1 ? 's' : ''}...`}
         </div>
       )}
-      <WalletModal isOpen={showModalConnect} onClose={() => { setShowModalConnect(false) }} className="bg-black shadow-lg z-[9999]" />
+      {/* <WalletModal isOpen={showModalConnect} onClose={() => { setShowModalConnect(false) }} className="bg-black shadow-lg z-[9999]" /> */}
     </div>
   )
 }
