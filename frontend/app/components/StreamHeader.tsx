@@ -120,16 +120,14 @@ export default function StreamHeader() {
             <>
               {/* <WalletModal isOpen={showModal} onClose={() => setShowModal(false)} /> */}
               {/* <NetworkSwitcher /> */}
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-app-card-bg border border-app-card-border text-sm cursor-pointer hover:bg-app-gray transition-colors"
+              {/* <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-app-card-bg border border-app-card-border text-sm cursor-pointer hover:bg-app-gray transition-colors"
                 onClick={() => setShowModalConnect(true)}
               >
-                {/* <button
-                  className="ml-1 p-1 hover:bg-app-gray rounded transition-colors text-xs font-medium"
-                  title="Connect wallet"
-                > */}
+       
                 Connect Wallet
-                {/* </button> */}
-              </div>
+              </div> */}
+              {/* <appkit-button label="Login" /> */}
+              <appkit-connect-button label="Login" size="sm" />
               {/* <Wallet className="z-10">
                 <ConnectWallet className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-app-card-bg border border-app-card-border text-sm cursor-pointer hover:bg-app-gray transition-colors *:text-foreground" />
                 <WalletDropdown>

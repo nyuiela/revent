@@ -13,6 +13,8 @@ import DataPrefetcher from "../components/DataPrefetcher"
 import { OnchainKitProvider } from "@coinbase/onchainkit";
 import { baseSepolia } from "wagmi/chains";
 import { fontConfig } from "../lib/fonts";
+import { ContextProvider } from "@/context/ContextProvider";
+import { headers as nextHeaders } from "next/headers";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -152,6 +154,8 @@ export default async function RootLayout({
       return await request(url, eventsCreatedQuery, {}, headers)
     }
   })
+  const headersList = await nextHeaders()
+  const cookies = headersList.get('cookie') || null
   return (
     <html lang="en"
     // className={`${fontConfig.variables.primary} ${fontConfig.variables.secondary} ${fontConfig.variables.mono} ${fontConfig.variables.display} ${fontConfig.variables.alternative} ${fontConfig.variables.clean} ${fontConfig.variables.modern} ${fontConfig.variables.friendly} ${fontConfig.variables.elegant} ${fontConfig.variables.vercel} ${fontConfig.variables.vercelMono} ${fontConfig.variables.serif} ${fontConfig.variables.condensed} ${fontConfig.variables.futuristic} light`}
@@ -196,11 +200,13 @@ export default async function RootLayout({
           }
         > */}
         <ThemeProvider>
-          <Providers>
-            <DataPrefetcher>
-              {children}
-            </DataPrefetcher>
-          </Providers>
+          <ContextProvider cookies={cookies}>
+            <Providers>
+              <DataPrefetcher>
+                {children}
+              </DataPrefetcher>
+            </Providers>
+          </ContextProvider>
         </ThemeProvider>
 
         {/* </OnchainKitProvider> */}
