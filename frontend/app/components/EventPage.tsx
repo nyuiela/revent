@@ -1,7 +1,7 @@
 "use client";
 
 import { Calendar, MapPin, Clock, ChevronLeft } from "lucide-react";
-import { useState, useEffect, ReactNode } from "react";
+import { useState, useEffect } from "react";
 import { useAccount, useChainId, useReadContract } from "wagmi";
 import {
   Transaction,
@@ -169,8 +169,8 @@ export default function EventPage({
   const eventCreator = graphEventData?.creator;
   const isEventCreator = Boolean(
     address &&
-      eventCreator &&
-      address.toLowerCase() === eventCreator.toLowerCase(),
+    eventCreator &&
+    address.toLowerCase() === eventCreator.toLowerCase(),
   );
 
   console.log("EventPage Debug:", {
@@ -329,10 +329,10 @@ export default function EventPage({
 
   const formattedDate = startDateObj
     ? startDateObj.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
     : "December 15, 2024";
   const formattedTime =
     startDateObj && endDateObj
@@ -415,13 +415,13 @@ export default function EventPage({
     // ✅ Participants - use real attendees data
     participants: attendeesData
       ? (attendeesData as string[]).map((address, index) => ({
-          id: address,
-          name: `Participant ${index + 1}`,
-          avatar: "/hero.png",
-          role: "viewer" as const,
-          bio: `Event participant with address ${address.slice(0, 6)}...${address.slice(-4)}`,
-          contribution: 0,
-        }))
+        id: address,
+        name: `Participant ${index + 1}`,
+        avatar: "/hero.png",
+        role: "viewer" as const,
+        bio: `Event participant with address ${address.slice(0, 6)}...${address.slice(-4)}`,
+        contribution: 0,
+      }))
       : [],
 
     // ✅ Media - use real media data from IPFS if available
@@ -474,12 +474,12 @@ export default function EventPage({
         : false,
       types: graphEventData?.registrationFee
         ? [
-            {
-              type: "Event Registration",
-              price: parseFloat(graphEventData.registrationFee),
-              currency: "ETH",
-            },
-          ]
+          {
+            type: "Event Registration",
+            price: parseFloat(graphEventData.registrationFee),
+            currency: "ETH",
+          },
+        ]
         : [],
     },
 
@@ -526,25 +526,25 @@ export default function EventPage({
   // Ticket helpers - use real ticket data from contract or fallback to IPFS data
   const ticketTypes = hasTickets
     ? tickets.map((ticket) => {
-        try {
-          return {
-            type: ticket.name || "Unknown Ticket",
-            price: parseFloat(ticket.price || "0") / 1e18, // Convert from wei to ETH
-            currency: ticket.currency || "ETH",
-            quantity: parseInt(ticket.totalQuantity || "0"),
-            perks: ticket.perks || [],
-          };
-        } catch (error) {
-          console.error("Error parsing ticket data:", error);
-          return {
-            type: "Invalid Ticket",
-            price: 0,
-            currency: "ETH",
-            quantity: 0,
-            perks: [],
-          };
-        }
-      })
+      try {
+        return {
+          type: ticket.name || "Unknown Ticket",
+          price: parseFloat(ticket.price || "0") / 1e18, // Convert from wei to ETH
+          currency: ticket.currency || "ETH",
+          quantity: parseInt(ticket.totalQuantity || "0"),
+          perks: ticket.perks || [],
+        };
+      } catch (error) {
+        console.error("Error parsing ticket data:", error);
+        return {
+          type: "Invalid Ticket",
+          price: 0,
+          currency: "ETH",
+          quantity: 0,
+          perks: [],
+        };
+      }
+    })
     : event.tickets?.available
       ? event.tickets?.types || []
       : [];
@@ -700,11 +700,10 @@ export default function EventPage({
                         type="button"
                         key={t.type}
                         onClick={() => setSelectedTicketIndex(idx)}
-                        className={`text-left p-4 rounded-2xl transition-colors bg-muted border-none cursor-pointer ${
-                          selectedTicketIndex === idx
-                            ? "bg-muted-foreground/30"
-                            : "bg-muted-foreground/10"
-                        }`}
+                        className={`text-left p-4 rounded-2xl transition-colors bg-muted border-none cursor-pointer ${selectedTicketIndex === idx
+                          ? "bg-muted-foreground/30"
+                          : "bg-muted-foreground/10"
+                          }`}
                       >
                         <div className="flex items-center justify-between">
                           <div>
@@ -768,7 +767,7 @@ export default function EventPage({
                           address={eventAddress as `0x${string}`}
                           functionName="registerForEvent"
                           args={[BigInt(numericEventId || 0), "0x"]}
-                          onReceiptSuccess={async () => {}}
+                          onReceiptSuccess={async () => { }}
                           idleLabel={
                             isPurchasing
                               ? "Purchasing..."
@@ -833,7 +832,7 @@ export default function EventPage({
                     address={eventAddress as `0x${string}`}
                     functionName="registerForEvent"
                     args={[BigInt(numericEventId || 0), "0x"]}
-                    onReceiptSuccess={async () => {}}
+                    onReceiptSuccess={async () => { }}
                     idleLabel="Register for Event"
                     className="w-full"
                     successLabel="Registered for Event"
@@ -1045,13 +1044,13 @@ export default function EventPage({
               addresses={
                 Array.isArray(attendeesData)
                   ? (attendeesData
-                      .map(
-                        (att: Record<string, unknown>) =>
-                          (att?.attendee as string) ||
-                          (att?.wallet as string) ||
-                          (att as unknown as string),
-                      )
-                      .filter(Boolean) as string[])
+                    .map(
+                      (att: Record<string, unknown>) =>
+                        (att?.attendee as string) ||
+                        (att?.wallet as string) ||
+                        (att as unknown as string),
+                    )
+                    .filter(Boolean) as string[])
                   : []
               }
               maxItems={4}
@@ -1063,9 +1062,8 @@ export default function EventPage({
       {/* Sticky Registration Button */}
       {false && !isRegistered && (
         <div
-          className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out bg-black/40 border-none ${
-            isScrolling ? "translate-y-full" : "translate-y-0"
-          }`}
+          className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out bg-black/40 border-none ${isScrolling ? "translate-y-full" : "translate-y-0"
+            }`}
         >
           <div className="bg-white/80 dark:bg-transparent backdrop-blur-sm border-t border-[var(--events-card-border)] p-4 border-none min-h-[6rem]">
             <div className="max-w-7xl mx-auto">
@@ -1119,7 +1117,7 @@ export default function EventPage({
                         );
                         setIsRegistering(
                           s.statusName === "transactionPending" ||
-                            s.statusName === "buildingTransaction",
+                          s.statusName === "buildingTransaction",
                         );
                         if (s.statusName === "success") {
                           setShowRegistrationSuccess(true);
@@ -1163,12 +1161,6 @@ export default function EventPage({
         </div>
       )}
 
-      {/* Wallet Modal */}
-      {/* <WalletModal
-        isOpen={showWalletModal}
-        onClose={() => setShowWalletModal(false)}
-        className="bg-black shadow-lg z-[9999]"
-      /> */}
 
       {/* Registration Success Card */}
       {showRegistrationSuccess && (

@@ -41,7 +41,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         onClose={() => setShowWalletModal(false)}
         className="bg-black shadow-lg"
       /> */}
-      <appkit-connect-button label="Login" size="sm" />
+      {/* <appkit-connect-button label="Login" size="sm" /> */}
     </AuthContext.Provider>
   );
 };
