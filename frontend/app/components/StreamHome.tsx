@@ -5,12 +5,24 @@ import Link from "next/link";
 import StreamHeader from "./StreamHeader";
 import EventsMap, { type LiveEvent, type EventsMapRef } from "./EventsMap";
 import EventSearch from "./EventSearch";
-import { Camera, ChevronUp, Monitor, Eye, MapPin, Navigation, Component } from "lucide-react";
+import {
+  Camera,
+  ChevronUp,
+  Monitor,
+  Eye,
+  MapPin,
+  Navigation,
+  Component,
+} from "lucide-react";
 import OwnerDisplay from "../../components/OwnerDisplay";
 import ViewCount from "../../components/ViewCount";
 import { useEvents } from "../../hooks/useEvents";
 import { useViewCounts } from "../../hooks/useViewCounts";
-import { useLocation, useProximityEvents, calculateDistance } from "../../hooks/useLocation";
+import {
+  useLocation,
+  useProximityEvents,
+  calculateDistance,
+} from "../../hooks/useLocation";
 import InfiniteScrollEvents from "./InfiniteScrollEvents";
 import Image from "next/image";
 // import { useViewProfile } from "@coinbase/onchainkit/minikit";
@@ -39,20 +51,23 @@ export default function StreamHome() {
   const { data: events = [], isLoading: eventsLoading } = useEvents();
 
   // Get view counts for all events (memoized to prevent unnecessary re-renders)
-  const eventIds = useMemo(() => events.map(event => event.id), [events]);
-  const { data: viewCounts = {}, isLoading: viewsLoading } = useViewCounts(eventIds);
+  const eventIds = useMemo(() => events.map((event) => event.id), [events]);
+  const { data: viewCounts = {}, isLoading: viewsLoading } =
+    useViewCounts(eventIds);
 
   // Sort events by proximity to user location
   const proximityEvents = useProximityEvents(events, location);
 
-  const filters = ["all", "tech", "gaming", "music"]; // exact labels per screenshot
+  const filters = ["All", "Tech", "Gaming", "Music"]; // exact labels per screenshot
 
   // Use proximity-sorted events for discover section
   // Take the first 4 closest events and add viewer count simulation
-  const discoverEvents = proximityEvents.slice(0, 4).map(event => ({
+  const discoverEvents = proximityEvents.slice(0, 4).map((event) => ({
     ...event,
     viewers: Math.floor(Math.random() * 200) + 50, // Simulate viewer count
-    distance: location ? calculateDistance(location.lat, location.lng, event.lat, event.lng) : null,
+    distance: location
+      ? calculateDistance(location.lat, location.lng, event.lat, event.lng)
+      : null,
   }));
 
   // Use proximity-sorted events for curations section
@@ -63,19 +78,21 @@ export default function StreamHome() {
     author: string;
     distance: number | null;
     slug?: string;
-  }> = proximityEvents.slice(4, 6).map(event => ({
+  }> = proximityEvents.slice(4, 6).map((event) => ({
     id: event.id,
     title: event.title.toLowerCase(),
     image: event.avatarUrl,
-    author: event.creator || '', // Store creator address for OwnerDisplay
-    distance: location ? calculateDistance(location.lat, location.lng, event.lat, event.lng) : null,
+    author: event.creator || "", // Store creator address for OwnerDisplay
+    distance: location
+      ? calculateDistance(location.lat, location.lng, event.lat, event.lng)
+      : null,
     slug: event.slug, // Include slug for routing - TypeScript fix
   }));
 
   // Use proximity-sorted event creators for curators section
-  const curators = proximityEvents.slice(6, 10).map(event => ({
+  const curators = proximityEvents.slice(6, 10).map((event) => ({
     id: event.id,
-    name: event.creator || '', // Store creator address for OwnerDisplay
+    name: event.creator || "", // Store creator address for OwnerDisplay
     viewers: Math.floor(Math.random() * 100) + 20,
     avatarUrl: event.avatarUrl,
   }));
@@ -117,7 +134,9 @@ export default function StreamHome() {
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="flex flex-col items-center gap-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--app-accent)]"></div>
-              <p className="text-[var(--app-foreground-muted)] text-sm">Loading events...</p>
+              <p className="text-[var(--app-foreground-muted)] text-sm">
+                Loading events...
+              </p>
             </div>
           </div>
         </div>
@@ -135,7 +154,12 @@ export default function StreamHome() {
         <div className="relative h-full">
           {mode === "map" && (
             <div className="absolute inset-0">
-              <EventsMap ref={mapRef} events={proximityEvents} onMapDrag={handleMapDrag} userLocation={location} />
+              <EventsMap
+                ref={mapRef}
+                events={proximityEvents}
+                onMapDrag={handleMapDrag}
+                userLocation={location}
+              />
             </div>
           )}
 
@@ -152,16 +176,20 @@ export default function StreamHome() {
             <div className="absolute inset-0 bg-[var(--app-gray)] flex items-center justify-center">
               <div className="flex flex-col items-center gap-2">
                 <Monitor className="w-8 h-8 text-[var(--app-foreground-muted)]" />
-                <span className="text-sm text-[var(--app-foreground-muted)]">Screen share</span>
+                <span className="text-sm text-[var(--app-foreground-muted)]">
+                  Screen share
+                </span>
               </div>
             </div>
           )}
 
           {/* Search bar - responsive to map dragging */}
           <div
-            className={`absolute left-4 right-4 top-4 flex items-center gap-2 transition-all duration-300 pointer-events-none z-20 ${searchBarVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}
+            className={`absolute left-4 right-4 top-4 flex items-center gap-2 transition-all duration-300 pointer-events-none z-20 ${searchBarVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"}`}
           >
-            <div className={`${searchBarVisible ? 'pointer-events-auto' : 'pointer-events-none'} w-full`}>
+            <div
+              className={`${searchBarVisible ? "pointer-events-auto" : "pointer-events-none"} w-full`}
+            >
               <EventSearch
                 events={events}
                 onEventSelect={handleEventSelect}
@@ -204,7 +232,9 @@ export default function StreamHome() {
 
                   `}
               >
-                <ChevronUp className={`w-3 h-3 transition-transform ${showDiscover ? 'rotate-180' : ''}`} />
+                <ChevronUp
+                  className={`w-3 h-3 transition-transform ${showDiscover ? "rotate-180" : ""}`}
+                />
                 Discover
               </button>
             </div>
@@ -215,8 +245,11 @@ export default function StreamHome() {
                   key={f}
                   type="button"
                   onClick={() => setActiveFilter(f)}
-                  className={`px-3 py-1.5 rounded-full text-xs shadow-sm bg-white/60 dark:bg-black/40 text-foreground ${activeFilter === f ? " bg-background text-blue-600" : "text-foreground"
-                    }`}
+                  className={`px-3 py-1.5 rounded-full text-xs shadow-sm bg-white/60 dark:bg-black/40 text-foreground ${
+                    activeFilter === f
+                      ? " bg-background text-blue-600"
+                      : "text-foreground"
+                  }`}
                 >
                   {f}
                 </button>
@@ -235,78 +268,90 @@ export default function StreamHome() {
       </div>
 
       {/* Discover Events Section */}
-      {
-        showDiscover && (
-          <section className="space-y-3 px-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium">
-                {location ? "Events Near You" : "Discover Events"}
-              </h3>
-              {location && (
-                <div className="text-xs text-[var(--app-foreground-muted)] flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />
-                  <span>Sorted by distance</span>
+      {showDiscover && (
+        <section className="space-y-3 px-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium">
+              {location ? "Events Near You" : "Discover Events"}
+            </h3>
+            {location && (
+              <div className="text-xs text-[var(--app-foreground-muted)] flex items-center gap-1">
+                <MapPin className="w-3 h-3" />
+                <span>Sorted by distance</span>
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {discoverEvents.map((event) => (
+              <Link
+                key={event.id}
+                href={`/${event.slug || event.id}`}
+                className="rounded-2xl overflow-hidden border border-border bg-card-bg cursor-pointer hover:shadow-lg transition-shadow shadow-none relative h-32 block"
+              >
+                {/* Background image covering the whole card */}
+                <div className="absolute inset-0">
+                  <Image
+                    src={event.avatarUrl}
+                    alt={event.title}
+                    className="w-full h-full object-cover"
+                    width={100}
+                    height={100}
+                  />
                 </div>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {discoverEvents.map((event) => (
-                <Link
-                  key={event.id}
-                  href={`/${event.slug || event.id}`}
-                  className="rounded-2xl overflow-hidden border border-border bg-card-bg cursor-pointer hover:shadow-lg transition-shadow shadow-none relative h-32 block"
-                >
-                  {/* Background image covering the whole card */}
-                  <div className="absolute inset-0">
-                    <Image src={event.avatarUrl} alt={event.title} className="w-full h-full object-cover" width={100} height={100} />
+
+                {/* Gradient overlay for text readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+
+                {/* Live indicator */}
+                {event.isLive && (
+                  <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full z-10">
+                    LIVE
                   </div>
+                )}
 
-                  {/* Gradient overlay for text readability */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                {/* Distance indicator */}
+                {event.distance !== null && (
+                  <div className="absolute top-2 right-2 bg-blue-500/80 text-white text-xs px-2 py-1 rounded-full z-10 flex items-center gap-1">
+                    <MapPin className="w-2 h-2" />
+                    <span>
+                      {event.distance < 1
+                        ? `${Math.round(event.distance * 1000)}m`
+                        : `${event.distance.toFixed(1)}km`}
+                    </span>
+                  </div>
+                )}
 
-                  {/* Live indicator */}
-                  {event.isLive && (
-                    <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full z-10">
-                      LIVE
-                    </div>
-                  )}
+                {/* View count */}
+                <div
+                  className={`absolute ${event.distance !== null ? "top-8 right-2" : "top-2 right-2"} bg-black/70 text-white text-xs px-2 py-1 rounded-full z-10 flex items-center gap-1`}
+                >
+                  <Eye className="w-3 h-3" />
+                  <ViewCount
+                    count={viewCounts[event.id] || 0}
+                    isLoading={viewsLoading}
+                    size="sm"
+                    showIcon={false}
+                  />
+                </div>
 
-                  {/* Distance indicator */}
-                  {event.distance !== null && (
-                    <div className="absolute top-2 right-2 bg-blue-500/80 text-white text-xs px-2 py-1 rounded-full z-10 flex items-center gap-1">
-                      <MapPin className="w-2 h-2" />
-                      <span>{event.distance < 1 ? `${Math.round(event.distance * 1000)}m` : `${event.distance.toFixed(1)}km`}</span>
-                    </div>
-                  )}
-
-                  {/* View count */}
-                  <div className={`absolute ${event.distance !== null ? 'top-8 right-2' : 'top-2 right-2'} bg-black/70 text-white text-xs px-2 py-1 rounded-full z-10 flex items-center gap-1`}>
-                    <Eye className="w-3 h-3" />
-                    <ViewCount
-                      count={viewCounts[event.id] || 0}
-                      isLoading={viewsLoading}
-                      size="sm"
+                {/* Text content */}
+                <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
+                  <div className="font-medium text-sm truncate text-white drop-shadow-sm">
+                    {event.title}
+                  </div>
+                  <div className="text-xs text-white/80 drop-shadow-sm">
+                    <OwnerDisplay
+                      address={event.creator || ""}
+                      className="text-white/80"
                       showIcon={false}
                     />
                   </div>
-
-                  {/* Text content */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
-                    <div className="font-medium text-sm truncate text-white drop-shadow-sm">{event.title}</div>
-                    <div className="text-xs text-white/80 drop-shadow-sm">
-                      <OwnerDisplay
-                        address={event.creator || ''}
-                        className="text-white/80"
-                        showIcon={false}
-                      />
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )
-      }
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Curations for you */}
       <section className="space-y-3 px-4">
@@ -329,13 +374,23 @@ export default function StreamHome() {
             >
               <div className="relative h-32">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <Image src={c.image} alt={c.title} className="w-full h-full object-cover" width={100} height={100} />
+                <Image
+                  src={c.image}
+                  alt={c.title}
+                  className="w-full h-full object-cover"
+                  width={100}
+                  height={100}
+                />
 
                 {/* Distance indicator */}
                 {c.distance !== null && (
                   <div className="absolute top-2 right-2 bg-blue-500/80 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
                     <MapPin className="w-2 h-2" />
-                    <span>{c.distance < 1 ? `${Math.round(c.distance * 1000)}m` : `${c.distance.toFixed(1)}km`}</span>
+                    <span>
+                      {c.distance < 1
+                        ? `${Math.round(c.distance * 1000)}m`
+                        : `${c.distance.toFixed(1)}km`}
+                    </span>
                   </div>
                 )}
 
@@ -347,7 +402,9 @@ export default function StreamHome() {
                       showIcon={false}
                     />
                   </div>
-                  <div className="text-base font-semibold leading-tight">{c.title}</div>
+                  <div className="text-base font-semibold leading-tight">
+                    {c.title}
+                  </div>
                 </div>
               </div>
             </Link>
@@ -366,10 +423,19 @@ export default function StreamHome() {
         <h3 className="text-sm font-medium">Active Participants for you</h3>
         <div className="flex gap-4 overflow-x-auto custom-scrollbar pb-4 mt-4">
           {curators.map((u) => (
-            <div key={u.id} className="flex flex-col items-center min-w-[72px] mt-2">
+            <div
+              key={u.id}
+              className="flex flex-col items-center min-w-[72px] mt-2"
+            >
               <div className="relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-white shadow">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <Image src={u.avatarUrl} alt={u.name} className="w-full h-full object-cover" width={100} height={100} />
+                <Image
+                  src={u.avatarUrl}
+                  alt={u.name}
+                  className="w-full h-full object-cover"
+                  width={100}
+                  height={100}
+                />
               </div>
               <div className="text-xs mt-1">
                 <OwnerDisplay
@@ -386,8 +452,6 @@ export default function StreamHome() {
           ))}
         </div>
       </section>
-    </div >
+    </div>
   );
 }
-
-

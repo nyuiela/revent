@@ -1,14 +1,15 @@
 "use client";
 
-import {
-  Calendar,
-  MapPin,
-  Clock,
-  ChevronLeft,
-} from "lucide-react";
+import { Calendar, MapPin, Clock, ChevronLeft } from "lucide-react";
 import { useState, useEffect, ReactNode } from "react";
 import { useAccount, useChainId, useReadContract } from "wagmi";
-import { Transaction, TransactionButton, TransactionStatus, TransactionStatusAction, TransactionStatusLabel } from "@coinbase/onchainkit/transaction";
+import {
+  Transaction,
+  TransactionButton,
+  TransactionStatus,
+  TransactionStatusAction,
+  TransactionStatusLabel,
+} from "@coinbase/onchainkit/transaction";
 // import { WalletModal } from "@coinbase/onchainkit/wallet";
 import { eventAbi, eventAddress } from "@/lib/contract";
 import type { Abi } from "viem";
@@ -22,7 +23,11 @@ import { useEventTickets } from "../../hooks/useEventTickets";
 import { useEventStatus } from "../../hooks/useEventStatus";
 import { EventDetails } from "@/utils/types";
 import RegistrationSuccessCard from "./RegistrationSuccessCard";
-import { Avatar, FollowersYouKnow, ProfileSocials } from "ethereum-identity-kit";
+import {
+  Avatar,
+  FollowersYouKnow,
+  ProfileSocials,
+} from "ethereum-identity-kit";
 import Image from "next/image";
 import { Button } from "./DemoComponents";
 import { useRouter } from "next/navigation";
@@ -30,7 +35,6 @@ import { ticketAbi, ticketAddress } from "@/lib/contract";
 import { formatAddress } from "@/utils/farcaster";
 import ContractButton from "./button/ContractButton";
 // import EventManagement from "./EventManagement";
-
 
 type Props = {
   eventId?: string;
@@ -68,15 +72,30 @@ type Props = {
   onBack?: () => void;
 };
 
-export default function EventPage({ eventId, ipfsHash, idType, graphEventData, eventSlugData }: Props) {
+export default function EventPage({
+  eventId,
+  ipfsHash,
+  idType,
+  graphEventData,
+  eventSlugData,
+}: Props) {
   const [isScrolling, setIsScrolling] = useState(false);
-  const { viewCount, isLoading: viewCountLoading } = useEventViews(eventId || '');
-  const { tickets, isLoading: ticketsLoading, hasTickets, error: ticketsError } = useEventTickets(eventId);
+  const { viewCount, isLoading: viewCountLoading } = useEventViews(
+    eventId || "",
+  );
+  const {
+    tickets,
+    isLoading: ticketsLoading,
+    hasTickets,
+    error: ticketsError,
+  } = useEventTickets(eventId);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [ticketMode] = useState<"none" | "single" | "multiple">("single");
   const [selectedTicketIndex, setSelectedTicketIndex] = useState(0);
   const [ticketQuantity, setTicketQuantity] = useState(1);
-  const [ipfsData, setIpfsData] = useState<Record<string, unknown> | null>(null);
+  const [ipfsData, setIpfsData] = useState<Record<string, unknown> | null>(
+    null,
+  );
   const [ipfsLoading, setIpfsLoading] = useState<boolean>(false);
   const [ipfsError, setIpfsError] = useState<string | null>(null);
   // const [showWalletModal, setShowWalletModal] = useState(false);
@@ -85,21 +104,23 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
   const chainId = useChainId();
   const [isRegistering, setIsRegistering] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
-  const numericEventId = eventId && typeof eventId === "string" ? Number(eventId) : eventId;
+  const numericEventId =
+    eventId && typeof eventId === "string" ? Number(eventId) : eventId;
   const canTransact = Boolean(chainId && eventAddress);
   const canPurchaseTickets = Boolean(address && chainId && ticketAddress);
-  const { statusData } = useEventStatus(eventId || '');
-  const isPublished = (statusData?.statusName || '').toLowerCase() === 'published';
+  const { statusData } = useEventStatus(eventId || "");
+  const isPublished =
+    (statusData?.statusName || "").toLowerCase() === "published";
 
   // Debug logging
-  console.log('EventPage Debug:', {
+  console.log("EventPage Debug:", {
     eventId,
     numericEventId,
     address,
     chainId,
     eventAddress,
     canTransact,
-    canPurchaseTickets
+    canPurchaseTickets,
   });
   const [isMounted, setIsMounted] = useState(false);
 
@@ -148,11 +169,11 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
   const eventCreator = graphEventData?.creator;
   const isEventCreator = Boolean(
     address &&
-    eventCreator &&
-    address.toLowerCase() === eventCreator.toLowerCase()
+      eventCreator &&
+      address.toLowerCase() === eventCreator.toLowerCase(),
   );
 
-  console.log('EventPage Debug:', {
+  console.log("EventPage Debug:", {
     eventId,
     ipfsHash,
     idType,
@@ -163,7 +184,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
     graphEventData,
     address,
     eventCreator,
-    isEventCreator
+    isEventCreator,
   });
 
   // Scroll detection logic
@@ -181,8 +202,8 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
       setLastScrollY(currentScrollY);
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
   // const [selectedMedia, setSelectedMedia] = useState<EventMedia | null>(null);
@@ -204,20 +225,25 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
       // Priority 1: Use IPFS hash from Graph Protocol data
       if (!ipfsUri && graphEventData && graphEventData.ipfsHash) {
-        ipfsUri = graphEventData.ipfsHash.startsWith('ipfs://')
+        ipfsUri = graphEventData.ipfsHash.startsWith("ipfs://")
           ? graphEventData.ipfsHash
           : `ipfs://${graphEventData.ipfsHash}`;
-        console.log('Using IPFS hash from Graph Protocol data:', ipfsUri);
+        console.log("Using IPFS hash from Graph Protocol data:", ipfsUri);
       }
 
       // Priority 2: Use IPFS hash from contract eventData
-      if (!ipfsUri && eventData && Array.isArray(eventData) && eventData.length > 0) {
+      if (
+        !ipfsUri &&
+        eventData &&
+        Array.isArray(eventData) &&
+        eventData.length > 0
+      ) {
         ipfsUri = eventData[0] as string; // Assuming the first element is the IPFS URI
-        console.log('Using IPFS hash from contract eventData:', ipfsUri);
+        console.log("Using IPFS hash from contract eventData:", ipfsUri);
       }
 
       if (!ipfsUri) {
-        console.log('No IPFS URI found, skipping IPFS fetch');
+        console.log("No IPFS URI found, skipping IPFS fetch");
         return;
       }
 
@@ -226,17 +252,21 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
         setIpfsError(null);
         const url = resolveIpfsUri(ipfsUri);
         const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok) throw new Error(`Failed to fetch IPFS metadata (${res.status})`);
-        const json = await res.json() as Record<string, unknown>;
+        if (!res.ok)
+          throw new Error(`Failed to fetch IPFS metadata (${res.status})`);
+        const json = (await res.json()) as Record<string, unknown>;
         if (!aborted) setIpfsData(json);
       } catch (e: unknown) {
-        if (!aborted) setIpfsError((e as Error)?.message || "Failed to load IPFS metadata");
+        if (!aborted)
+          setIpfsError((e as Error)?.message || "Failed to load IPFS metadata");
       } finally {
         if (!aborted) setIpfsLoading(false);
       }
     }
     run();
-    return () => { aborted = true; };
+    return () => {
+      aborted = true;
+    };
   }, [ipfsHash, eventData, graphEventData]);
 
   // Format helpers for date/time (prefer IPFS startISO/endISO)
@@ -251,7 +281,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--app-accent)] mx-auto mb-4"></div>
           <p className="text-[var(--app-foreground-muted)]">
-            {eventId ? 'Retrieving event data...' : 'Loading event metadata...'}
+            {eventId ? "Retrieving event data..." : "Loading event metadata..."}
           </p>
         </div>
       </div>
@@ -264,9 +294,12 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-[var(--app-foreground)] mb-2">Event Not Found</h1>
+          <h1 className="text-2xl font-bold text-[var(--app-foreground)] mb-2">
+            Event Not Found
+          </h1>
           <p className="text-[var(--app-foreground-muted)] mb-4">
-            {ipfsError || "Unable to load event data. The event may not exist or the data may be unavailable."}
+            {ipfsError ||
+              "Unable to load event data. The event may not exist or the data may be unavailable."}
           </p>
           <button
             onClick={() => window.history.back()}
@@ -278,12 +311,14 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
       </div>
     );
   }
-  const startUnix: number | undefined = typeof ipfsData?.startTime === 'number' ? ipfsData?.startTime : undefined;
-  const endUnix: number | undefined = typeof ipfsData?.endTime === 'number' ? ipfsData?.endTime : undefined;
+  const startUnix: number | undefined =
+    typeof ipfsData?.startTime === "number" ? ipfsData?.startTime : undefined;
+  const endUnix: number | undefined =
+    typeof ipfsData?.endTime === "number" ? ipfsData?.endTime : undefined;
 
   function toDate(d?: string | number) {
     if (d === undefined) return undefined;
-    if (typeof d === 'string') return new Date(d);
+    if (typeof d === "string") return new Date(d);
     // Heuristic: treat values < 10^12 as seconds, otherwise millis
     const secs = d < 1_000_000_000_000 ? d * 1000 : d;
     return new Date(secs);
@@ -293,11 +328,16 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
   const endDateObj = toDate(endISO ?? endUnix);
 
   const formattedDate = startDateObj
-    ? startDateObj.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+    ? startDateObj.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
     : "December 15, 2024";
-  const formattedTime = startDateObj && endDateObj
-    ? `${startDateObj.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })} - ${endDateObj.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`
-    : "2:00 PM - 10:00 PM EST";
+  const formattedTime =
+    startDateObj && endDateObj
+      ? `${startDateObj.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })} - ${endDateObj.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`
+      : "2:00 PM - 10:00 PM EST";
 
   // Loading UI while fetching IPFS
   if (ipfsHash && ipfsLoading) {
@@ -312,115 +352,152 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
   }
   // Use real data from various sources, with IPFS data taking priority
   const event: EventDetails = {
-    id: eventId || 'unknown',
-    title: (ipfsData?.title as string) ||
+    id: eventId || "unknown",
+    title:
+      (ipfsData?.title as string) ||
       (eventSlugData?.title as string) ||
-      (graphEventData?.eventId ? `Event #${graphEventData.eventId}` : "Event Details"),
+      (graphEventData?.eventId
+        ? `Event #${graphEventData.eventId}`
+        : "Event Details"),
     description:
       (ipfsData?.description as string) ||
       (eventSlugData?.description as string) ||
       "Event details will be available soon.",
     date: formattedDate,
     time: formattedTime,
-    onlinePlatformLink: (ipfsData?.onlinePlatformLink as string) ||
+    onlinePlatformLink:
+      (ipfsData?.onlinePlatformLink as string) ||
       (eventSlugData?.onlinePlatformLink as string) ||
       "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    location: (ipfsData?.location as string) ||
-      "Location TBD",
-    coordinates: (ipfsData?.coordinates as { lat: number; lng: number }) ||
-      (eventSlugData?.lat && eventSlugData?.lng ? { lat: eventSlugData.lat, lng: eventSlugData.lng } : { lat: 0, lng: 0 }),
-    image: (ipfsData?.image as string) ||
+    location: (ipfsData?.location as string) || "Location TBD",
+    coordinates:
+      (ipfsData?.coordinates as { lat: number; lng: number }) ||
+      (eventSlugData?.lat && eventSlugData?.lng
+        ? { lat: eventSlugData.lat, lng: eventSlugData.lng }
+        : { lat: 0, lng: 0 }),
+    image:
+      (ipfsData?.image as string) ||
       (eventSlugData?.avatarUrl as string) ||
       "/hero.png",
-    category: (ipfsData?.category as string) ||
+    category:
+      (ipfsData?.category as string) ||
       (eventSlugData?.category as string) ||
       "General",
-    maxParticipants: (ipfsData?.maxParticipants as number) ??
-      (eventSlugData?.maxAttendees ? parseInt(eventSlugData.maxAttendees) : undefined) ??
-      (graphEventData?.maxParticipants ? parseInt(graphEventData.maxParticipants) : undefined) ??
+    maxParticipants:
+      (ipfsData?.maxParticipants as number) ??
+      (eventSlugData?.maxAttendees
+        ? parseInt(eventSlugData.maxAttendees)
+        : undefined) ??
+      (graphEventData?.maxParticipants
+        ? parseInt(graphEventData.maxParticipants)
+        : undefined) ??
       100,
     currentParticipants: attendeesData ? (attendeesData as string[]).length : 0,
-    isLive: (ipfsData?.isLive as boolean) ??
+    isLive:
+      (ipfsData?.isLive as boolean) ??
       (eventSlugData?.isLive as boolean) ??
       false,
     platforms: (ipfsData?.platforms as string[]) ||
-      (eventSlugData?.platforms as string[]) ||
-      ["Farcaster"],
+      (eventSlugData?.platforms as string[]) || ["Farcaster"],
     totalRewards: (ipfsData?.totalRewards as number) ?? 0,
 
     // ✅ Sessions & Agenda
-    agenda: (ipfsData?.agenda as Record<string, unknown>[])?.map((a, idx) => ({
-      id: (a.id as string) || `item-${idx}`,
-      title: a.title as string,
-      description: a.description as string,
-      startTime: a.startTime as string,
-      endTime: a.endTime as string,
-      speakers: a.speakers as string[],
-    })) || [],
+    agenda:
+      (ipfsData?.agenda as Record<string, unknown>[])?.map((a, idx) => ({
+        id: (a.id as string) || `item-${idx}`,
+        title: a.title as string,
+        description: a.description as string,
+        startTime: a.startTime as string,
+        endTime: a.endTime as string,
+        speakers: a.speakers as string[],
+      })) || [],
 
     // ✅ Participants - use real attendees data
-    participants: attendeesData ? (attendeesData as string[]).map((address, index) => ({
-      id: address,
-      name: `Participant ${index + 1}`,
-      avatar: "/hero.png",
-      role: "viewer" as const,
-      bio: `Event participant with address ${address.slice(0, 6)}...${address.slice(-4)}`,
-      contribution: 0
-    })) : [],
+    participants: attendeesData
+      ? (attendeesData as string[]).map((address, index) => ({
+          id: address,
+          name: `Participant ${index + 1}`,
+          avatar: "/hero.png",
+          role: "viewer" as const,
+          bio: `Event participant with address ${address.slice(0, 6)}...${address.slice(-4)}`,
+          contribution: 0,
+        }))
+      : [],
 
     // ✅ Media - use real media data from IPFS if available
-    media: (ipfsData?.media as Record<string, unknown>[])?.map((m, idx) => ({
-      id: (m.id as string) || `media-${idx}`,
-      type: ((m.type as string) === "video" ? "video" : "image") as "image" | "video",
-      url: (m.url as string) || "/hero.png",
-      title: (m.title as string) || "Event Media",
-      uploadedBy: (m.uploadedBy as string) || "Event Team",
-      uploadedAt: (m.uploadedAt as string) || "Recently",
-      likes: (m.likes as number) || 0
-    })) || [],
+    media:
+      (ipfsData?.media as Record<string, unknown>[])?.map((m, idx) => ({
+        id: (m.id as string) || `media-${idx}`,
+        type: ((m.type as string) === "video" ? "video" : "image") as
+          | "image"
+          | "video",
+        url: (m.url as string) || "/hero.png",
+        title: (m.title as string) || "Event Media",
+        uploadedBy: (m.uploadedBy as string) || "Event Team",
+        uploadedAt: (m.uploadedAt as string) || "Recently",
+        likes: (m.likes as number) || 0,
+      })) || [],
 
     // ✅ Rewards - use real rewards data from IPFS if available
-    rewards: (ipfsData?.rewards as Record<string, unknown>[])?.map((r, idx) => ({
-      id: (r.id as string) || `reward-${idx}`,
-      name: (r.name as string) || "Event Reward",
-      description: (r.description as string) || "Reward for participation",
-      value: (r.value as number) || 0,
-      currency: (r.currency as string) || "USD",
-      totalPool: (r.totalPool as number) || 0,
-      distributed: (r.distributed as number) || 0,
-      icon: (r.icon as string) || "🎁"
-    })) || [],
+    rewards:
+      (ipfsData?.rewards as Record<string, unknown>[])?.map((r, idx) => ({
+        id: (r.id as string) || `reward-${idx}`,
+        name: (r.name as string) || "Event Reward",
+        description: (r.description as string) || "Reward for participation",
+        value: (r.value as number) || 0,
+        currency: (r.currency as string) || "USD",
+        totalPool: (r.totalPool as number) || 0,
+        distributed: (r.distributed as number) || 0,
+        icon: (r.icon as string) || "🎁",
+      })) || [],
 
     // ✅ Sponsors & Partners - use real sponsors data from IPFS if available
-    sponsors: (ipfsData?.sponsors as Record<string, unknown>[])?.map((s, idx) => ({
-      name: (s.name as string) || `Sponsor ${idx + 1}`,
-      logo: (s.logo as string) || "/hero.png",
-      link: (s.link as string) || "#"
-    })) || [],
+    sponsors:
+      (ipfsData?.sponsors as Record<string, unknown>[])?.map((s, idx) => ({
+        name: (s.name as string) || `Sponsor ${idx + 1}`,
+        logo: (s.logo as string) || "/hero.png",
+        link: (s.link as string) || "#",
+      })) || [],
 
     // ✅ Ticket Info - use real ticket data from IPFS or contract
-    tickets: (ipfsData?.tickets as { available: boolean; types: { type: string; price: number; currency: string; perks?: string[] }[] }) ?? {
-      available: graphEventData?.registrationFee ? parseFloat(graphEventData.registrationFee) > 0 : false,
-      types: graphEventData?.registrationFee ? [{
-        type: "Event Registration",
-        price: parseFloat(graphEventData.registrationFee),
-        currency: "ETH"
-      }] : []
+    tickets: (ipfsData?.tickets as {
+      available: boolean;
+      types: {
+        type: string;
+        price: number;
+        currency: string;
+        perks?: string[];
+      }[];
+    }) ?? {
+      available: graphEventData?.registrationFee
+        ? parseFloat(graphEventData.registrationFee) > 0
+        : false,
+      types: graphEventData?.registrationFee
+        ? [
+            {
+              type: "Event Registration",
+              price: parseFloat(graphEventData.registrationFee),
+              currency: "ETH",
+            },
+          ]
+        : [],
     },
 
     // ✅ Hosts - use real hosts data from IPFS if available
-    hosts: (ipfsData?.hosts as Record<string, unknown>[])?.map((h: Record<string, unknown>) => ({
-      name: h.name as string,
-      avatar: (h.avatar as string) || "/hero.png",
-      role: (h.role as string) || "Host",
-      bio: h.bio as string,
-      social: h.social as Record<string, string> || {},
-    })) || [],
+    hosts:
+      (ipfsData?.hosts as Record<string, unknown>[])?.map(
+        (h: Record<string, unknown>) => ({
+          name: h.name as string,
+          avatar: (h.avatar as string) || "/hero.png",
+          role: (h.role as string) || "Host",
+          bio: h.bio as string,
+          social: (h.social as Record<string, string>) || {},
+        }),
+      ) || [],
 
     // ✅ Social Links - use real social links from IPFS if available
-    socialLinks: (ipfsData?.socialLinks as Record<string, string>) || {}
+    socialLinks: (ipfsData?.socialLinks as Record<string, string>) || {},
   };
-
 
   // const topContributors = [...event.participants]
   //   .sort((a, b) => b.contribution - a.contribution)
@@ -447,38 +524,46 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
   // };
 
   // Ticket helpers - use real ticket data from contract or fallback to IPFS data
-  const ticketTypes = hasTickets ? tickets.map(ticket => {
-    try {
-      return {
-        type: ticket.name || 'Unknown Ticket',
-        price: parseFloat(ticket.price || '0') / 1e18, // Convert from wei to ETH
-        currency: ticket.currency || 'ETH',
-        quantity: parseInt(ticket.totalQuantity || '0'),
-        perks: ticket.perks || []
-      };
-    } catch (error) {
-      console.error('Error parsing ticket data:', error);
-      return {
-        type: 'Invalid Ticket',
-        price: 0,
-        currency: 'ETH',
-        quantity: 0,
-        perks: []
-      };
-    }
-  }) : (event.tickets?.available ? (event.tickets?.types || []) : []);
+  const ticketTypes = hasTickets
+    ? tickets.map((ticket) => {
+        try {
+          return {
+            type: ticket.name || "Unknown Ticket",
+            price: parseFloat(ticket.price || "0") / 1e18, // Convert from wei to ETH
+            currency: ticket.currency || "ETH",
+            quantity: parseInt(ticket.totalQuantity || "0"),
+            perks: ticket.perks || [],
+          };
+        } catch (error) {
+          console.error("Error parsing ticket data:", error);
+          return {
+            type: "Invalid Ticket",
+            price: 0,
+            currency: "ETH",
+            quantity: 0,
+            perks: [],
+          };
+        }
+      })
+    : event.tickets?.available
+      ? event.tickets?.types || []
+      : [];
 
   // Ensure selectedTicketIndex is within bounds
-  const safeSelectedTicketIndex = Math.min(selectedTicketIndex, Math.max(0, ticketTypes.length - 1));
+  const safeSelectedTicketIndex = Math.min(
+    selectedTicketIndex,
+    Math.max(0, ticketTypes.length - 1),
+  );
   const selectedTicket = ticketTypes[safeSelectedTicketIndex];
-  const effectiveQty = ticketMode === "none" ? 0 : (ticketMode === "single" ? 1 : Math.max(1, ticketQuantity));
+  const effectiveQty =
+    ticketMode === "none"
+      ? 0
+      : ticketMode === "single"
+        ? 1
+        : Math.max(1, ticketQuantity);
   const totalPrice = selectedTicket ? selectedTicket.price * effectiveQty : 0;
   // const canRegister = ticketMode === "none" || (event.tickets?.available && !!selectedTicket && effectiveQty > 0);
   const registerCta = ticketMode === "none" ? "RSVP" : "Get Tickets";
-
-
-
-
 
   //  function onBack(): void {
   //   window.history.back();
@@ -486,7 +571,6 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
   // Prepare map data for EventsMap
   // Mapbox EventsMap dataset kept for future multi-event contexts if needed
-
 
   return (
     <div className="min-h-screen mt-0 text-[var(--events-foreground)] bg-background relative z-[20]">
@@ -522,7 +606,11 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
       {/* Hero Section */}
       <div className="relative h-[25rem] md:h-[25rem] overflow-hidden">
         <div className="left-4 top-4 z-10 absolute rounded-full bg-black/40 backdrop-blur-md cursor-pointer">
-          <Button variant="ghost" className="gap-2 bg-transparent cursor-pointer" onClick={() => router.back()}>
+          <Button
+            variant="ghost"
+            className="gap-2 bg-transparent cursor-pointer"
+            onClick={() => router.back()}
+          >
             <ChevronLeft className="w-6 h-6 text-white" />
           </Button>
         </div>
@@ -550,7 +638,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
           <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
             {event.title}
           </h1>
-          <div className="flex items-center gap-4 text-white/80 text-sm">
+          <div className="grid grid-cols-2 gap-4 text-white/80 text-sm">
             <div className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
               {event.date}
@@ -575,21 +663,22 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
 
       {/* Content */}
       <div className="p-8 px-4 max-w-7xl mx-auto space-y-8">
-
         {/* Registration/Tickets Section */}
         <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
           <h2 className="text-xl font-semibold mb-4">
             {hasTickets ? "Purchase Tickets" : "Register"}
           </h2>
           {isRegistered !== undefined && isRegistered && (
-            <div className="border border-[var(--events-card-border)] border-none bg-blue-500 mb-2">You are already registered for this event</div>
+            <div className="border border-[var(--events-card-border)] border-none bg-blue-500 mb-2">
+              You are already registered for this event
+            </div>
           )}
 
           {/* Show error if tickets failed to load */}
           {ticketsError && (
             <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
               <div className="text-red-800 text-sm">
-                Error loading tickets: {ticketsError.message || 'Unknown error'}
+                Error loading tickets: {ticketsError.message || "Unknown error"}
               </div>
             </div>
           )}
@@ -597,7 +686,8 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
           {/* Show tickets if available, otherwise show registration; gate by publish status */}
           {!isPublished ? (
             <div className="p-4 border border-border rounded-lg bg-muted text-muted-foreground ">
-              This event is currently in draft. Registration will open once it is published.
+              This event is currently in draft. Registration will open once it
+              is published.
             </div>
           ) : !ticketsError && hasTickets ? (
             <>
@@ -610,9 +700,11 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                         type="button"
                         key={t.type}
                         onClick={() => setSelectedTicketIndex(idx)}
-                        className={`text-left p-4 rounded-2xl transition-colors bg-muted border-none cursor-pointer ${selectedTicketIndex === idx
-                          ? "bg-muted-foreground/30"
-                          : "bg-muted-foreground/10"}`}
+                        className={`text-left p-4 rounded-2xl transition-colors bg-muted border-none cursor-pointer ${
+                          selectedTicketIndex === idx
+                            ? "bg-muted-foreground/30"
+                            : "bg-muted-foreground/10"
+                        }`}
                       >
                         <div className="flex items-center justify-between">
                           <div>
@@ -624,7 +716,8 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                             )}
                           </div>
                           <div className="text-right font-semibold">
-                            {t.currency === "USD" ? "$" : ""}{t.price.toLocaleString()}
+                            {t.currency === "USD" ? "$" : ""}
+                            {t.price.toLocaleString()}
                           </div>
                         </div>
                       </button>
@@ -634,19 +727,27 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                   {/* Quantity selector */}
                   {ticketMode === "multiple" && selectedTicket && (
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-[var(--events-foreground-muted)]">Quantity</span>
+                      <span className="text-sm text-[var(--events-foreground-muted)]">
+                        Quantity
+                      </span>
                       <div className="inline-flex items-center rounded-lg border border-[var(--events-card-border)]">
                         <button
                           type="button"
-                          onClick={() => setTicketQuantity((q) => Math.max(1, q - 1))}
+                          onClick={() =>
+                            setTicketQuantity((q) => Math.max(1, q - 1))
+                          }
                           className="px-3 py-1.5 text-sm hover:bg-[var(--events-accent)]/10"
                         >
                           −
                         </button>
-                        <div className="px-4 py-1.5 text-sm">{ticketQuantity}</div>
+                        <div className="px-4 py-1.5 text-sm">
+                          {ticketQuantity}
+                        </div>
                         <button
                           type="button"
-                          onClick={() => setTicketQuantity((q) => Math.min(10, q + 1))}
+                          onClick={() =>
+                            setTicketQuantity((q) => Math.min(10, q + 1))
+                          }
                           className="px-3 py-1.5 text-sm hover:bg-[var(--events-accent)]/10"
                         >
                           +
@@ -656,27 +757,33 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                   )}
 
                   {/* Purchase button */}
-                  {selectedTicket && canPurchaseTickets && tickets.length > 0 && safeSelectedTicketIndex < tickets.length && (
-                    <div className="flex items-center gap-1 mb-0 p-4 px-[0.2rem] rounded-xl pb-0 w-full">
-                      <ContractButton
-                        chainId={chainId}
-                        abi={eventAbi.abi as Abi}
-                        address={eventAddress as `0x${string}`}
-                        functionName="registerForEvent"
-                        args={[BigInt(numericEventId || 0), "0x"]}
-                        onReceiptSuccess={async () => {
-                        }}
-                        idleLabel={isPurchasing ? "Purchasing..." : `Purchase ${ticketQuantity} Ticket${ticketQuantity > 1 ? 's' : ''}`}
-                        successLabel="Tickets Purchased"
-                        errorLabel="Try Again"
-                        cancelLabel="Cancel"
-                        showCancel={true}
-                        showToast={true}
-                        successToastMessage="Registered for Event"
-                        btnClassName="w-full bg-emerald-600 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors cursor-pointer"
-                        className="w-full"
-                      />
-                      {/* <Transaction
+                  {selectedTicket &&
+                    canPurchaseTickets &&
+                    tickets.length > 0 &&
+                    safeSelectedTicketIndex < tickets.length && (
+                      <div className="flex items-center gap-1 mb-0 p-4 px-[0.2rem] rounded-xl pb-0 w-full">
+                        <ContractButton
+                          chainId={chainId}
+                          abi={eventAbi.abi as Abi}
+                          address={eventAddress as `0x${string}`}
+                          functionName="registerForEvent"
+                          args={[BigInt(numericEventId || 0), "0x"]}
+                          onReceiptSuccess={async () => {}}
+                          idleLabel={
+                            isPurchasing
+                              ? "Purchasing..."
+                              : `Purchase ${ticketQuantity} Ticket${ticketQuantity > 1 ? "s" : ""}`
+                          }
+                          successLabel="Tickets Purchased"
+                          errorLabel="Try Again"
+                          cancelLabel="Cancel"
+                          showCancel={true}
+                          showToast={true}
+                          successToastMessage="Registered for Event"
+                          btnClassName="w-full bg-emerald-600 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors cursor-pointer"
+                          className="w-full"
+                        />
+                        {/* <Transaction
                         chainId={chainId}
                         calls={[
                           {
@@ -706,11 +813,13 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                           <TransactionStatusAction />
                         </TransactionStatus>
                       </Transaction> */}
-                    </div>
-                  )}
+                      </div>
+                    )}
                 </div>
               ) : (
-                <div className="text-sm text-[var(--events-foreground-muted)]">No tickets available</div>
+                <div className="text-sm text-[var(--events-foreground-muted)]">
+                  No tickets available
+                </div>
               )}
             </>
           ) : !ticketsError ? (
@@ -724,8 +833,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                     address={eventAddress as `0x${string}`}
                     functionName="registerForEvent"
                     args={[BigInt(numericEventId || 0), "0x"]}
-                    onReceiptSuccess={async () => {
-                    }}
+                    onReceiptSuccess={async () => {}}
                     idleLabel="Register for Event"
                     className="w-full"
                     successLabel="Registered for Event"
@@ -736,6 +844,7 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                     successToastMessage="Registered for Event"
                     btnClassName="w-full bg-emerald-600 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors cursor-pointer"
                   />
+                ) : (
                   // <Transaction
                   //   chainId={chainId}
                   //   calls={[
@@ -763,7 +872,6 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                   //     <TransactionStatusAction />
                   //   </TransactionStatus>
                   // </Transaction>
-                ) : (
                   <></>
                 )}
               </div>
@@ -788,7 +896,6 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
             </div>
           </div> */}
         </div>
-
 
         {/* Live Streamers */}
         {/* {liveStreamers.length > 0 && (
@@ -823,8 +930,6 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
             </p>
           </div>
 
-
-
           {/* Agenda Section */}
           <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
             <h2 className="text-xl font-semibold mb-4">Agenda</h2>
@@ -832,8 +937,12 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
               {event.agenda.map((agenda) => (
                 <div key={agenda.id}>
                   <h3 className="text-lg font-medium mb-2">{agenda.title}</h3>
-                  <p className="text-sm text-[var(--events-foreground-muted)] mb-2">{agenda.description}</p>
-                  <p className="text-sm text-[var(--events-foreground-muted)] mb-2">{agenda.startTime} - {agenda.endTime}</p>
+                  <p className="text-sm text-[var(--events-foreground-muted)] mb-2">
+                    {agenda.description}
+                  </p>
+                  <p className="text-sm text-[var(--events-foreground-muted)] mb-2">
+                    {agenda.startTime} - {agenda.endTime}
+                  </p>
                 </div>
               ))}
             </div>
@@ -847,18 +956,30 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
               </h2>
               <div className="space-y-2">
                 {event.hosts.map((host, index) => (
-                  <div key={index} className="flex items-start gap-4 p-2 border-none border-[var(--events-card-border)] rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-start gap-4 p-2 border-none border-[var(--events-card-border)] rounded-lg"
+                  >
                     <div className="flex-shrink-0">
-                      <Avatar address={host.name as `0x${string}` || ""} style={{ width: "40px", height: "40px" }} />
+                      <Avatar
+                        address={(host.name as `0x${string}`) || ""}
+                        style={{ width: "40px", height: "40px" }}
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className=" font-medium text-[14px]">{formatAddress(host.name as `0x${string}` || "")}</h3>
+                        <h3 className=" font-medium text-[14px]">
+                          {formatAddress((host.name as `0x${string}`) || "")}
+                        </h3>
                         {/* <ProfileSocials userAddress={host.name as `0x${string}` || ""} records={host.social} style={{}} /> */}
                       </div>
-                      <p className="text-xs text-[var(--events-accent)] font-medium mb-2">{host.role}</p>
-                      <FollowersYouKnow connectedAddress={address as `0x${string}` || ""} lookupAddressOrName={host.name as `0x${string}` || ""} />
-
+                      <p className="text-xs text-[var(--events-accent)] font-medium mb-2">
+                        {host.role}
+                      </p>
+                      <FollowersYouKnow
+                        connectedAddress={(address as `0x${string}`) || ""}
+                        lookupAddressOrName={(host.name as `0x${string}`) || ""}
+                      />
                     </div>
                   </div>
                 ))}
@@ -882,10 +1003,12 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
               </div>
 
               {/* Location display - map for offline, URL for online */}
-              {event.location.startsWith('http') ? (
+              {event.location.startsWith("http") ? (
                 <div className="bg-transparent border border-border rounded-lg text-center p-4">
                   <div className="space-y-3">
-                    <div className="text-sm text-muted-foreground">Online Event</div>
+                    <div className="text-sm text-muted-foreground">
+                      Online Event
+                    </div>
                     <a
                       href={event.location}
                       target="_blank"
@@ -901,10 +1024,13 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                 </div>
               ) : (
                 <div className="bg-transparent border border-border rounded-lg text-center p-0">
-                  <StaticLocationMap lat={event.coordinates.lat} lng={event.coordinates.lng} heightClass="h-64" />
+                  <StaticLocationMap
+                    lat={event.coordinates.lat}
+                    lng={event.coordinates.lng}
+                    heightClass="h-64"
+                  />
                 </div>
               )}
-
             </div>
           </div>
           {/* <EventCam setActiveTab={() => { }} /> */}
@@ -912,28 +1038,34 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
           {/* Participants Section */}
           <div className="border border-[var(--events-card-border)] rounded-xl border-none bg-transparent">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              All Participants ({Array.isArray(attendeesData) ? attendeesData.length : 0})
+              All Participants (
+              {Array.isArray(attendeesData) ? attendeesData.length : 0})
             </h2>
             <ParticipantsGrid
               addresses={
                 Array.isArray(attendeesData)
-                  ? attendeesData.map((att: Record<string, unknown>) => (att?.attendee as string) || (att?.wallet as string) || (att as unknown as string)).filter(Boolean) as string[]
+                  ? (attendeesData
+                      .map(
+                        (att: Record<string, unknown>) =>
+                          (att?.attendee as string) ||
+                          (att?.wallet as string) ||
+                          (att as unknown as string),
+                      )
+                      .filter(Boolean) as string[])
                   : []
               }
               maxItems={4}
             />
           </div>
-
-
         </div>
       </div>
 
       {/* Sticky Registration Button */}
-      {
-        false && !isRegistered &&
-        (<div
-          className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out bg-black/40 border-none ${isScrolling ? 'translate-y-full' : 'translate-y-0'
-            }`}
+      {false && !isRegistered && (
+        <div
+          className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out bg-black/40 border-none ${
+            isScrolling ? "translate-y-full" : "translate-y-0"
+          }`}
         >
           <div className="bg-white/80 dark:bg-transparent backdrop-blur-sm border-t border-[var(--events-card-border)] p-4 border-none min-h-[6rem]">
             <div className="max-w-7xl mx-auto">
@@ -948,8 +1080,23 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                 </div>
                 <div className="flex items-center gap-4 flex-col">
                   <div className="text-right">
-                    <div className="text-xs text-[var(--events-foreground-muted)]">{ticketMode === "none" ? "RSVP" : (selectedTicket ? selectedTicket.type : "Ticket")}{ticketMode === "multiple" && selectedTicket ? ` × ${effectiveQty}` : ""}</div>
-                    <div className="text-base font-semibold">{ticketMode === "none" ? "Free" : (selectedTicket ? `${selectedTicket.currency === "USD" ? "$" : ""}${totalPrice.toLocaleString()}` : "—")}</div>
+                    <div className="text-xs text-[var(--events-foreground-muted)]">
+                      {ticketMode === "none"
+                        ? "RSVP"
+                        : selectedTicket
+                          ? selectedTicket.type
+                          : "Ticket"}
+                      {ticketMode === "multiple" && selectedTicket
+                        ? ` × ${effectiveQty}`
+                        : ""}
+                    </div>
+                    <div className="text-base font-semibold">
+                      {ticketMode === "none"
+                        ? "Free"
+                        : selectedTicket
+                          ? `${selectedTicket.currency === "USD" ? "$" : ""}${totalPrice.toLocaleString()}`
+                          : "—"}
+                    </div>
                   </div>
                   {/* <button className="px-4 py-2 text-sm font-medium text-[var(--events-foreground)] border border-[var(--events-card-border)] rounded-lg hover:bg-[var(--events-accent)]/10 transition-colors">
                   Share
@@ -966,17 +1113,35 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
                         },
                       ]}
                       onStatus={(s) => {
-                        console.log('Sticky registration transaction status:', s);
-                        setIsRegistering(s.statusName === "transactionPending" || s.statusName === "buildingTransaction");
+                        console.log(
+                          "Sticky registration transaction status:",
+                          s,
+                        );
+                        setIsRegistering(
+                          s.statusName === "transactionPending" ||
+                            s.statusName === "buildingTransaction",
+                        );
                         if (s.statusName === "success") {
                           setShowRegistrationSuccess(true);
                         }
                         if (s.statusName === "error") {
-                          console.error('Sticky registration transaction error:', s);
+                          console.error(
+                            "Sticky registration transaction error:",
+                            s,
+                          );
                         }
                       }}
                     >
-                      <TransactionButton text={isRegistering ? (ticketMode === "none" ? "RSVP..." : "Processing...") : registerCta} className="bg-transparent hover:bg-transparent text-foreground dark:text-foreground p-0 underline text-sm font-medium cursor-pointer" />
+                      <TransactionButton
+                        text={
+                          isRegistering
+                            ? ticketMode === "none"
+                              ? "RSVP..."
+                              : "Processing..."
+                            : registerCta
+                        }
+                        className="bg-transparent hover:bg-transparent text-foreground dark:text-foreground p-0 underline text-sm font-medium cursor-pointer"
+                      />
                       <TransactionStatus>
                         <TransactionStatusLabel />
                         <TransactionStatusAction />
@@ -995,8 +1160,8 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
               </div>
             </div>
           </div>
-        </div>)
-      }
+        </div>
+      )}
 
       {/* Wallet Modal */}
       {/* <WalletModal
@@ -1006,18 +1171,16 @@ export default function EventPage({ eventId, ipfsHash, idType, graphEventData, e
       /> */}
 
       {/* Registration Success Card */}
-      {
-        showRegistrationSuccess && (
-          <RegistrationSuccessCard
-            event={event}
-            ticketType={selectedTicket?.type}
-            quantity={effectiveQty}
-            totalPrice={totalPrice}
-            currency={selectedTicket?.currency || "USD"}
-            onClose={() => setShowRegistrationSuccess(false)}
-          />
-        )
-      }
-    </div >
+      {showRegistrationSuccess && (
+        <RegistrationSuccessCard
+          event={event}
+          ticketType={selectedTicket?.type}
+          quantity={effectiveQty}
+          totalPrice={totalPrice}
+          currency={selectedTicket?.currency || "USD"}
+          onClose={() => setShowRegistrationSuccess(false)}
+        />
+      )}
+    </div>
   );
 }

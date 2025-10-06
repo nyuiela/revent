@@ -1,33 +1,39 @@
-"use client"
-import React, { useMemo } from 'react'
-import Link from 'next/link'
-import { MapPin, Users, Calendar, Loader2, RefreshCw } from "lucide-react"
-import Footer from '../components/footer'
+"use client";
+import React, { useMemo } from "react";
+import Link from "next/link";
+import {
+  MapPin,
+  Users,
+  Calendar,
+  Clock,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
+import Footer from "../components/footer";
 // import OwnerDisplay from '../../components/OwnerDisplay'
-import ViewCount from '../../components/ViewCount'
-import { useEvents } from '../../hooks/useEvents'
-import { useViewCounts } from '../../hooks/useViewCounts'
-import Image from 'next/image';
+import ViewCount from "../../components/ViewCount";
+import { useEvents } from "../../hooks/useEvents";
+import { useViewCounts } from "../../hooks/useViewCounts";
+import Image from "next/image";
 // import StreamHeader from '../components/StreamHeader'
-
 
 // Function to format timestamp to readable date
 function formatTimestamp(timestamp: string): string {
   const date = new Date(parseInt(timestamp) * 1000);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 }
 
 // Function to format timestamp to readable time
 function formatTime(timestamp: string): string {
   const date = new Date(parseInt(timestamp) * 1000);
-  return date.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
   });
 }
 
@@ -40,13 +46,23 @@ function getTimeRange(startTime: string, endTime: string): string {
 
 const EventsPage = () => {
   // Use React Query for events data
-  const { data: events = [], isLoading: loading, error: eventsError, refetch } = useEvents();
+  const {
+    data: events = [],
+    isLoading: loading,
+    error: eventsError,
+    refetch,
+  } = useEvents();
 
   // Get view counts for all events (memoized to prevent unnecessary re-renders)
-  const eventIds = useMemo(() => events.map(event => event.id), [events]);
-  const { data: viewCounts = {}, isLoading: viewsLoading } = useViewCounts(eventIds);
+  const eventIds = useMemo(() => events.map((event) => event.id), [events]);
+  const { data: viewCounts = {}, isLoading: viewsLoading } =
+    useViewCounts(eventIds);
 
-  const error = eventsError ? (eventsError instanceof Error ? eventsError.message : 'Failed to fetch events') : null;
+  const error = eventsError
+    ? eventsError instanceof Error
+      ? eventsError.message
+      : "Failed to fetch events"
+    : null;
 
   if (loading) {
     return (
@@ -88,9 +104,11 @@ const EventsPage = () => {
         {/* <StreamHeader /> */}
         <div className="flex items-center justify-between p-4">
           <div>
-            <h1 className="text-xl font-bold text-[var(--events-foreground)]">Events</h1>
+            <h1 className="text-xl font-bold text-[var(--events-foreground)]">
+              Events
+            </h1>
             <p className="text-[12px] text-gray-700 dark:text-gray-600">
-              {events.length} event{events.length !== 1 ? 's' : ''} found
+              {events.length} event{events.length !== 1 ? "s" : ""} found
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -99,7 +117,9 @@ const EventsPage = () => {
               disabled={loading}
               className="px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-gray-700 disabled:opacity-50 rounded-lg transition-colors flex items-center gap-2 bg-[var(--events-accent)]"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+              />
               Refresh
             </button>
             <Link
@@ -116,7 +136,9 @@ const EventsPage = () => {
       <div className="p-4 space-y-2">
         {events.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-[var(--events-foreground-muted)] mb-4">No events found</p>
+            <p className="text-[var(--events-foreground-muted)] mb-4">
+              No events found
+            </p>
             <Link
               href="/events/create"
               className="px-4 py-2 text-sm font-medium text-white bg-[var(--events-accent)] hover:bg-[var(--events-accent-hover)] rounded-lg transition-colors"
@@ -152,27 +174,31 @@ const EventsPage = () => {
                 {/* Event Details */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-lg font-semibold truncate">{event.title}</h3>
+                    <h3 className="text-lg font-semibold truncate">
+                      {event.title}
+                    </h3>
                     <span className="px-2 py-1 bg-muted text-muted-foreground text-[10px] rounded-full ml-2 flex-shrink-0">
-                      {event.category || 'Event'}
+                      {event.category || "Event"}
                     </span>
                   </div>
 
                   <p className="text-[12px] text-foreground-muted mb-3 line-clamp-2 text-ellipsis">
-                    {event.description || 'No description available'}
+                    {event.description || "No description available"}
                   </p>
 
                   <div className="flex items-end gap-4 text-xs text-foreground-muted">
                     {event.startTime && (
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {formatTimestamp(event.startTime)}
-                      </div>
-                    )}
-                    {event.startTime && event.endTime && (
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {getTimeRange(event.startTime, event.endTime)}
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {formatTimestamp(event.startTime)}
+                        </div>
+                        {event.startTime && event.endTime && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {getTimeRange(event.startTime, event.endTime)}
+                          </div>
+                        )}
                       </div>
                     )}
                     {event.maxAttendees && (
@@ -183,7 +209,8 @@ const EventsPage = () => {
                           isLoading={viewsLoading}
                           size="sm"
                           showIcon={false}
-                        />/{event.maxAttendees}
+                        />
+                        /{event.maxAttendees}
                       </div>
                     )}
                   </div>
@@ -203,7 +230,7 @@ const EventsPage = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default EventsPage
+export default EventsPage;

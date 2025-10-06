@@ -287,49 +287,58 @@ html {
 }
 
 @layer base {
+  html {
+    font-family: var(--font-outfit), Outfit, Inter, system-ui, sans-serif;
+  }
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-outfit), Outfit, Inter, system-ui, sans-serif;
   }
 }
 
 @layer utilities {
   /* Primary Font Utilities */
   .font-display {
-    font-family: var(--font-plus-jakarta), Inter, system-ui, sans-serif;
+    font-family: var(--font-outfit), Outfit, Inter, system-ui, sans-serif;
     font-weight: 600;
     letter-spacing: -0.025em;
   }
 
   .font-body {
-    font-family: var(--font-plus-jakarta), Inter, system-ui, sans-serif;
+    font-family: var(--font-outfit), Outfit, Inter, system-ui, sans-serif;
     font-weight: 400;
   }
 
   .font-caption {
-    font-family: var(--font-plus-jakarta), Inter, system-ui, sans-serif;
+    font-family: var(--font-outfit), Outfit, Inter, system-ui, sans-serif;
     font-weight: 500;
     font-size: 0.875rem;
+  }
+
+  /* Ensure default font classes use Outfit */
+  .font-sans {
+    font-family: var(--font-outfit), Outfit, Inter, system-ui, sans-serif;
   }
 
   /* Placeholder Font Utilities */
   .font-poppins {
     font-family:
-      var(--font-poppins), var(--font-plus-jakarta), Inter, system-ui,
+      var(--font-poppins), var(--font-outfit), Outfit, Inter, system-ui,
       sans-serif;
   }
 
   .font-space-grotesk {
     font-family:
-      var(--font-space-grotesk), var(--font-plus-jakarta), Inter, system-ui,
+      var(--font-space-grotesk), var(--font-outfit), Outfit, Inter, system-ui,
       sans-serif;
   }
 
   .font-dm-sans {
     font-family:
-      var(--font-dm-sans), var(--font-plus-jakarta), Inter, system-ui,
+      var(--font-dm-sans), var(--font-outfit), Outfit, Inter, system-ui,
       sans-serif;
   }
 

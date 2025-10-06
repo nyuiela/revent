@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AppIcons } from "@/lib/assets";
 import { cn } from "@/lib/utils";
@@ -17,47 +17,76 @@ interface TabProps {
   setActiveTab: (tab: string) => void;
 }
 
-function Tab({ name, activeIcon, inactiveIcon, path, isActive, setActiveTab }: TabProps) {
+function Tab({
+  name,
+  activeIcon,
+  inactiveIcon,
+  path,
+  isActive,
+  setActiveTab,
+}: TabProps) {
   const triggerFeedback = () => {
     try {
-      const prefersReduced = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      if (prefersReduced) return
-      if (typeof window !== 'undefined' && 'vibrate' in navigator && typeof navigator.vibrate === 'function') {
-        navigator.vibrate(15)
-        return
+      const prefersReduced =
+        typeof window !== "undefined" &&
+        window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (prefersReduced) return;
+      if (
+        typeof window !== "undefined" &&
+        "vibrate" in navigator &&
+        typeof navigator.vibrate === "function"
+      ) {
+        navigator.vibrate(15);
+        return;
       }
-      if (typeof window !== 'undefined' && ('AudioContext' in window || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)) {
-        const AudioCtx = (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext || AudioContext
-        const ctx = new AudioCtx()
-        const osc = ctx.createOscillator()
-        const gain = ctx.createGain()
-        osc.type = 'square'
-        osc.frequency.value = 180
-        gain.gain.value = 0.02
-        osc.connect(gain)
-        gain.connect(ctx.destination)
-        const now = ctx.currentTime
-        osc.start(now)
-        osc.stop(now + 0.03)
+      if (
+        typeof window !== "undefined" &&
+        ("AudioContext" in window ||
+          (window as unknown as { webkitAudioContext?: typeof AudioContext })
+            .webkitAudioContext)
+      ) {
+        const AudioCtx =
+          (window as unknown as { webkitAudioContext?: typeof AudioContext })
+            .webkitAudioContext || AudioContext;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "square";
+        osc.frequency.value = 180;
+        gain.gain.value = 0.02;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        const now = ctx.currentTime;
+        osc.start(now);
+        osc.stop(now + 0.03);
         osc.onended = () => {
-          try { ctx.close() } catch { }
-        }
+          try {
+            ctx.close();
+          } catch {}
+        };
       }
-    } catch { }
-  }
+    } catch {}
+  };
 
   return (
     <div
       // href={path}
       className={`h-10 relative shrink-0 w-[62.5px] flex flex-col items-center justify-center cursor-pointer ${name === "Create" ? "w-[80px] absolute bottom-[1rem] bg-foreground rounded-full p-4 h-12 flex items-center justify-center shadow-2xl border-t-4 border-emerald-200 dark:border-emerald-600" : ""}`}
       onClick={() => {
-        triggerFeedback()
-        setActiveTab(name)
+        triggerFeedback();
+        setActiveTab(name);
       }}
     >
-      {name === "Create" && <div className="absolute text-background font-bold">Create</div>}
-      {name !== "Create" && <div className="absolute aspect-[24/24] bottom-[41.25%] top-[-1.25%] translate-x-[-50%]" style={{ left: "calc(50% - 0.25px)" }}>
-        {/* <Image
+      {name === "Create" && (
+        <div className="absolute text-background font-bold">Create</div>
+      )}
+      {name !== "Create" && (
+        <div
+          className="absolute aspect-[24/24] bottom-[41.25%] top-[-1.25%] translate-x-[-50%]"
+          style={{ left: "calc(50% - 0.25px)" }}
+        >
+          {/* <Image
           src={isActive ? activeIcon : inactiveIcon}
           alt={name}
           width={24}
@@ -67,64 +96,99 @@ function Tab({ name, activeIcon, inactiveIcon, path, isActive, setActiveTab }: T
             isActive ? "text-foreground" : "text-foreground-muted"
           )}
         /> */}
-        {isActive ? activeIcon : inactiveIcon}
-      </div>}
+          {isActive ? activeIcon : inactiveIcon}
+        </div>
+      )}
 
-      {name !== "Create" && <div className="absolute font-nunito-sans inset-[70%_-1.04%_-5%_-1.04%] leading-[0] text-[10px] text-center">
-        <p className={cn(
-          "leading-[normal] font-medium",
-          isActive
-            ? "text-foreground"
-            : "text-muted-foreground"
-        )}>
-          {name}
-        </p>
-      </div>}
+      {name !== "Create" && (
+        <div className="absolute inset-[70%_-1.04%_-5%_-1.04%] leading-[0] text-[10px] text-center">
+          <p
+            className={cn(
+              "leading-[normal] font-medium",
+              isActive ? "text-foreground" : "text-muted-foreground",
+            )}
+          >
+            {name}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
 
-export function MobileNavigation({ setActiveTab, sActiveTab }: { setActiveTab: (tab: string) => void, sActiveTab: string }) {
+interface MobileNavigationProps {
+  setActiveTab: (tab: string) => void;
+  sActiveTab: string;
+}
+
+const MobileNavigationComponent = ({
+  setActiveTab,
+  sActiveTab,
+}: MobileNavigationProps) => {
   const pathname = usePathname();
-  const [isHidden, setIsHidden] = useState(false)
-  const hideTimeoutRef = useRef<number | null>(null)
+  const [isHidden, setIsHidden] = useState(false);
+  const hideTimeoutRef = useRef<number | null>(null);
   const { showBannerPersistent, hideBanner } = useBannerToast();
   showBannerPersistent("Beta launch");
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsHidden(true)
+      setIsHidden(true);
       if (hideTimeoutRef.current) {
-        window.clearTimeout(hideTimeoutRef.current)
+        window.clearTimeout(hideTimeoutRef.current);
       }
       hideTimeoutRef.current = window.setTimeout(() => {
-        setIsHidden(false)
-      }, 100)
-    }
+        setIsHidden(false);
+      }, 100);
+    };
 
-    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       if (hideTimeoutRef.current) {
-        window.clearTimeout(hideTimeoutRef.current)
+        window.clearTimeout(hideTimeoutRef.current);
       }
-      window.removeEventListener('scroll', handleScroll)
-    }
-  }, [])
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
-  const theme = useTheme()
+  const theme = useTheme();
   const menuItems = [
     {
       name: "Home",
       // activeIcon: AppIcons.homeActive,
-      activeIcon: <Home className="text-foreground" fill="transparent" color={theme.resolvedTheme === "dark" ? "#fff" : "#000"} />,
+      activeIcon: (
+        <Home
+          className="text-foreground"
+          fill="transparent"
+          color={theme.resolvedTheme === "dark" ? "#fff" : "#000"}
+        />
+      ),
       // inactiveIcon: AppIcons.homeInactive,
-      inactiveIcon: <Home className="text-foreground-muted" fill="transparent" color="#9CA3AF" />,
+      inactiveIcon: (
+        <Home
+          className="text-foreground-muted"
+          fill="transparent"
+          color="#9CA3AF"
+        />
+      ),
       path: "/",
     },
     {
       name: "Events",
-      activeIcon: <CalendarDays fill="transparent" className="bg-transparent" color={theme.resolvedTheme === "dark" ? "#fff" : "#000"} />,
-      inactiveIcon: <CalendarDays className="text-foreground-muted" fill="transparent" color="#9CA3AF" />,
+      activeIcon: (
+        <CalendarDays
+          fill="transparent"
+          className="bg-transparent"
+          color={theme.resolvedTheme === "dark" ? "#fff" : "#000"}
+        />
+      ),
+      inactiveIcon: (
+        <CalendarDays
+          className="text-foreground-muted"
+          fill="transparent"
+          color="#9CA3AF"
+        />
+      ),
       path: "/events",
     },
     {
@@ -135,14 +199,36 @@ export function MobileNavigation({ setActiveTab, sActiveTab }: { setActiveTab: (
     },
     {
       name: "Earn",
-      activeIcon: <Gift className="bg-transparent" color={theme.resolvedTheme === "dark" ? "#fff" : "#000"} />,
-      inactiveIcon: <Gift className="text-foreground-muted" fill="transparent" color="#9CA3AF" />,
+      activeIcon: (
+        <Gift
+          className="bg-transparent"
+          color={theme.resolvedTheme === "dark" ? "#fff" : "#000"}
+        />
+      ),
+      inactiveIcon: (
+        <Gift
+          className="text-foreground-muted"
+          fill="transparent"
+          color="#9CA3AF"
+        />
+      ),
       path: "/earn",
     },
     {
       name: "Wallet",
-      activeIcon: <WalletCards className="bg-transparent" color={theme.resolvedTheme === "dark" ? "#fff" : "#000"} />,
-      inactiveIcon: <WalletCards className="text-foreground-muted" fill="transparent" color="#9CA3AF" />,
+      activeIcon: (
+        <WalletCards
+          className="bg-transparent"
+          color={theme.resolvedTheme === "dark" ? "#fff" : "#000"}
+        />
+      ),
+      inactiveIcon: (
+        <WalletCards
+          className="text-foreground-muted"
+          fill="transparent"
+          color="#9CA3AF"
+        />
+      ),
       // inactiveIcon: AppIcons.walletInactive,
       path: "/profile",
     },
@@ -150,9 +236,11 @@ export function MobileNavigation({ setActiveTab, sActiveTab }: { setActiveTab: (
 
   // ${isHidden ? 'translate-y-full opacity-0' : 'translate-y-0 opacity-100'}
   return (
-    <div className={`fixed bottom-0 left-0 right-0 z-40 max-w-md mx-auto p-0 shadow-2xl bg-background border-t border-border
-     `}>
-      <div className="relative backdrop-blur-[20px] backdrop-filter bg-muted">
+    <div
+      className={`fixed bottom-0 left-0 right-0 z-40 max-w-md mx-auto p-0 shadow-2xl bg-background border-t border-border rounded-t-3xl
+     `}
+    >
+      <div className="relative backdrop-blur-[20px] backdrop-filter bg-muted rounded-t-3xl">
         <div className="flex items-start justify-between px-4 py-2">
           {menuItems.map((item) => {
             const isActive = sActiveTab === item.name;
@@ -165,7 +253,7 @@ export function MobileNavigation({ setActiveTab, sActiveTab }: { setActiveTab: (
                 path={item.path}
                 isActive={isActive}
                 setActiveTab={() => {
-                  setActiveTab(item.name)
+                  setActiveTab(item.name);
                 }}
               />
             );
@@ -174,4 +262,6 @@ export function MobileNavigation({ setActiveTab, sActiveTab }: { setActiveTab: (
       </div>
     </div>
   );
-}
+};
+
+export const MobileNavigation = React.memo(MobileNavigationComponent);

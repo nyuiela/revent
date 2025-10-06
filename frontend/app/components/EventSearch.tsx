@@ -13,7 +13,13 @@ type Props = {
   onClearSelectedEvent?: () => void; // Add callback to clear selected event
 };
 
-export default function EventSearch({ events, onEventSelect, onSearch, selectedEventTitle, onClearSelectedEvent }: Props) {
+export default function EventSearch({
+  events,
+  onEventSelect,
+  onSearch,
+  selectedEventTitle,
+  onClearSelectedEvent,
+}: Props) {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [filteredEvents, setFilteredEvents] = useState<LiveEvent[]>([]);
@@ -34,9 +40,10 @@ export default function EventSearch({ events, onEventSelect, onSearch, selectedE
       return;
     }
 
-    const filtered = events.filter((event) =>
-      event.title.toLowerCase().includes(query.toLowerCase()) ||
-      event.username.toLowerCase().includes(query.toLowerCase())
+    const filtered = events.filter(
+      (event) =>
+        event.title.toLowerCase().includes(query.toLowerCase()) ||
+        event.username.toLowerCase().includes(query.toLowerCase()),
     );
     setFilteredEvents(filtered);
     setIsOpen(filtered.length > 0);
@@ -44,7 +51,10 @@ export default function EventSearch({ events, onEventSelect, onSearch, selectedE
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -74,11 +84,15 @@ export default function EventSearch({ events, onEventSelect, onSearch, selectedE
             onChange={(e) => {
               setQuery(e.target.value);
               // Clear selected event title when user starts typing
-              if (selectedEventTitle && e.target.value !== selectedEventTitle && onClearSelectedEvent) {
+              if (
+                selectedEventTitle &&
+                e.target.value !== selectedEventTitle &&
+                onClearSelectedEvent
+              ) {
                 onClearSelectedEvent();
               }
             }}
-            placeholder="search for something"
+            placeholder="Search for something"
             className="bg-transparent placeholder-muted-foreground text-sm w-full focus:outline-none"
             onFocus={() => query.trim() !== "" && setIsOpen(true)}
           />
@@ -118,7 +132,9 @@ export default function EventSearch({ events, onEventSelect, onSearch, selectedE
                 <div className="text-xs text-gray-500">
                   @{event.username}
                   {event.isLive && (
-                    <span className="ml-2 text-red-500 font-medium">• LIVE</span>
+                    <span className="ml-2 text-red-500 font-medium">
+                      • LIVE
+                    </span>
                   )}
                 </div>
               </div>
