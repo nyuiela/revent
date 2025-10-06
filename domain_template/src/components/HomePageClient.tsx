@@ -14,6 +14,9 @@ import { useWallet } from '@/components/WalletProvider';
 import { useNotifications } from '@/components/NotificationSystem';
 import heroSectionImage from '../../public/hero-section.png';
 import Image from 'next/image';
+import { motion, AnimatePresence } from "framer-motion";
+
+
 
 // Custom Connect Button Component
 function CustomConnectButton() {
@@ -377,10 +380,22 @@ export default function HomePageClient() {
       </div>
 
       {/* Invest Modal */}
-      <InvestModal
-        isOpen={showInvest}
-        onClose={() => setShowInvest(false)}
-      />
+      <AnimatePresence>
+        {showInvest && (
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            transition={{ duration: 0.5 }}
+            className="fixed inset-0 z-50"
+          >
+            <InvestModal
+              isOpen={showInvest}
+              onClose={() => setShowInvest(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

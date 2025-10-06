@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useWallet } from '@/components/WalletProvider';
 import { useNotifications } from '@/components/NotificationSystem';
+import { useTokenBalance } from '@/hooks/useBalance';
+import { TokenSymbol } from '@/utils/balance';
 import MultiContractButton from './buttons/MultiContractButton';
 import { eventId, reventTradingAbi, reventTradingAddress } from '@/contract/abi/contract';
 import { parseEther } from 'viem';
@@ -23,17 +25,17 @@ import { parseEther } from 'viem';
 export default function InvestModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { isConnected, address, connect } = useWallet();
   const { addNotification } = useNotifications();
+  
+  // Balance hooks
+  const { balance: ethBalance, loading: ethBalanceLoading, formattedBalance: ethBalanceFormatted } = useTokenBalance('ETH');
+  const { balance: usdcBalance, loading: usdcBalanceLoading, formattedBalance: usdcBalanceFormatted } = useTokenBalance('USDC');
 
   // State for amounts
   const [usdAmount, setUsdAmount] = useState('');
   const [ethAmount, setEthAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeCurrency, setActiveCurrency] = useState<'USD' | 'ETH'>('USD');
-
-  // User wallet balance
-  const [ethBalance, setEthBalance] = useState<string>('0');
-  const [usdBalance, setUsdBalance] = useState<string>('0');
-  const [balanceLoading, setBalanceLoading] = useState(false);
+  const [selectedToken, setSelectedToken] = useState<TokenSymbol>('ETH');
 
   // Real-time ETH price from multiple sources
   const [ethPrice, setEthPrice] = useState(1632); // Default fallback
@@ -42,50 +44,23 @@ export default function InvestModal({ isOpen, onClose }: { isOpen: boolean; onCl
   const [priceSource, setPriceSource] = useState<string>('CoinGecko');
   const [priceUpdated, setPriceUpdated] = useState(false);
 
-  // Fetch user's ETH balance from wallet
-  const fetchUserBalance = async () => {
-    if (!isConnected || !address) {
-      setEthBalance('0');
-      setUsdBalance('0');
-      return;
+  // Get current balance based on selected token
+  const getCurrentBalance = () => {
+    if (selectedToken === 'ETH') {
+      return ethBalanceFormatted;
+    } else if (selectedToken === 'USDC') {
+      return usdcBalanceFormatted;
     }
+    return '0.0000';
+  };
 
-    try {
-      setBalanceLoading(true);
-
-      // Check if ethereum provider is available
-      if (!window.ethereum) {
-        console.warn('No ethereum provider found');
-        setEthBalance('0');
-        setUsdBalance('0');
-        return;
-      }
-
-      // Get ETH balance from wallet
-      const balance = await (window.ethereum as any).request({
-        method: 'eth_getBalance',
-        params: [address, 'latest']
-      });
-
-      if (balance) {
-        // Convert from wei to ETH
-        const ethBalanceWei = BigInt(balance);
-        const ethBalanceEth = Number(ethBalanceWei) / 1e18;
-        const ethBalanceFormatted = ethBalanceEth.toFixed(6);
-
-        setEthBalance(ethBalanceFormatted);
-
-        // Calculate USD balance
-        const usdBalanceValue = (ethBalanceEth * ethPrice).toFixed(2);
-        setUsdBalance(usdBalanceValue);
-      }
-    } catch (error) {
-      console.error('Failed to fetch wallet balance:', error);
-      setEthBalance('0');
-      setUsdBalance('0');
-    } finally {
-      setBalanceLoading(false);
+  const getBalanceLoading = () => {
+    if (selectedToken === 'ETH') {
+      return ethBalanceLoading;
+    } else if (selectedToken === 'USDC') {
+      return usdcBalanceLoading;
     }
+    return false;
   };
 
   // Fetch real-time ETH price from multiple sources
@@ -147,11 +122,7 @@ export default function InvestModal({ isOpen, onClose }: { isOpen: boolean; onCl
   }, []);
 
   // Fetch user balance when wallet connects or ETH price changes
-  useEffect(() => {
-    if (isConnected && address) {
-      fetchUserBalance();
-    }
-  }, [isConnected, address, ethPrice]);
+  // Balance is now automatically managed by the useTokenBalance hook
 
   // Conversion functions
   const convertUsdToEth = (usd: number) => usd / ethPrice;
@@ -234,8 +205,8 @@ export default function InvestModal({ isOpen, onClose }: { isOpen: boolean; onCl
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl relative overflow-hidden">
+    <div className="bg-black/50 backdrop-blur-sm flex items-center justify-center h-full p-4">
+      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl relative overflow-hidden scale-[0.7]">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 className="text-xl font-bold text-gray-900">Invest in MOONSHOT 2025</h2>
@@ -273,15 +244,24 @@ export default function InvestModal({ isOpen, onClose }: { isOpen: boolean; onCl
               </div>
             </div>
             <div className="text-sm text-blue-600 mt-1 flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span>Balance: ${usdBalance}</span>
-                {balanceLoading && (
+              <div className="flex items-center space-x-3">
+                <span className="text-gray-700">USDC:</span>
+                <span className="font-medium">{usdcBalanceFormatted}</span>
+                {usdcBalanceLoading && (
                   <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                 )}
               </div>
               <button
-                onClick={fetchUserBalance}
-                disabled={balanceLoading}
+                onClick={() => {
+                  // Balance refreshes automatically via useTokenBalance hook
+                  addNotification({
+                    type: 'info',
+                    title: 'Balance Refreshed',
+                    message: 'Your balance is automatically updated',
+                    duration: 2000
+                  });
+                }}
+                disabled={getBalanceLoading()}
                 className="text-blue-400 hover:text-blue-600 transition-colors"
                 title="Refresh balance"
               >
@@ -304,9 +284,36 @@ export default function InvestModal({ isOpen, onClose }: { isOpen: boolean; onCl
             </button>
           </div>
 
-          {/* ETH Input */}
+          {/* Token Selector */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Amount in ETH</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Select Token</label>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setSelectedToken('ETH')}
+                className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                  selectedToken === 'ETH'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                ETH
+              </button>
+              <button
+                onClick={() => setSelectedToken('USDC')}
+                className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                  selectedToken === 'USDC'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                USDC
+              </button>
+            </div>
+          </div>
+
+          {/* Token Input */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Amount in {selectedToken}</label>
             <div className="relative">
               <input
                 type="number"
@@ -321,19 +328,28 @@ export default function InvestModal({ isOpen, onClose }: { isOpen: boolean; onCl
                 placeholder="0.00"
               />
               <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                <span className="text-gray-500 font-medium">ETH</span>
+                <span className="text-gray-500 font-medium">{selectedToken}</span>
               </div>
             </div>
             <div className="text-sm text-blue-600 mt-1 flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span>Balance: {ethBalance} ETH</span>
-                {balanceLoading && (
+              <div className="flex items-center space-x-3">
+                <span className="text-gray-700">{selectedToken}:</span>
+                <span className="font-medium">{getCurrentBalance()}</span>
+                {getBalanceLoading() && (
                   <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                 )}
               </div>
               <button
-                onClick={fetchUserBalance}
-                disabled={balanceLoading}
+                onClick={() => {
+                  // Balance refreshes automatically via useTokenBalance hook
+                  addNotification({
+                    type: 'info',
+                    title: 'Balance Refreshed',
+                    message: 'Your balance is automatically updated',
+                    duration: 2000
+                  });
+                }}
+                disabled={getBalanceLoading()}
                 className="text-blue-400 hover:text-blue-600 transition-colors"
                 title="Refresh balance"
               >
