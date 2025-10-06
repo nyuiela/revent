@@ -53,6 +53,52 @@ const EventsPage = () => {
     refetch,
   } = useEvents();
 
+  const [showAllEvents, setShowAllEvents] = React.useState<boolean>(false);
+  const [statusByEventId, setStatusByEventId] = React.useState<Record<string, number>>({});
+
+  React.useEffect(() => {
+    let cancelled = false;
+    const fetchStatuses = async () => {
+      if (!events || events.length === 0) {
+        setStatusByEventId({});
+        return;
+      }
+      try {
+        const results = await Promise.all(
+          events.map(async (e) => {
+            try {
+              const res = await fetch(`/api/events/status/${e.id}`);
+              const json = await res.json();
+              const status = parseInt(json?.currentStatus ?? '0');
+              return [e.id, Number.isFinite(status) ? status : 0] as const;
+            } catch {
+              return [e.id, 0] as const;
+            }
+          })
+        );
+        if (!cancelled) {
+          const map: Record<string, number> = {};
+          for (const [id, st] of results) map[id] = st;
+          setStatusByEventId(map);
+        }
+      } catch {
+        if (!cancelled) setStatusByEventId({});
+      }
+    };
+    fetchStatuses();
+    return () => {
+      cancelled = true;
+    };
+  }, [events]);
+
+  const filteredEvents = React.useMemo(() => {
+    if (showAllEvents) return events;
+    return events.filter((e) => {
+      const st = statusByEventId[e.id];
+      return st === 1 || st === 2 || st === 3;
+    });
+  }, [events, showAllEvents, statusByEventId]);
+
   // Get view counts for all events (memoized to prevent unnecessary re-renders)
   const eventIds = useMemo(() => events.map((event) => event.id), [events]);
   const { data: viewCounts = {}, isLoading: viewsLoading } =
@@ -108,7 +154,7 @@ const EventsPage = () => {
               Events
             </h1>
             <p className="text-[12px] text-gray-700 dark:text-gray-600">
-              {events.length} event{events.length !== 1 ? "s" : ""} found
+              {filteredEvents.length} event{filteredEvents.length !== 1 ? "s" : ""} found
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -122,6 +168,12 @@ const EventsPage = () => {
               />
               Refresh
             </button>
+            <button
+              onClick={() => setShowAllEvents((v) => !v)}
+              className="px-4 py-2 text-sm font-medium text-muted-foreground bg-muted hover:bg-muted-hover rounded-lg transition-colors"
+            >
+              {showAllEvents ? 'All' : 'Published+'}
+            </button>
             <Link
               href="/events/create"
               className="px-4 py-2 text-sm font-medium text-muted-foreground bg-muted hover:bg-muted-hover rounded-lg transition-colors"
@@ -134,7 +186,7 @@ const EventsPage = () => {
 
       {/* Events List */}
       <div className="p-4 space-y-2">
-        {events.length === 0 ? (
+        {filteredEvents.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-[var(--events-foreground-muted)] mb-4">
               No events found
@@ -147,7 +199,7 @@ const EventsPage = () => {
             </Link>
           </div>
         ) : (
-          events.map((event) => (
+          filteredEvents.map((event) => (
             <Link
               key={event.id}
               href={`/${event.slug || event.id}`} // Use slug if available, fallback to ID
