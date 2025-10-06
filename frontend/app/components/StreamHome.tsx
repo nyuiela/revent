@@ -31,7 +31,10 @@ type Mode = "map" | "camera" | "screen";
 
 export default function StreamHome() {
   const [mode] = useState<Mode>("map");
-  const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [activeFilter, setActiveFilter] = useState<string>("All");
+  const [filterCycleIndex, setFilterCycleIndex] = useState<number>(0);
+  const [showAllEvents, setShowAllEvents] = useState<boolean>(true);
+  const [statusByEventId, setStatusByEventId] = useState<Record<string, number>>({});
   const [showDiscover, setShowDiscover] = useState(true);
   const [searchBarVisible, setSearchBarVisible] = useState(true);
   const [selectedEventTitle, setSelectedEventTitle] = useState<string>("");
@@ -55,8 +58,53 @@ export default function StreamHome() {
   const { data: viewCounts = {}, isLoading: viewsLoading } =
     useViewCounts(eventIds);
 
-  // Sort events by proximity to user location
-  const proximityEvents = useProximityEvents(events, location);
+  // Fetch latest status for each event and filter by showAllEvents
+  useEffect(() => {
+    let cancelled = false;
+    const fetchStatuses = async () => {
+      if (!events || events.length === 0) {
+        setStatusByEventId({});
+        return;
+      }
+      try {
+        const results = await Promise.all(
+          events.map(async (e) => {
+            try {
+              const res = await fetch(`/api/events/status/${e.id}`);
+              const json = await res.json();
+              const status = parseInt(json?.currentStatus ?? "0");
+              return [e.id, Number.isFinite(status) ? status : 0] as const;
+            } catch {
+              return [e.id, 0] as const;
+            }
+          })
+        );
+        if (!cancelled) {
+          const map: Record<string, number> = {};
+          for (const [id, st] of results) map[id] = st;
+          setStatusByEventId(map);
+        }
+      } catch {
+        if (!cancelled) setStatusByEventId({});
+      }
+    };
+    fetchStatuses();
+    return () => {
+      cancelled = true;
+    };
+  }, [events]);
+
+  const filteredByStatus = useMemo(() => {
+    if (showAllEvents) return events;
+    return events.filter((e) => {
+      const st = statusByEventId[e.id];
+      // Include only statuses 1,2,3 (exclude 0 draft and anything undefined)
+      return st === 1 || st === 2 || st === 3;
+    });
+  }, [events, showAllEvents, statusByEventId]);
+
+  // Sort events by proximity to user location using filtered events
+  const proximityEvents = useProximityEvents(filteredByStatus, location);
 
   const filters = ["All", "Tech", "Gaming", "Music"]; // exact labels per screenshot
 
@@ -122,6 +170,43 @@ export default function StreamHome() {
         setSearchBarVisible(true);
         dragOverlayTimerRef.current = null;
       }, 150);
+    }
+  };
+
+  const handleFilterClick = (filterLabel: string) => {
+    // Determine the candidate list based on the filter
+    const filtered =
+      filterLabel === "All"
+        ? proximityEvents
+        : proximityEvents.filter(
+            (e) => (e.category || "").toLowerCase() === filterLabel.toLowerCase()
+          );
+
+    if (filtered.length === 0) {
+      setActiveFilter(filterLabel);
+      setFilterCycleIndex(0);
+      return;
+    }
+
+    // If switching to a new filter, start from the first match; otherwise cycle
+    const isSameFilter = filterLabel === activeFilter;
+    const nextIndex = isSameFilter ? (filterCycleIndex + 1) % filtered.length : 0;
+
+    setActiveFilter(filterLabel);
+    setFilterCycleIndex(nextIndex);
+
+    // Fly the map to the selected event
+    const targetEvent = filtered[nextIndex];
+    if (targetEvent) {
+      mapRef.current?.focusOnEvent(targetEvent);
+    }
+  };
+
+  const handleFlyToNearest = () => {
+    // Use proximityEvents which are already sorted by distance (if location is available)
+    const nearest = proximityEvents[0];
+    if (nearest) {
+      mapRef.current?.focusOnEvent(nearest);
     }
   };
 
@@ -244,7 +329,7 @@ export default function StreamHome() {
                 <button
                   key={f}
                   type="button"
-                  onClick={() => setActiveFilter(f)}
+                  onClick={() => handleFilterClick(f)}
                   className={`px-3 py-1.5 rounded-full text-xs shadow-sm bg-white/60 dark:bg-black/40 text-foreground ${
                     activeFilter === f
                       ? " bg-background text-blue-600"
@@ -258,9 +343,18 @@ export default function StreamHome() {
                 type="button"
                 className="w-8 h-8 rounded-full bg-white/90 text-black grid place-items-center hover:bg-white transition-colors"
                 aria-label="more"
+                onClick={handleFlyToNearest}
               >
                 {/* <Plus className="w-4 h-4" /> */}
                 <Component className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAllEvents((v) => !v)}
+                className="px-3 py-1.5 rounded-full text-xs shadow-sm bg-white/60 dark:bg-black/40 text-foreground"
+                aria-label="toggle-visible-events"
+              >
+                {showAllEvents ? "All" : "Published+"}
               </button>
             </div>
           </div>
